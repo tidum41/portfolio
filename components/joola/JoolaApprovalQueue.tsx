@@ -3,7 +3,7 @@
 import { useId, useMemo, useState, type ReactNode } from "react";
 import JoolaStage from "./JoolaStage";
 import JoolaDemoState, { JoolaSyncBanner } from "./JoolaDemoState";
-import { money, moneyWhole } from "@/lib/caseStudies/joolaLedger";
+import { JOOLA_CREDIT, money, moneyWhole } from "@/lib/caseStudies/joolaLedger";
 
 type OrderRow = {
   id: string;
@@ -16,56 +16,114 @@ type OrderRow = {
   /** Net 30 credit limit for this account. */
   creditLimit: number;
   overdue: number;
-  overdueInv?: string;
+  /** Invoice IDs for the overdue column; truncated with +N in the cell. */
+  overdueInvs?: string[];
   status: "over" | "ar";
 };
 
+const LIMIT = JOOLA_CREDIT.limit;
+
 const SEED: OrderRow[] = [
   {
-    id: "ncs",
-    distributor: "North Court Supply",
+    id: "dicks",
+    distributor: "Dick's Sporting Goods",
     so: "SO-48288",
-    buyer: "Riley Cho",
+    buyer: "Maya Okonkwo",
+    detail: "Secondary: LeBron James",
     orderTotal: 18447.52,
     remaining: 12250,
-    creditLimit: 25000,
+    creditLimit: LIMIT,
+    overdue: 0,
+    status: "over",
+  },
+  {
+    id: "baseline",
+    distributor: "Baseline Pickleball Co.",
+    so: "SO-48301",
+    buyer: "Jordan Hale",
+    detail: "Secondary: Kevin Durant",
+    orderTotal: 9620,
+    remaining: 4100,
+    creditLimit: LIMIT,
+    overdue: 2840.5,
+    overdueInvs: ["INV-2031", "INV-2044", "INV-2050", "INV-2058"],
+    status: "ar",
+  },
+  {
+    id: "courtside",
+    distributor: "Courtside Supply",
+    so: "SO-48312",
+    buyer: "Sam Rivera",
+    detail: "Secondary: Tom Brady",
+    orderTotal: 7125,
+    remaining: 5200,
+    creditLimit: LIMIT,
     overdue: 0,
     status: "over",
   },
 ];
 
+function OverdueCell({ amount, ids = [] }: { amount: number; ids?: string[] }) {
+  const shown = ids.slice(0, 1);
+  const more = Math.max(0, ids.length - shown.length);
+  return (
+    <td className={`rep-ar${amount > 0 ? " is-overdue" : ""}`}>
+      <div className="rep-ar__amt tnum">{money(amount)}</div>
+      <div className="rep-ar__ids" title={ids.length ? ids.join(", ") : undefined}>
+        {shown.length === 0 ? (
+          <span className="inv inv--empty">{"\u00a0"}</span>
+        ) : (
+          <>
+            {shown.map((id) => (
+              <span className="inv" key={id}>
+                {id}
+              </span>
+            ))}
+            {more > 0 ? <span className="inv-more">+{more}</span> : null}
+          </>
+        )}
+      </div>
+    </td>
+  );
+}
+
 function RepChrome({
   active = "Approvals",
   children,
+  overlay = null,
 }: {
   active?: "Approvals" | "Replacements" | "Accounts";
   children: ReactNode;
+  overlay?: ReactNode;
 }) {
   return (
     <div className="rep-shell">
-      <aside className="rep-sidebar">
-        <img className="rep-logo" src="/dev/joola-b2b/joola-logo.png" alt="JOOLA" />
-        <span className="rep-wholesale">Wholesale</span>
-        <nav className="rep-nav" aria-label="Rep portal">
-          {(["Approvals", "Replacements", "Accounts"] as const).map((item) => (
-            <span key={item} className={item === active ? "is-active" : undefined}>
-              {item}
-            </span>
-          ))}
-        </nav>
-        <a className="rep-back" href="https://www.joola.com" tabIndex={-1}>
-          Back to joola.com store.
-        </a>
-      </aside>
-      <div className="rep-main">
-        <div className="rep-topbar">
-          <div className="rep-user" aria-label="Signed in as Collin Johns, Sales rep">
-            <strong>Collin Johns</strong>
-            <span>Sales rep</span>
+      <div className="rep-shell__layout">
+        <aside className="rep-sidebar">
+          <img className="rep-logo" src="/dev/joola-b2b/joola-logo.png" alt="JOOLA" />
+          <span className="rep-wholesale">Wholesale</span>
+          <nav className="rep-nav" aria-label="Rep portal">
+            {(["Approvals", "Replacements", "Accounts"] as const).map((item) => (
+              <span key={item} className={item === active ? "is-active" : undefined}>
+                {item}
+              </span>
+            ))}
+          </nav>
+          <a className="rep-back" href="https://www.joola.com" tabIndex={-1}>
+            Back to joola.com store.
+          </a>
+        </aside>
+        <div className="rep-main">
+          <div className="rep-topbar">
+            <div className="rep-user" aria-label="Signed in as Collin Johns, Sales rep">
+              <strong>Collin Johns</strong>
+              <span>Sales rep</span>
+            </div>
           </div>
+          <div className="rep-body">{children}</div>
         </div>
-        <div className="rep-body">{children}</div>
       </div>
+      {overlay}
     </div>
   );
 }
@@ -196,8 +254,78 @@ function ApprovalQueueInner({
     );
   }
 
+  const modal = modalFor ? (
+    <div className="rep-modal-backdrop" role="presentation">
+      <div
+        className="rep-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={reasonId}
+      >
+        <h2 id={reasonId}>Approve override</h2>
+        <p className="ctx">
+          {modalFor.distributor}, {modalFor.so}. This order is over the Net 30 limit.
+          {modalFor.overdue > 0
+            ? " The account has overdue invoices."
+            : " The account has no overdue invoices."}
+        </p>
+        <div className="meter-block">
+          <div className="credit-meter-label">
+            <span>Net 30 credit</span>
+            <span className="avail">
+              {money(modalFor.remaining)} left of {moneyWhole(modalFor.creditLimit)}
+            </span>
+          </div>
+          <div
+            className="credit-bar"
+            data-credit-bar
+            style={{ ["--credit-order-end" as string]: `${orderEndPct}%` }}
+          />
+          <div className="over-line">
+            Order {money(modalFor.orderTotal)}. Over by {money(overBy)}.
+          </div>
+        </div>
+        <label htmlFor={`${reasonId}-field`}>Reason</label>
+        <textarea
+          id={`${reasonId}-field`}
+          placeholder="Why this order can ship over the limit"
+          value={reason}
+          aria-invalid={tried && !canApprove}
+          aria-describedby={tried && !canApprove ? errorId : undefined}
+          onChange={(e) => setReason(e.target.value)}
+        />
+        {tried && !canApprove ? (
+          <div className="field-error" id={errorId} role="alert">
+            Enter a reason to approve this override.
+          </div>
+        ) : (
+          <div className="field-error" aria-hidden>
+            {"\u00a0"}
+          </div>
+        )}
+        <div className="rep-modal-actions">
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={!canApprove}
+            onClick={confirmApprove}
+          >
+            Approve override
+          </button>
+          <button
+            type="button"
+            className="btn-outline"
+            onClick={() => setModalFor(null)}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <RepChrome>
+    <RepChrome overlay={modal}>
       <h1>Approval queue</h1>
       <p className="rep-lede">Orders over the Net 30 credit limit.</p>
       <div className="rep-banner">
@@ -241,11 +369,8 @@ function ApprovalQueueInner({
                         Over by {money(over)}
                       </div>
                     </td>
-                    <td className={`rep-ar${row.overdue > 0 ? " is-overdue" : ""}`}>
-                      {money(row.overdue)}
-                      {row.overdueInv ? <span className="inv">{row.overdueInv}</span> : null}
-                    </td>
-                    <td>
+                    <OverdueCell amount={row.overdue} ids={row.overdueInvs} />
+                    <td className="rep-status">
                       <span className={`status-pill is-${row.status}`}>
                         {row.status === "over" ? "Over limit" : "Overdue invoices"}
                       </span>
@@ -267,70 +392,6 @@ function ApprovalQueueInner({
           </table>
         </div>
       )}
-
-      {modalFor ? (
-        <div className="rep-modal-backdrop" role="presentation">
-          <div
-            className="rep-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={reasonId}
-          >
-            <h2 id={reasonId}>Approve override</h2>
-            <p className="ctx">
-              {modalFor.distributor}, {modalFor.so}. This order is over the Net 30 limit. The
-              account has no overdue invoices.
-            </p>
-            <div className="meter-block">
-              <div className="credit-meter-label">
-                <span>Net 30 credit</span>
-                <span className="avail">
-                  {money(modalFor.remaining)} left of {moneyWhole(modalFor.creditLimit)}
-                </span>
-              </div>
-              <div
-                className="credit-bar"
-                data-credit-bar
-                style={{ ["--credit-order-end" as string]: `${orderEndPct}%` }}
-              />
-              <div className="over-line">
-                Order {money(modalFor.orderTotal)}. Over by {money(overBy)}.
-              </div>
-            </div>
-            <label htmlFor={`${reasonId}-field`}>Reason</label>
-            <textarea
-              id={`${reasonId}-field`}
-              placeholder="Why this order can ship over the limit"
-              value={reason}
-              aria-invalid={tried && !canApprove}
-              aria-describedby={tried && !canApprove ? errorId : undefined}
-              onChange={(e) => setReason(e.target.value)}
-            />
-            {tried && !canApprove ? (
-              <div className="field-error" id={errorId} role="alert">
-                Enter a reason to approve this override.
-              </div>
-            ) : null}
-            <div className="rep-modal-actions">
-              <button
-                type="button"
-                className="btn-primary"
-                disabled={!canApprove}
-                onClick={confirmApprove}
-              >
-                Approve override
-              </button>
-              <button
-                type="button"
-                className="btn-outline"
-                onClick={() => setModalFor(null)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </RepChrome>
   );
 }

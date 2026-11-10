@@ -79,7 +79,7 @@ function SavedOrderInner({
             <span className="tpl-title">
               <span className="name">September restock</span>
               <span className="meta">
-                {LINES.length} products, {units} units. Saved by Anna Bright, Sep 12
+                {LINES.length} products, {units} units. Saved by Drew Brees, Sep 12
               </span>
             </span>
             <span className="tpl-total">{money(total)}</span>

@@ -61,7 +61,10 @@ function QuickOrderLineInner({
   const [query, setQuery] = useState(demoState === "long-name" ? "Perseus" : "Perseus");
   const errorId = useId();
   const oos = demoState === "oos";
+  const atZero = !oos && qty === 0;
   const belowMoq = !oos && qty > 0 && qty < product.moq;
+  const needsMoq = atZero || belowMoq;
+  const canAdd = !oos && qty >= product.moq;
   const unit = priceAt(product, Math.max(qty, product.moq));
   const total = qty > 0 && !oos ? lineAmount(product, qty) : 0;
   const next = nextTier(product, Math.max(qty, 1));
@@ -70,9 +73,9 @@ function QuickOrderLineInner({
   const clampedHint = useMemo(() => {
     if (oos) return "Out of stock. Notify me when back in stock.";
     if (demoState === "network") return "Couldn't update the line. Retry.";
-    if (belowMoq) return `Minimum order quantity is ${product.moq}`;
+    if (needsMoq) return `Minimum order quantity is ${product.moq}`;
     return null;
-  }, [belowMoq, demoState, oos, product.moq]);
+  }, [needsMoq, demoState, oos, product.moq]);
 
   function setSafeQty(n: number) {
     setQty(Math.max(0, Math.min(9999999, Math.round(n))));
@@ -132,7 +135,9 @@ function QuickOrderLineInner({
             ) : null}
           </div>
           <div className="qty-cell">
-            <div className={`qty-group${belowMoq || demoState === "network" ? " is-error" : ""}`}>
+            <div
+              className={`qty-group${needsMoq || demoState === "network" ? " is-error" : ""}`}
+            >
               <div className="qty-stepper">
                 <button
                   type="button"
@@ -146,7 +151,7 @@ function QuickOrderLineInner({
                   className="qty"
                   inputMode="numeric"
                   aria-label={`${product.name} quantity`}
-                  aria-invalid={belowMoq || demoState === "network"}
+                  aria-invalid={needsMoq || demoState === "network"}
                   aria-describedby={clampedHint ? errorId : undefined}
                   value={qty}
                   disabled={oos}
@@ -183,16 +188,29 @@ function QuickOrderLineInner({
               {clampedHint ?? "\u00a0"}
             </div>
           </div>
-          <div className="line-total end tnum">{oos ? "—" : money(total)}</div>
+          <div
+            className={`line-total end tnum${!canAdd || oos ? " is-muted" : ""}`}
+          >
+            {money(total)}
+          </div>
         </div>
       </div>
-      {demoState === "network" ? (
-        <div className="qo-retry">
+      <div className="qo-add-row">
+        {demoState === "network" ? (
           <button type="button" className="btn-outline">
             Retry
           </button>
-        </div>
-      ) : null}
+        ) : (
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={!canAdd}
+            aria-disabled={!canAdd}
+          >
+            Add
+          </button>
+        )}
+      </div>
     </div>
   );
 }

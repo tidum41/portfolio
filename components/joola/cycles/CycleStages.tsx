@@ -179,7 +179,7 @@ export function IdentityStage({ v }: { v: number }) {
         ? "Courtside Supply"
         : "Baseline Pickleball Co.";
   const person =
-    v >= 13 ? "Anna Bright · Buyer" : v >= 10 ? "Anna W." : v >= 6 ? "Priya M." : null;
+    v >= 13 ? "Anna Bright · Buyer" : v >= 10 ? "Patrick Mahomes" : v >= 6 ? "Kevin Love" : null;
   const showTag = v >= 11 && v < 12;
   const showSwitch = v >= 11 && v < 13;
   const cartPill = v >= 11;

@@ -89,9 +89,9 @@ export const copy = {
     },
     credit: {
       label: "Credit line",
-      title: "$50,000 credit line",
-      /** Approved prototype string — keep verbatim */
-      meter: "$25,693.50 left of $50,000",
+      title: "$25,000 credit line",
+      /** Keep in sync with JOOLA_CREDIT.limit */
+      meter: "$20,800.00 left of $25,000",
       body: "Available credit updates as open invoices and new orders post. Cart shows how much of this order will use.",
     },
     shipDate: {
@@ -155,7 +155,7 @@ export const copy = {
     /** Approved prototype control label — keep verbatim */
     uploadCsv: "Upload CSV",
     savedOrders: "Saved order",
-    creditLeft: "$25,693.50 left of $50,000",
+    creditLeft: "$20,800.00 left of $25,000",
     placingOrder: "Placing order",
     shipDatePending: "Ship date pending",
     onboardingLink: "Replay onboarding",

@@ -154,20 +154,35 @@ export function lineAmount(product: JoolaProduct, qty: number): number {
   return Math.round(priceAt(product, qty) * qty * 100) / 100;
 }
 
-/** Credit figures used by the case-study credit meter (copy-v3 fig 6). */
+/** Credit figures used by the case-study credit meter and rep queue. */
 export const JOOLA_CREDIT = {
-  limit: 10000,
+  limit: 25000,
   used: 4200,
-  available: 5800,
+  available: 20800,
 } as const;
 
-/** Story credit used on the account / rep side ($50k line). */
+/** Story credit used on the account / rep side (same $25k line). */
 export const JOOLA_ACCOUNT_CREDIT = {
-  limit: 50000,
-  priorUsed: 5000,
-  available: 45000,
-  afterOrder: 40091.34,
+  limit: 25000,
+  priorUsed: 4200,
+  available: 20800,
+  afterOrder: 17600,
   terms: "Net 30",
+} as const;
+
+/** People on accounts (athletes into pickleball). Never used as account names. */
+export const JOOLA_PEOPLE = {
+  buyer: "Anna Bright",
+  rep: "Collin Johns",
+  pro: "Ben Johns",
+  owners: [
+    "LeBron James",
+    "Kevin Durant",
+    "Kevin Love",
+    "Tom Brady",
+    "Patrick Mahomes",
+    "Drew Brees",
+  ],
 } as const;
 
 export const JOOLA_MESSAGES = {

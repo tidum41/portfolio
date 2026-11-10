@@ -249,23 +249,37 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--color-text-muted, #8a8a96);
+  color: var(--ink, #1a1a1a);
+}
+.joola-demo-state label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 .joola-demo-state__label {
   font-size: 11px;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: var(--color-text-muted, #8a8a96);
+  color: var(--muted, #5c5c66);
 }
 .joola-demo-state select {
   height: 28px;
   padding: 0 28px 0 10px;
-  border: 1px solid var(--color-border-subtle, #e8e6e1);
+  border: 1px solid var(--line, #e6e8ef);
   border-radius: 6px;
   background: #fff;
-  color: var(--color-text-primary, #1a1a1a);
+  color: var(--ink, #1a1a1a);
   font-size: 12px;
+  font-weight: 500;
   min-width: 132px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231a1a1a' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+.joola-demo-state select:focus-visible {
+  outline: 2px solid var(--blue, #2c3ee0);
+  outline-offset: 2px;
 }
 .joola-portal .joola-skel { display: flex; flex-direction: column; gap: 10px; padding: 8px 0; }
 .joola-portal .joola-skel__row {
@@ -413,6 +427,18 @@
   font-size: 14px; font-weight: 500; line-height: 18px;
   font-variant-numeric: tabular-nums; text-align: right;
   white-space: nowrap; min-width: 7ch;
+  color: var(--ink);
+}
+.joola-portal .line-total.is-muted {
+  color: var(--faint);
+  font-weight: 400;
+}
+.joola-portal .qo-add-row {
+  margin-top: 12px;
+  min-height: 36px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 .joola-portal .qty-cell { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 148px; }
 .joola-portal .qty-group {
@@ -445,7 +471,6 @@
   font-size: 12px; color: var(--failed); text-align: right; max-width: 148px; line-height: 1.3;
   min-height: 32px; /* reserved — prevents CLS when MOQ/OOS/network hint appears */
 }
-.joola-portal .qo-retry { margin-top: 12px; min-height: 36px; }
 .joola-portal .qo-line.is-mobile .qo-line__head { display: none; }
 .joola-portal .qo-line.is-mobile .search-row { height: auto; flex-wrap: wrap; }
 .joola-portal .qo-line.is-mobile .search-wrap { width: 100%; }
@@ -668,14 +693,21 @@
 
 /* ── Rep approval queue (Paper is source of truth) ────────────────── */
 .joola-portal .rep-shell {
-  display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
+  position: relative;
   min-height: 420px;
   width: 100%;
   max-width: 100%;
   min-width: 0; /* never force the stage wider than the frame */
   background: #fff;
   color: var(--ink);
+}
+.joola-portal .rep-shell__layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 420px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 .joola-portal .rep-sidebar {
   background: var(--sidebar-bg); border-right: 1px solid var(--line);
@@ -759,11 +791,19 @@
 }
 .joola-portal .rep-table th:last-child,
 .joola-portal .rep-table td:last-child {
-  position: sticky;
-  right: 0;
-  z-index: 2;
   padding-right: 4px;
-  box-shadow: -10px 0 12px -10px rgba(26, 26, 26, 0.18);
+  background: #fff;
+  box-shadow: none;
+  border-left: 0;
+}
+/* Sticky Actions only when the table must scroll; no seam at desktop widths */
+@media (max-width: 1100px) {
+  .joola-portal .rep-table th:last-child,
+  .joola-portal .rep-table td:last-child {
+    position: sticky;
+    right: 0;
+    z-index: 2;
+  }
 }
 .joola-portal .rep-dist strong {
   display: block; font-size: 14px; font-weight: 500; line-height: 18px;
@@ -788,10 +828,30 @@
 .joola-portal .rep-credit .over.is-ar { color: var(--failed); }
 .joola-portal .rep-ar {
   font-size: 14px; font-weight: 500; line-height: 18px;
-  font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap;
+  font-variant-numeric: tabular-nums; color: var(--muted);
+  max-width: 100%; overflow: hidden;
 }
 .joola-portal .rep-ar.is-overdue { color: var(--failed); }
-.joola-portal .rep-ar .inv { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); font-weight: 400; }
+.joola-portal .rep-ar__amt {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.joola-portal .rep-ar__ids {
+  display: flex; align-items: center; gap: 4px; flex-wrap: nowrap;
+  margin-top: 2px; min-height: 16px; max-width: 100%; overflow: hidden;
+}
+.joola-portal .rep-ar .inv {
+  display: block; font-size: 12px; color: var(--muted); font-weight: 400;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.joola-portal .rep-ar .inv--empty { visibility: hidden; }
+.joola-portal .rep-ar .inv-more {
+  flex-shrink: 0; font-size: 12px; font-weight: 500; color: var(--muted);
+  white-space: nowrap;
+}
+.joola-portal .rep-status {
+  white-space: nowrap; overflow: visible; min-width: 132px;
+}
 .joola-portal .status-pill {
   display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px;
   font-size: 13px; font-weight: 400; line-height: 16px; white-space: nowrap; border: 1px solid transparent;
@@ -828,12 +888,17 @@
   display: flex; align-items: center; justify-content: center;
 }
 .joola-portal .rep-modal-backdrop {
-  position: absolute; inset: 0; background: rgba(26,26,26,0.35);
-  display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 5;
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  background: rgba(26,26,26,0.35);
+  display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 20;
+  box-sizing: border-box;
 }
 .joola-portal .rep-modal {
-  width: min(440px, 100%); background: #fff; border-radius: 8px; padding: 24px;
+  position: relative;
+  width: min(440px, 100%); max-height: calc(100% - 16px); overflow: auto;
+  background: #fff; border-radius: 8px; padding: 24px;
   box-shadow: 0 16px 40px rgba(26,26,26,0.16);
+  flex-shrink: 0;
 }
 .joola-portal .rep-modal h2 { margin: 0; font-size: 20px; font-weight: 500; }
 .joola-portal .rep-modal .ctx { margin: 8px 0 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
@@ -863,7 +928,7 @@
 .joola-portal .rep-result .row span { color: var(--muted); }
 .joola-portal .rep-result .row strong { font-weight: 500; color: var(--ink); }
 @media (max-width: 720px) {
-  .joola-portal .rep-shell {
+  .joola-portal .rep-shell__layout {
     grid-template-columns: 1fr;
     min-width: 0;
   }
@@ -881,7 +946,7 @@
 
 /* Narrow stage (embedded figure narrower than viewport) — collapse sidebar */
 @container (max-width: 720px) {
-  .joola-portal .rep-shell {
+  .joola-portal .rep-shell__layout {
     grid-template-columns: 1fr;
   }
 }
