@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import EvidenceFooter from "@/components/dialogue/product/EvidenceFooter";
 import ChatComposer from "@/components/dialogue/product/ChatComposer";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
@@ -6,6 +6,7 @@ import { dialogueCopy } from "@/components/dialogue/product/tokens";
 
 type Props = {
   children: ReactNode;
+  className?: string;
   compact?: boolean;
   hero?: boolean;
   /** Hide bottom composer (rare; default shows t384 chrome). */
@@ -18,22 +19,30 @@ type Props = {
   evidenceOf?: { of: number; group: string };
   /** @deprecated Anatomy targets live on answer parts, not the chat head. */
   anatomy?: boolean;
+  /** Pin the scroll container for playground chat (never window scroll). */
+  scrollRef?: RefObject<HTMLDivElement | null>;
+  /** Interactive composer slot. Replaces the decorative ChatComposer when set. */
+  composerSlot?: ReactNode;
 };
 
 export default function StudyChatShell({
   children,
+  className,
   compact,
   hero,
   hideComposer,
   hideHeader,
   evidence,
   evidenceOf,
+  scrollRef,
+  composerSlot,
 }: Props) {
   return (
     <div
       className={[
         "dp-study-chat",
         dialogueProductFontClassName,
+        className ?? "",
         hero ? "dp-study-chat--hero" : "",
         compact ? "dp-study-chat--compact" : "",
       ]
@@ -65,11 +74,11 @@ export default function StudyChatShell({
           </div>
         </div>
       )}
-      <div className="dp-study-chat__scroll">
+      <div className="dp-study-chat__scroll" ref={scrollRef}>
         <div className="dp-study-chat__body" data-annotate-part="chat-body">{children}</div>
       </div>
       {evidence !== undefined ? <EvidenceFooter count={evidence} of={evidenceOf?.of} group={evidenceOf?.group} /> : null}
-      {!hideComposer ? <ChatComposer /> : null}
+      {composerSlot ?? (!hideComposer ? <ChatComposer /> : null)}
     </div>
   );
 }

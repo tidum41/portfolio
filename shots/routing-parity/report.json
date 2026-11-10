@@ -1,0 +1,269 @@
+{
+  "generatedAt": "2026-11-04T07:57:44.202Z",
+  "base": "http://localhost:3001",
+  "forks": [
+    {
+      "template": "count_split",
+      "uses": [
+        "FridayBar/AnswerCard",
+        "SideSample",
+        "QuoteListFigure",
+        "SourcePill",
+        "DialogueInterviewPlayer"
+      ],
+      "fork": "Player stays in a reserved dlg-route-player-slot instead of nesting inside the quote (LiveSideSample nests and shifts). Demo-only follow-up chips sit under the answer."
+    },
+    {
+      "template": "quote_list",
+      "uses": [
+        "QuoteListFigure"
+      ],
+      "fork": "None — QuoteListFigure only, with routed quotes."
+    },
+    {
+      "template": "clip_list",
+      "uses": [
+        "ClipQuotes",
+        "DialogueInterviewPlayer"
+      ],
+      "fork": "ClipQuotes gains optional onSelect so a row can open the shared player; player stays in the reserved slot for zero layout shift."
+    },
+    {
+      "template": "segment_comparison",
+      "uses": [
+        "ChartVizCard",
+        "ChartBarList"
+      ],
+      "fork": "None — same chart primitives as the live library. No FridayBar/QuoteListFigure/ClipQuotes in this template."
+    },
+    {
+      "template": "thin_data",
+      "uses": [
+        "dp-low-signal / dp-next-study chrome (same classes as ThinDataFigure)"
+      ],
+      "fork": "Action copies a follow-up prompt for the example study instead of downloading ThinDataFigure's Markdown plan file — different product affordance on example data."
+    }
+  ],
+  "pixelDiffs": [
+    {
+      "pair": "count_bar_closed",
+      "live": "live-count-closed",
+      "demo": "demo-count-closed",
+      "width": 390,
+      "height": 138,
+      "diffPx": 2,
+      "diffPct": 0.004,
+      "align": {
+        "dx": 0,
+        "dy": 0
+      },
+      "files": {
+        "live": "/agent/repos/portfolio/shots/routing-parity/count_bar_closed-live.png",
+        "demo": "/agent/repos/portfolio/shots/routing-parity/count_bar_closed-demo.png",
+        "diff": "/agent/repos/portfolio/shots/routing-parity/count_bar_closed-diff.png",
+        "heat": "/agent/repos/portfolio/shots/routing-parity/count_bar_closed-heat.png"
+      }
+    },
+    {
+      "pair": "count_side_open",
+      "live": "live-count-open",
+      "demo": "demo-count-open",
+      "width": 390,
+      "height": 242,
+      "diffPx": 0,
+      "diffPct": 0,
+      "align": {
+        "dx": 0,
+        "dy": 0
+      },
+      "files": {
+        "live": "/agent/repos/portfolio/shots/routing-parity/count_side_open-live.png",
+        "demo": "/agent/repos/portfolio/shots/routing-parity/count_side_open-demo.png",
+        "diff": "/agent/repos/portfolio/shots/routing-parity/count_side_open-diff.png",
+        "heat": "/agent/repos/portfolio/shots/routing-parity/count_side_open-heat.png"
+      }
+    },
+    {
+      "pair": "quote_list",
+      "live": "live-quotes",
+      "demo": "demo-quotes",
+      "width": 390,
+      "height": 160,
+      "diffPx": 0,
+      "diffPct": 0,
+      "align": {
+        "dx": 0,
+        "dy": 0
+      },
+      "files": {
+        "live": "/agent/repos/portfolio/shots/routing-parity/quote_list-live.png",
+        "demo": "/agent/repos/portfolio/shots/routing-parity/quote_list-demo.png",
+        "diff": "/agent/repos/portfolio/shots/routing-parity/quote_list-diff.png",
+        "heat": "/agent/repos/portfolio/shots/routing-parity/quote_list-heat.png"
+      }
+    },
+    {
+      "pair": "clip_list",
+      "live": "live-clips",
+      "demo": "demo-clips",
+      "width": 390,
+      "height": 160,
+      "diffPx": 0,
+      "diffPct": 0,
+      "align": {
+        "dx": 0,
+        "dy": 0
+      },
+      "files": {
+        "live": "/agent/repos/portfolio/shots/routing-parity/clip_list-live.png",
+        "demo": "/agent/repos/portfolio/shots/routing-parity/clip_list-demo.png",
+        "diff": "/agent/repos/portfolio/shots/routing-parity/clip_list-diff.png",
+        "heat": "/agent/repos/portfolio/shots/routing-parity/clip_list-heat.png"
+      }
+    }
+  ],
+  "styleMismatches": [
+    {
+      "part": "bar",
+      "mismatches": [],
+      "liveBox": {
+        "w": 356,
+        "h": 48
+      },
+      "demoBox": {
+        "w": 356,
+        "h": 48
+      }
+    },
+    {
+      "part": "legend",
+      "mismatches": [],
+      "liveBox": {
+        "w": 356,
+        "h": 16
+      },
+      "demoBox": {
+        "w": 356,
+        "h": 16
+      }
+    },
+    {
+      "part": "chip",
+      "mismatches": [],
+      "liveBox": {
+        "w": 113,
+        "h": 38
+      },
+      "demoBox": {
+        "w": 113,
+        "h": 38
+      }
+    },
+    {
+      "part": "quote",
+      "mismatches": [],
+      "liveBox": {
+        "w": 390,
+        "h": 70
+      },
+      "demoBox": {
+        "w": 390,
+        "h": 70
+      }
+    },
+    {
+      "part": "clip_quote",
+      "mismatches": [],
+      "liveBox": {
+        "w": 390,
+        "h": 70
+      },
+      "demoBox": {
+        "w": 390,
+        "h": 70
+      }
+    }
+  ],
+  "interaction": {
+    "hover": {
+      "side": {
+        "rest": {
+          "transition": "color, background-color, border-color, box-shadow",
+          "cursor": "pointer",
+          "bg": "rgba(0, 0, 0, 0)",
+          "border": "rgb(28, 25, 23)"
+        },
+        "hover": {
+          "transition": "color, background-color, border-color, box-shadow",
+          "cursor": "pointer",
+          "bg": "rgba(0, 0, 0, 0)",
+          "border": "rgb(28, 25, 23)"
+        },
+        "changed": false
+      },
+      "quote": {
+        "rest": {
+          "transition": "background-color, border-color",
+          "cursor": "pointer",
+          "bg": "rgb(252, 251, 249)",
+          "border": "rgb(231, 229, 228)"
+        },
+        "hover": {
+          "transition": "background-color, border-color",
+          "cursor": "pointer",
+          "bg": "rgb(252, 251, 249)",
+          "border": "rgb(138, 136, 134)"
+        },
+        "changed": true
+      }
+    },
+    "press": {
+      "side": {
+        "rest": {
+          "transition": "color, background-color, border-color, box-shadow",
+          "cursor": "pointer",
+          "bg": "rgba(0, 0, 0, 0)",
+          "border": "rgb(28, 25, 23)"
+        },
+        "press": {
+          "transition": "color, background-color, border-color, box-shadow",
+          "cursor": "pointer",
+          "bg": "rgba(0, 0, 0, 0)",
+          "border": "rgb(28, 25, 23)"
+        },
+        "changed": false
+      },
+      "quote": {
+        "rest": {
+          "transition": "background-color, border-color",
+          "cursor": "pointer",
+          "bg": "rgb(252, 251, 249)",
+          "border": "rgb(231, 229, 228)"
+        },
+        "press": {
+          "transition": "background-color, border-color",
+          "cursor": "pointer",
+          "bg": "rgb(252, 251, 249)",
+          "border": "rgb(44, 41, 39)"
+        },
+        "changed": true
+      },
+      "hasSideTransition": true,
+      "hasQuoteTransition": true
+    },
+    "layoutShift": {
+      "count": {
+        "panelDeltaH": 235.375,
+        "quoteDeltaY": 0,
+        "beforeH": 622,
+        "afterH": 857.375
+      },
+      "clip": {
+        "listDeltaH": 0,
+        "listDeltaY": 0,
+        "rowDeltaY": 0,
+        "panelDeltaH": 0
+      }
+    }
+  }
+}

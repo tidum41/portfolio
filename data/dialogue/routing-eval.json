@@ -1,0 +1,168 @@
+{
+  "description": "Labelled questions for the Dialogue generative-UI routing demo. expected.template is the gold label for the rule router and the model path. Counts come from the example dataset only. Includes clear, ambiguous, thin-data and off-topic edge cases.",
+  "thinDataMinParticipants": 3,
+  "cases": [
+    {
+      "id": "q01",
+      "question": "How do shoppers read 'Arrives by Friday'?",
+      "expected": { "template": "count_split", "topic": "friday_reading" },
+      "tag": "clear"
+    },
+    {
+      "id": "q02",
+      "question": "How many shoppers read it as this Friday?",
+      "expected": { "template": "count_split", "topic": "friday_reading" },
+      "tag": "clear"
+    },
+    {
+      "id": "q03",
+      "question": "What share of people were unsure about the delivery date?",
+      "expected": { "template": "count_split", "topic": "friday_reading" },
+      "tag": "clear"
+    },
+    {
+      "id": "q04",
+      "question": "How widely did address friction show up?",
+      "expected": { "template": "count_split", "topic": "address_friction" },
+      "tag": "clear"
+    },
+    {
+      "id": "q05",
+      "question": "How often did returns come up?",
+      "expected": { "template": "count_split", "topic": "returns" },
+      "tag": "clear"
+    },
+    {
+      "id": "q06",
+      "question": "Compare address friction on mobile vs desktop",
+      "expected": { "template": "segment_comparison", "topic": "address_friction" },
+      "tag": "clear"
+    },
+    {
+      "id": "q07",
+      "question": "How does Friday reading differ between first-time and repeat shoppers?",
+      "expected": { "template": "segment_comparison", "topic": "friday_reading" },
+      "tag": "clear"
+    },
+    {
+      "id": "q08",
+      "question": "Break down returns by device",
+      "expected": { "template": "segment_comparison", "topic": "returns" },
+      "tag": "clear"
+    },
+    {
+      "id": "q09",
+      "question": "Compare Friday readings by shopper type",
+      "expected": { "template": "segment_comparison", "topic": "friday_reading" },
+      "tag": "clear"
+    },
+    {
+      "id": "q10",
+      "question": "What did shoppers say about returns?",
+      "expected": { "template": "quote_list", "topic": "returns" },
+      "tag": "clear"
+    },
+    {
+      "id": "q11",
+      "question": "Show me quotes about Arrives by Friday",
+      "expected": { "template": "quote_list", "topic": "friday_reading" },
+      "tag": "clear"
+    },
+    {
+      "id": "q12",
+      "question": "What exact words did people use about address friction?",
+      "expected": { "template": "quote_list", "topic": "address_friction" },
+      "tag": "clear"
+    },
+    {
+      "id": "q13",
+      "question": "Give me verbatim evidence on the delivery promise",
+      "expected": { "template": "quote_list", "topic": "friday_reading" },
+      "tag": "clear"
+    },
+    {
+      "id": "q14",
+      "question": "Play clips about the Friday label",
+      "expected": { "template": "clip_list", "topic": "friday_reading" },
+      "tag": "clear"
+    },
+    {
+      "id": "q15",
+      "question": "Let me hear the address friction clips",
+      "expected": { "template": "clip_list", "topic": "address_friction" },
+      "tag": "clear"
+    },
+    {
+      "id": "q16",
+      "question": "Watch the returns footage",
+      "expected": { "template": "clip_list", "topic": "returns" },
+      "tag": "clear"
+    },
+    {
+      "id": "q17",
+      "question": "Why were shoppers unsure about Friday?",
+      "expected": { "template": "quote_list", "topic": "friday_reading" },
+      "tag": "clear"
+    },
+    {
+      "id": "q18",
+      "question": "Tell me about how people talked about returns",
+      "expected": { "template": "quote_list", "topic": "returns" },
+      "tag": "clear"
+    },
+    {
+      "id": "q19",
+      "question": "How many shoppers mentioned damaged packaging?",
+      "expected": { "template": "thin_data", "topic": "packaging_damage" },
+      "tag": "thin"
+    },
+    {
+      "id": "q20",
+      "question": "Play clips about damaged packaging",
+      "expected": { "template": "clip_list", "topic": "packaging_damage" },
+      "tag": "thin"
+    },
+    {
+      "id": "q21",
+      "question": "What did people say about a crushed box?",
+      "expected": { "template": "thin_data", "topic": "packaging_damage" },
+      "tag": "thin"
+    },
+    {
+      "id": "q22",
+      "question": "Compare damaged packaging on mobile vs desktop",
+      "expected": { "template": "thin_data", "topic": "packaging_damage" },
+      "tag": "thin"
+    },
+    {
+      "id": "q23",
+      "question": "Tell me about Friday",
+      "expected": { "template": "quote_list", "topic": "friday_reading" },
+      "tag": "ambiguous"
+    },
+    {
+      "id": "q24",
+      "question": "Anything useful on the delivery promise?",
+      "expected": { "template": "count_split", "topic": "friday_reading" },
+      "tag": "ambiguous"
+    },
+    {
+      "id": "q25",
+      "question": "What is the weather in the study?",
+      "expected": { "template": "count_split", "topic": "friday_reading" },
+      "tag": "off_topic"
+    },
+    {
+      "id": "q26",
+      "question": "Show me the NPS score for this brand",
+      "expected": { "template": "count_split", "topic": "friday_reading" },
+      "tag": "off_topic"
+    },
+    {
+      "id": "q27",
+      "question": "Show clips of shoppers who read the Friday label",
+      "expected": { "template": "clip_list", "topic": "friday_reading" },
+      "tag": "clear"
+    }
+  ]
+}

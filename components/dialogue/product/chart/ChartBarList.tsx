@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useRef, useState, type PointerEvent, type ReactNode } from "react";
 import {
   chartBarFill,
   chartBarFillByMagnitude,
@@ -19,6 +21,9 @@ type Props = {
   gridlines?: boolean;
   /** Columns side by side instead of rows (a standard two-bar chart, drawn for the Counts explorations). */
   vertical?: boolean;
+  /** Opens the people behind a row. Omit on static charts. */
+  onSelect?: (index: number) => void;
+  selected?: number | null;
 };
 
 /** Horizontal bar list — funnel, distribution, quote frequency, segment companion. */
@@ -30,11 +35,20 @@ export default function ChartBarList({
   className,
   gridlines = false,
   vertical = false,
+  onSelect,
+  selected = null,
 }: Props) {
   const max = maxProp ?? Math.max(...rows.map((r) => r.value), 1);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [pill, setPill] = useState<{ x: number; y: number; text: string } | null>(null);
+  const track = (event: PointerEvent<HTMLElement>, text: string) => {
+    const box = rootRef.current?.getBoundingClientRect();
+    if (!box) return;
+    setPill({ x: event.clientX - box.left, y: event.clientY - box.top, text });
+  };
   if (vertical) {
     return (
-      <div className={["dp-chart-root dp-chart-cols", className].filter(Boolean).join(" ")}>
+      <div ref={rootRef} className={["dp-chart-root dp-chart-cols", className].filter(Boolean).join(" ")}>
         <div className="dp-chart-cols__plot">
           {rows.map((row, i) => (
             <div key={row.label} className="dp-chart-cols__col" data-annotate-part={`col-${annotateSlug(row.label)}`}>
@@ -57,17 +71,39 @@ export default function ChartBarList({
 
   return (
     <div
+      ref={rootRef}
       className={["dp-chart-root dp-chart-bars", hasDetail ? "dp-chart-bars--detail" : "", className].filter(Boolean).join(" ")}
     >
       {gridlines ? <span className="dp-chart-bars__grid" aria-hidden data-annotate-part="gridlines" /> : null}
       {rows.map((row, i) => {
         const widthPct = Math.max(0, Math.min(100, (row.value / max) * 100));
+        const share = row.pct ?? `${Math.round(widthPct)}%`;
         const fill =
           fillMode === "magnitude"
             ? chartBarFillByMagnitude(row.value, max, row.focal)
             : chartBarFill(i, row.focal, row.secondary);
         return (
-          <div key={row.label} className="dp-chart-bars__row" data-annotate-part={`bar-row-${annotateSlug(row.label)}`}>
+          <div
+            key={row.label}
+            className="dp-chart-bars__row"
+            data-annotate-part={`bar-row-${annotateSlug(row.label)}`}
+            data-selected={selected === i ? "" : undefined}
+            role={onSelect ? "button" : undefined}
+            tabIndex={onSelect ? 0 : undefined}
+            onClick={onSelect ? () => onSelect(i) : undefined}
+            onKeyDown={
+              onSelect
+                ? (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onSelect(i);
+                    }
+                  }
+                : undefined
+            }
+            onPointerMove={(event) => track(event, share)}
+            onPointerLeave={() => setPill(null)}
+          >
             <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}</span>
             <div
               className="dp-chart-bars__track"
@@ -105,6 +141,11 @@ export default function ChartBarList({
         );
       })}
       {note ? <p className="dp-chart-bars__note" data-annotate-part="bars-note">{note}</p> : null}
+      {pill ? (
+        <span className="dp-hero-tooltip dlg-chart-pill" role="tooltip" data-chart-pill="" style={{ left: pill.x, top: pill.y }}>
+          {pill.text}
+        </span>
+      ) : null}
     </div>
   );
 }

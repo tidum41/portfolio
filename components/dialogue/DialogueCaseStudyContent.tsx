@@ -8,6 +8,7 @@ import CaseStudyPager from "@/components/CaseStudyPager";
 import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
 import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 import StaticFigure from "@/components/dialogue/StaticFigure";
+import RoutingDemo from "@/components/dialogue/routing/RoutingDemo";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import DialogueDemoVideo, { DialogueDemoStill } from "@/components/dialogue/motion/DialogueDemoVideo";
 import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
@@ -265,6 +266,15 @@ export function DialogueCaseStudyContent({
                 <DialogueChartLibrary templates />
               </figure>
               <Caption>Three questions, three charts, and one line under each. Illustrative data.</Caption>
+              <CaseStudyBody>
+                After the engagement I built a live router that picks one of those templates from a typed question, on example data.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="system">
+                  <RoutingDemo />
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>Interactive demo built after the engagement, with example data. The UI labels whether the model or the rule path answered.</Caption>
               <CaseStudyBody>
                 The last rule is for thin data. Under three people the answer swaps its chart for an early-signal flag, with follow-ups the same interviews can count.
               </CaseStudyBody>
