@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useId, useLayoutEffect, useRef, useState } from "react";
 import StudyChatShell from "@/components/dialogue/product/StudyChatShell";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import { ArrowUpIcon } from "@/components/dialogue/product/icons";
@@ -65,17 +65,31 @@ export default function RoutingDemo() {
   const [showExplain, setShowExplain] = useState(false);
   const [lastExplain, setLastExplain] = useState<Explain | null>(null);
 
+  const pageScrollLock = useRef<{ x: number; y: number } | null>(null);
+
+  const lockPageScroll = useCallback(() => {
+    pageScrollLock.current = { x: window.scrollX, y: window.scrollY };
+  }, []);
+
+  const restorePageScroll = useCallback(() => {
+    const pos = pageScrollLock.current;
+    if (!pos) return;
+    window.scrollTo({ left: pos.x, top: pos.y, behavior: "instant" });
+  }, []);
+
   const scrollChatToBottom = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     scrollChatToBottom();
-  }, [turns, scrollChatToBottom]);
+    restorePageScroll();
+  }, [turns, routingLine, showExplain, scrollChatToBottom, restorePageScroll]);
 
   const reset = () => {
+    lockPageScroll();
     setTurns([]);
     setText("");
     setRoutingLine(null);
@@ -83,11 +97,18 @@ export default function RoutingDemo() {
     setLastExplain(null);
     const el = scrollRef.current;
     if (el) el.scrollTop = 0;
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
   };
 
   const ask = async (question: string) => {
     const q = question.trim();
     if (!q || pending) return;
+    lockPageScroll();
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     setText("");
     setShowExplain(false);
     setPending(true);
@@ -156,6 +177,7 @@ export default function RoutingDemo() {
           className="dp-study-chat__composer-send dlg-route-demo__send"
           aria-label="Send question"
           disabled={pending || !text.trim()}
+          onMouseDown={(e) => e.preventDefault()}
         >
           <ArrowUpIcon />
         </button>
@@ -194,7 +216,11 @@ export default function RoutingDemo() {
         </div>
 
         <div className="dlg-route-playground__panel">
-          <StudyChatShell scrollRef={scrollRef} composerSlot={composer}>
+          <StudyChatShell
+            scrollRef={scrollRef}
+            composerSlot={composer}
+            className="dlg-route-playground__chat"
+          >
             {turns.length === 0 ? (
               <p className="dlg-route-playground__idle">Ask a question about the example study.</p>
             ) : null}
@@ -237,6 +263,7 @@ export default function RoutingDemo() {
             type="button"
             className="dlg-suggest dlg-route-playground__preset"
             disabled={pending}
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => void ask(s)}
           >
             <PlusGlyph />
@@ -245,23 +272,32 @@ export default function RoutingDemo() {
         ))}
       </div>
 
-      {routingLine ? (
-        <p className="dlg-route-playground__routing" role="status">
-          {routingLine}
-        </p>
-      ) : null}
+      <p
+        className="dlg-route-playground__routing"
+        role="status"
+        aria-live="polite"
+        data-empty={routingLine ? undefined : ""}
+      >
+        {routingLine ?? "\u00a0"}
+      </p>
 
-      {lastExplain ? (
+      <div className="dlg-route-playground__explain-slot">
         <div className="dlg-route-explain">
           <button
             type="button"
             className="dlg-route-explain__toggle"
             aria-expanded={showExplain}
-            onClick={() => setShowExplain((v) => !v)}
+            disabled={!lastExplain}
+            aria-hidden={!lastExplain}
+            tabIndex={lastExplain ? 0 : -1}
+            onClick={() => {
+              lockPageScroll();
+              setShowExplain((v) => !v);
+            }}
           >
             {showExplain ? "Hide how it routed" : "How it routed"}
           </button>
-          {showExplain ? (
+          {showExplain && lastExplain ? (
             <div className="dlg-route-explain__panel">
               <dl>
                 <dt>Query type</dt>
@@ -276,7 +312,7 @@ export default function RoutingDemo() {
             </div>
           ) : null}
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }

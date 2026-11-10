@@ -675,6 +675,7 @@
 /* Playground r2 option A */
 .dlg-route-playground {
   max-width: 640px;
+  overflow-anchor: none;
 }
 
 .dlg-route-playground__well {
@@ -683,6 +684,8 @@
   width: 640px;
   max-width: 100%;
   height: 672px;
+  min-height: 672px;
+  max-height: 672px;
   padding: 16px;
   border-radius: var(--dp-radius-control);
   background: var(--figure-well-dialogue);
@@ -690,12 +693,23 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  overflow: hidden;
+  overflow-anchor: none;
+  flex-shrink: 0;
 }
 
 .dlg-route-playground__chrome {
-  align-self: stretch;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
   display: flex;
   justify-content: flex-end;
+  pointer-events: none;
+}
+
+.dlg-route-playground__chrome button {
+  pointer-events: auto;
 }
 
 .dlg-route-playground__reset {
@@ -712,25 +726,37 @@
 .dlg-route-playground__panel {
   width: 448px;
   max-width: 100%;
-  flex: 1 1 auto;
-  min-height: 0;
+  height: 608px;
+  min-height: 608px;
+  max-height: 608px;
+  flex: 0 0 608px;
+  overflow: hidden;
+  overflow-anchor: none;
 }
 
-.dlg-route-playground__panel .dp-study-chat {
+.dlg-route-playground__panel .dp-study-chat.dlg-route-playground__chat {
   width: 448px;
   max-width: 100%;
   height: 608px;
-  max-height: 100%;
+  min-height: 608px;
+  max-height: 608px;
   box-shadow: var(--shadow-chat);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  contain: layout size style;
 }
 
-.dlg-route-playground__panel .dp-study-chat__scroll {
+.dlg-route-playground__panel .dlg-route-playground__chat .dp-study-chat__scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  overflow-anchor: none;
+}
+
+.dlg-route-playground__panel .dlg-route-playground__chat .dp-study-chat__body {
+  overflow-anchor: none;
 }
 
 .dlg-route-playground__idle {
@@ -790,9 +816,27 @@
 
 .dlg-route-playground__routing {
   margin: 0;
+  min-height: 2.5rem;
+  max-height: 2.5rem;
+  overflow: hidden;
   font-size: var(--text-meta-size);
   line-height: var(--text-meta-leading);
   color: var(--dp-muted);
+  overflow-anchor: none;
+}
+
+.dlg-route-playground__routing[data-empty] {
+  visibility: hidden;
+}
+
+.dlg-route-playground__explain-slot {
+  min-height: 36px;
+  overflow-anchor: none;
+}
+
+.dlg-route-playground__explain-slot .dlg-route-explain__toggle:disabled {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .dlg-route-playground .dp-chart-bars__row {

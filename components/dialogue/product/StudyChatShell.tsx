@@ -6,6 +6,7 @@ import { dialogueCopy } from "@/components/dialogue/product/tokens";
 
 type Props = {
   children: ReactNode;
+  className?: string;
   compact?: boolean;
   hero?: boolean;
   /** Hide bottom composer (rare; default shows t384 chrome). */
@@ -26,6 +27,7 @@ type Props = {
 
 export default function StudyChatShell({
   children,
+  className,
   compact,
   hero,
   hideComposer,
@@ -40,6 +42,7 @@ export default function StudyChatShell({
       className={[
         "dp-study-chat",
         dialogueProductFontClassName,
+        className ?? "",
         hero ? "dp-study-chat--hero" : "",
         compact ? "dp-study-chat--compact" : "",
       ]
