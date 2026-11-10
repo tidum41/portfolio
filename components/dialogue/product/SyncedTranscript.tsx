@@ -14,15 +14,15 @@ type Row = {
 
 /** Paper section-5 transcript, as restored from 657337d. */
 const ROWS: Row[] = [
-  { speaker: "Dialogue", time: "01:04", text: "What made you hesitate before paying?", role: "dialogue" },
+  { speaker: "Dialogue", time: "18:24", text: "The delivery date is on the product page. What did you take it to mean?", role: "dialogue" },
   {
-    speaker: "Marcus W.",
-    time: "01:38",
-    text: "When the card failed, I didn't know if it was my bank or the site, so I hesitated before retrying.",
+    speaker: "Mei",
+    time: "18:27",
+    text: "Friday which week? It just says \u2018Arrives by Friday\u2019, so I don\u2019t know if that\u2019s this Friday or next.",
     active: true,
     role: "participant",
   },
-  { speaker: "Dialogue", time: "01:42", text: "Did the error tell you what to fix?", role: "dialogue" },
+  { speaker: "Dialogue", time: "18:51", text: "Did anything on the page pin the date down?", role: "dialogue" },
 ];
 
 export default function SyncedTranscript() {

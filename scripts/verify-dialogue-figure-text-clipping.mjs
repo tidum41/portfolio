@@ -100,7 +100,7 @@ function auditPage(page) {
   });
 }
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({ executablePath: "/usr/bin/google-chrome" });
 const page = await browser.newPage();
 await page.setViewportSize({ width: 390, height: 844 });
 await page.goto(`${BASE}/dialogue`, { waitUntil: "load", timeout: 180000 });

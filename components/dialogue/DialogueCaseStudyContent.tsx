@@ -1,57 +1,39 @@
 "use client";
 
-import React from "react";
+import { Check, X } from "@phosphor-icons/react/dist/ssr";
 import dynamic from "next/dynamic";
-import { ScrollReveal } from "@/components/ScrollReveal";
 import CaseStudyBody from "@/components/CaseStudyBody";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
-import DialogueLeadAnswerCompare from "@/components/dialogue/DialogueLeadAnswerCompare";
 import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
-import DialogueProductFigure from "@/components/dialogue/DialogueProductFigure";
-import type { DialogueProductScenario } from "@/components/dialogue/product/DialogueProductScenario";
+import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
+import StaticFigure from "@/components/dialogue/StaticFigure";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import DialogueDemoVideo, { DialogueDemoStill } from "@/components/dialogue/motion/DialogueDemoVideo";
+import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
 import "@/components/dialogue/product/dialogue-product.css";
-import DialogueRachelFrame, { type DialogueFrameTone } from "@/components/dialogue/DialogueRachelFrame";
-import { DIALOGUE_SUBTITLE, DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
-import { ANATOMY_LABELS, ANATOMY_PART_IDS } from "@/lib/dialogue/product/sampleData";
-
-function frameToneFromLabel(label: string): DialogueFrameTone {
-  if (label.startsWith("Problem:")) return "problem";
-  if (label.startsWith("Solution:")) return "solution";
-  return "system";
-}
 
 const CaseStudyTOC = dynamic(() => import("@/components/CaseStudyTOC"));
 
 export type RasterAnnotator = (assetId: string, children: React.ReactNode) => React.ReactNode;
 
-/** Contents labels match the section H2s. */
+/** Short TOC labels (Rachel Chen style); the headings carry the full claims. */
 export const DIALOGUE_TOC_ITEMS = [
-  {
-    id: "problem",
-    label: "The chat could answer anything, but not say which interview said it",
-  },
-  {
-    id: "why-it-matters",
-    label: "A finding only travels if you can point to the interview behind it",
-  },
-  { id: "one-structure", label: "Every answer gets one fixed structure" },
-  { id: "clips", label: "A quote with no context" },
-  { id: "chart-library", label: "A chart only when the data asks for one" },
-  { id: "thin-data", label: "Say when the data is thin" },
-  { id: "full-answer", label: "One answer, start to finish" },
+  { id: "problem", label: "Problem" },
+  { id: "levels", label: "Levels of detail" },
+  { id: "counts", label: "Counts" },
+  { id: "data-viz", label: "Data visualization" },
+  { id: "measure", label: "Shipped and next" },
+  { id: "takeaway", label: "Takeaway" },
 ];
 
 function Section({
   id,
   children,
-  noReveal = false,
 }: {
   id: string;
   children: React.ReactNode;
-  noReveal?: boolean;
 }) {
-  const inner = noReveal ? <>{children}</> : <ScrollReveal>{children}</ScrollReveal>;
   return (
     <section
       id={id}
@@ -62,66 +44,69 @@ function Section({
         marginBottom: "var(--dialogue-section-gap)",
       }}
     >
-      {inner}
+      <ScrollReveal>{children}</ScrollReveal>
     </section>
   );
 }
 
-function H2({ children }: { children: React.ReactNode }) {
+function ClaimH2({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <h2 className={["cs-claim-h2", className].filter(Boolean).join(" ")}>{children}</h2>;
+}
+
+/** Round P8: names the researcher's step above each claim (Rachel Chen kicker). */
+function Kicker({ children }: { children: React.ReactNode }) {
+  return <p className="cs-kicker dialogue-caption__label">{children}</p>;
+}
+
+function StatusLine({ children }: { children: React.ReactNode }) {
+  return <p className="cs-status-line">{children}</p>;
+}
+
+/** Visible scaffold for copy Mudit writes himself (TASTE: visible markers, never invented facts). */
+function Placeholder({ children }: { children: React.ReactNode }) {
+  return <span className="cs-placeholder">[PLACEHOLDER: {children}]</span>;
+}
+
+function Caption({ children }: { children: React.ReactNode }) {
   return (
-    <h2
-      style={{
-        fontFamily: "var(--font-sans-medium)",
-        fontSize: "var(--fs-h2)",
-        fontWeight: "var(--fw-h2)" as React.CSSProperties["fontWeight"],
-        lineHeight: "var(--lh-h2)",
-        letterSpacing: "var(--ls-h2)",
-        color: "var(--color-text-primary)",
-        margin: "0 0 24px",
-        maxWidth: 640,
-        width: "100%",
-        boxSizing: "border-box",
-      }}
-    >
-      {children}
-    </h2>
+    <p className="dialogue-caption cs-caption">
+      <span className="dialogue-caption__sentence">{children}</span>
+    </p>
   );
 }
 
-function ProductFigureBlock({
-  scenario,
-  title,
-  assetId,
-  wrapRaster,
-  frameLabel,
-  frameTone,
-}: {
-  scenario: DialogueProductScenario;
-  title: string;
-  assetId?: string;
-  wrapRaster?: RasterAnnotator;
-  frameLabel?: string;
-  frameTone?: DialogueFrameTone;
-}) {
-  const tone = frameTone ?? (frameLabel ? frameToneFromLabel(frameLabel) : "system");
-  const media = (
-    <DialogueRachelFrame label={frameLabel} tone={tone}>
-      <DialogueProductFigure scenario={scenario} title={title} assetId={assetId} />
-    </DialogueRachelFrame>
+/* Levels pair: the reasoning behind each prototype. Check for the kept path, X for the explored one. */
+type ReasonRow = { kind: "pro" | "con"; text: string };
+const LEVELS_KEPT: ReasonRow = { kind: "pro", text: "Opens at the insight, with the count. Each level is one tap away." };
+const LEVELS_EXPLORED: ReasonRow = { kind: "con", text: "Asks for depth before you know if the count matters." };
+const THIN_BAR: ReasonRow = { kind: "con", text: "A full bar for two people reads as a pattern." };
+const THIN_FLAG: ReasonRow = { kind: "pro", text: "Says why there is no chart, and offers follow-ups to count." };
+const REASON_ICON = { pro: Check, con: X } as const;
+
+/* P15 item 5: the variant letter and the mark share one 16px column. */
+function LevelReasoning({ letter, label, reasoning }: { letter: string; label: string; reasoning: ReasonRow }) {
+  const Icon = REASON_ICON[reasoning.kind];
+  return (
+    <div className="dlg-reason">
+      <p className="dlg-reason__row dlg-reason__row--label dialogue-caption__label">
+        <span className="dlg-reason__key">{letter}</span>
+        <span>{label}</span>
+      </p>
+      <p className="dlg-reason__row">
+        <span className="dlg-reason__key dialogue-lib__mark" data-kind={reasoning.kind} aria-hidden><Icon size={16} weight="bold" /></span>
+        <span>{reasoning.text}</span>
+      </p>
+    </div>
   );
-  const wrapped = assetId && wrapRaster ? wrapRaster(assetId, media) : media;
-  return <figure className="cs-figure dialogue-live-block">{wrapped}</figure>;
 }
+
 
 export function DialogueCaseStudyContent({
-  annotateRaster,
   backHref = "/",
 }: {
   annotateRaster?: RasterAnnotator;
   backHref?: string;
 }) {
-  const wrap = annotateRaster;
-
   return (
     <div className="dialogue-case-study" style={{ fontFamily: "var(--font-sans)" }}>
       <div className="cs-layout">
@@ -135,199 +120,203 @@ export function DialogueCaseStudyContent({
           </div>
 
           <CaseStudyOpen
-            tagline="Dialogue, contract, 2026"
+            tagline="Dialogue AI, Case Study, Contract 2026"
             title={DIALOGUE_TITLE}
-            subtitle={DIALOGUE_SUBTITLE}
             metadata={[
               { _key: "role", label: "Role", values: ["Product designer (contract)"] },
-              { _key: "timeline", label: "Timeline", values: ["Dec 2025 to March 2026"] },
-              {
-                _key: "team",
-                label: "Team",
-                wide: true,
-                values: [
-                  <>
-                    <span className="cs-meta-name">Benjamin Lo</span>
-                    <span className="cs-meta-role">Co-founder, CEO</span>
-                  </>,
-                  <>
-                    <span className="cs-meta-name">Justin Hoang</span>
-                    <span className="cs-meta-role">Co-founder, CPO</span>
-                  </>,
-                ],
-              },
-              {
-                _key: "scope",
-                label: "Scope",
-                values: ["Interaction design", "Visual design", "Prototyping"],
-              },
+              { _key: "timeline", label: "Timeline", values: ["Dec 2025 to Mar 2026"] },
+              { _key: "scope", label: "Scope", values: ["Product design", "Prototyping in code"] },
             ]}
           >
-            {wrap
-              ? wrap(
-                  "D-01",
-                  <div className="cs-hero-media-frame dialogue-hero-media dialogue-hero-joola">
-                    <DialogueProductFigure
-                      scenario="hero"
-                      title="Study chat structured answer hero"
-                      assetId="D-01"
-                      className="dialogue-product-figure--hero-fill"
-                    />
-                  </div>,
-                )
-              : (
-                  <div className="cs-hero-media-frame dialogue-hero-media dialogue-hero-joola">
-                    <DialogueProductFigure
-                      scenario="hero"
-                      title="Study chat structured answer hero"
-                      assetId="D-01"
-                      className="dialogue-product-figure--hero-fill"
-                    />
-                  </div>
-                )}
+            <div className="cs-hero-media-frame">
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="solution">
+                  <StaticFigure figure="hero">
+                    <DialogueDemoVideo src="/dialogue/motion/live-hero-ask.mp4" poster="/dialogue/motion/live-hero-ask.jpg" label="The question is typed and sent, the count arrives, and tapping 225 names that group in a header, with a chip for each person and Ana's quote under them" />
+                  </StaticFigure>
+                </DialogueRachelFrame>
+              </figure>
+            </div>
+            <Caption>The final answer: 225 of 300 shoppers. Tapping the 225 names that group in a header, with a chip for each person and Ana&rsquo;s quote under them. Recorded from my live code recreation. Illustrative data.</Caption>
           </CaseStudyOpen>
 
           <article style={{ minWidth: 0 }}>
+            <p className="cs-hero-body">
+              Dialogue runs AI-moderated interviews, and each study gets a chat. I redesigned its
+              answer so a research team can move fast on an insight and still check the people behind it.
+            </p>
             <Section id="problem">
-              <H2>The chat could answer anything, but not say which interview said it</H2>
+              <Kicker>The moment</Kicker>
+              <ClaimH2>Teams needed answers fast, and the detail got lost</ClaimH2>
+              <p className="dlg-constraint">Priya and Hearthside are an illustrative scenario, and every figure on this page uses invented data.</p>
               <CaseStudyBody>
-                AI-moderated interviews for enterprise UX teams and startups. Teams could not see
-                which interview said what, so a long answer felt like a guess.
+                Priya, a researcher at Hearthside, needs one claim for tomorrow&rsquo;s share-out. She asks the study chat how shoppers read &lsquo;Arrives by Friday&rsquo; and gets a fluent paragraph.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                A fast answer and a deep one pull apart. The paragraph reads in seconds and hides the people behind each claim, and finding them means leaving it.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="problem">
+                  <StaticFigure figure="problem-before">
+                    <DialogueDemoStill src="/dialogue/motion/variant-before-full.jpg" label="Dialogue today: one fluent paragraph under the question, with &ldquo;Many found&rdquo; underlined and noted as an unstated count" />
+                  </StaticFigure>
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>How Dialogue&rsquo;s chat answers today, recreated in code. &ldquo;Many found&rdquo; stands in for a count the answer never states. Illustrative data.</Caption>
+              <p className="dlg-constraint">Two constraints: Dialogue&rsquo;s fixed 448px chat panel, and teams I knew only through Dialogue&rsquo;s customer stories, where Kalshi sets the bar at a share-out by tomorrow morning.</p>
+            </Section>
+
+            <Section id="levels">
+              <Kicker>The turn</Kicker>
+              <ClaimH2>Every level at once was too slow, so depth became optional</ClaimH2>
+              <StatusLine>Concept</StatusLine>
+              <CaseStudyBody>
+                I first assumed every answer should carry every level of detail, from the insight at the top down to the people and their source clips. The deepest detail seemed like the most useful.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                A prototype check on my own build showed the open player pushed the count out of view, and I had to scroll back up for the one number I came for. Depth had to be something the reader opens.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <p className="dlg-demo-pair__label dialogue-caption__label">First try: every level, every time</p>
+                <DialogueRachelFrame tone="problem">
+                  <StaticFigure figure="levels-every">
+                    <DialogueDemoVideo src="/dialogue/motion/variant-every-full.mp4" poster="/dialogue/motion/variant-every-full.jpg" label="Tapping the 75 opens its people. Tapping Mei opens her clip, and the player pushes the count out of view until the chevron folds it back." />
+                  </StaticFigure>
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>My first try opened each level below the last. By the time Mei&rsquo;s clip plays, the count it explains has scrolled out of view. Illustrative data.</Caption>
+              <CaseStudyBody>
+                Priya&rsquo;s PM wants the sentence and a skeptical director wants the people. I built two ways to reach each level: A, a depth picker by the composer, and B, toggles inside the answer.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <div className="dlg-demo-pair">
+                  <div>
+                    <LevelReasoning letter="A" label="Explored: pick a depth before asking" reasoning={LEVELS_EXPLORED} />
+                    <DialogueRachelFrame tone="problem">
+                      <DialogueDemoVideo src="/dialogue/motion/variant-picker-full.mp4" poster="/dialogue/motion/variant-picker-full.jpg" label="A depth picker by the composer. Picking Chart, typing the question and sending it returns the count with its bar." />
+                    </DialogueRachelFrame>
+                  </div>
+                  <div>
+                    <LevelReasoning letter="B" label="Kept: depth opens inside the answer" reasoning={LEVELS_KEPT} />
+                    <DialogueRachelFrame tone="solution">
+                      <DialogueDemoVideo src="/dialogue/motion/variant-toggles-full.mp4" poster="/dialogue/motion/variant-toggles-full.jpg" label="The answer opens at the insight. Chart and People each add one level under it, and every quote already carries its play button." />
+                    </DialogueRachelFrame>
+                  </div>
+                </div>
+              </figure>
+              <Caption>In B the toggles stay where they are, so one tap on Insight brings the count back. Illustrative data.</Caption>
+              <CaseStudyBody>
+                The clip is the deepest level and the heaviest to load, so it loads only when a quote&rsquo;s play button is tapped and starts at the moment the quote was said.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="solution">
+                  <StaticFigure figure="clip-open">
+                    <DialogueDemoStill src="/dialogue/motion/live-clip.jpg" label="Ana&rsquo;s quote open under the head line &ldquo;picked from the 225&rdquo;, with her clip player inside the answer" />
+                  </StaticFigure>
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>Ana&rsquo;s clip opens under her quote, inside the answer. Illustrative data.</Caption>
+            </Section>
+
+            <Section id="counts">
+              <Kicker>Read the count</Kicker>
+              <ClaimH2>Every claim leads with how many, and both sides open</ClaimH2>
+              <StatusLine>Shipped</StatusLine>
+              <CaseStudyBody>
+                The answer format took 8 versions to settle. The count is the level everyone reads, so it leads, and I iterated on standard two-bar charts until a single bar read quicker in the 448px panel.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <div className="dlg-demo-pair">
+                  <div>
+                    <DialogueRachelFrame tone="problem">
+                      <DialogueChartLibrary countsExplored />
+                    </DialogueRachelFrame>
+                  </div>
+                  <div>
+                    <p className="dlg-demo-pair__label dialogue-caption__label">Shipped: one bar with two sides</p>
+                    <DialogueRachelFrame tone="solution">
+                      <StaticFigure figure="counts-open">
+                        <DialogueDemoVideo src="/dialogue/motion/live-side.mp4" poster="/dialogue/motion/live-side.jpg" label="Tapping 75 swaps the 225 shoppers for the 75 unsure, and tapping 225 swaps them back" />
+                      </StaticFigure>
+                    </DialogueRachelFrame>
+                  </div>
+                </div>
+              </figure>
+              <Caption>The versions run from two bars side by side, to two stacked, to the one bar that shipped. Tapping 75 swaps in two of the unsure shoppers. Illustrative data.</Caption>
+            </Section>
+
+            <Section id="data-viz">
+              <Kicker>Match the chart</Kicker>
+              <ClaimH2>Charts count people out of their own group</ClaimH2>
+              <StatusLine>Concept</StatusLine>
+              <CaseStudyBody>
+                The chart follows a rule I wrote. Two short groups fit one bar, and three or more groups, or any label over 26 characters, get one row each, scaled to the 300.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="system">
+                  <DialogueChartLibrary answerRows />
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>A long question with long group labels. Both labels would wrap on the bar, so each group gets its own row. Illustrative data.</Caption>
+              <CaseStudyBody>
+                Each template is adapted from IBM Carbon and counts people out of their own group, since two groups of different size look alike as percents.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueChartLibrary templates />
+              </figure>
+              <Caption>Three questions, three charts, and one line under each. Illustrative data.</Caption>
+              <CaseStudyBody>
+                The last rule is for thin data. Under three people the answer swaps its chart for an early-signal flag, with follow-ups the same interviews can count.
+              </CaseStudyBody>
+              <figure className="cs-figure dialogue-live-block">
+                <div className="dlg-demo-pair">
+                  <div>
+                    <LevelReasoning letter="A" label="Explored: a bar for two people" reasoning={THIN_BAR} />
+                    <DialogueRachelFrame tone="problem">
+                      <DialogueChartLibrary thinNearMiss />
+                    </DialogueRachelFrame>
+                  </div>
+                  <div>
+                    <LevelReasoning letter="B" label="Kept: a flag in place of the chart" reasoning={THIN_FLAG} />
+                    <DialogueRachelFrame tone="system">
+                      <StaticFigure figure="thin-followups">
+                        <DialogueDemoVideo src="/dialogue/motion/live-thin.mp4" poster="/dialogue/motion/live-thin.jpg" label="A thin answer flags its early signal and offers follow-up questions; tapping one answers it with a count" />
+                      </StaticFigure>
+                    </DialogueRachelFrame>
+                  </div>
+                </div>
+              </figure>
+              <Caption>Two people get a flag, and no chart. A&rsquo;s bar fills its track for two people, so B puts a flag in its place, and a follow-up answers with a count out of 125. Recorded from my live code recreation. Illustrative data.</Caption>
+            </Section>
+
+            <Section id="measure">
+              <Kicker>What shipped</Kicker>
+              <ClaimH2>Counts shipped, and the rest is a concept I&rsquo;d test</ClaimH2>
+              <StatusLine>Proposed test, no results yet</StatusLine>
+              <CaseStudyBody>
+                Everything here beyond the count is a concept I built in code, and none of it has been tested with a research team.
+              </CaseStudyBody>
+              <CaseStudyBody>
+                I&rsquo;d watch time from question to share-out next to how often a side gets opened. Neither tells me whether a checked answer changed a decision, and that&rsquo;s the gap I&rsquo;d ask teams about.
               </CaseStudyBody>
             </Section>
 
-            <Section id="why-it-matters">
-              <H2>A finding only travels if you can point to the interview behind it</H2>
-              <CaseStudyBody>
-                In sessions with Benjamin and Justin, and with students running mock interviews,
-                people asked who said that before they would trust a long answer. Those sessions
-                stood in for research customers. The gap was the same either way: without a path
-                back to the interview, the answer stayed a guess.
-              </CaseStudyBody>
-              <DialogueLeadAnswerCompare
-                heading="Lead with the answer"
-                subheading="Three ways the chat could answer the same question."
-                chosenId="structured"
-                annotateRaster={wrap}
-                options={[
-                  {
-                    id: "paragraphs",
-                    label: "Wall of text",
-                    title: "Paragraphs",
-                    costLine:
-                      "Reads complete, but you still cannot name who said what before you act.",
-                    productScenario: "decision-paragraphs",
-                    rasterAssetId: "D-04",
-                  },
-                  {
-                    id: "quote-list",
-                    label: "Quotes only",
-                    title: "Quote list",
-                    costLine: "Faithful to the footage, but you still count by hand.",
-                    productScenario: "decision-quotes",
-                    rasterAssetId: "D-05",
-                  },
-                  {
-                    id: "structured",
-                    label: "Answer + evidence",
-                    title: "Structured answer",
-                    costLine:
-                      "Clearer in one glance, but the chat has to hold summary, chart, and clips without feeling crowded.",
-                    productScenario: "decision-structured",
-                    rasterAssetId: "D-06",
-                  },
-                ]}
-              />
-            </Section>
-
-            <Section id="one-structure">
-              <H2>Every answer gets one fixed structure</H2>
-              <CaseStudyBody>
-                Parts stay in order: 1 Summary, 2 Sources, 3 Chart, 4 Clips, 5 Follow-ups. Only
-                the chart changes shape. A source that disagrees stays in the card, under Counter-evidence.
-              </CaseStudyBody>
-              <ProductFigureBlock
-                scenario="anatomy"
-                title="Study chat answer card with numbered callouts for summary through follow-ups"
-                assetId="D-08"
-                wrapRaster={wrap}
-              />
-              <ol className="dialogue-anatomy-list">
-                {ANATOMY_LABELS.map((label, i) => (
-                  <li key={label} data-anatomy-list-part={ANATOMY_PART_IDS[i]}>
-                    <span>{i + 1}</span>
-                    {label}
-                  </li>
-                ))}
-              </ol>
-            </Section>
-
-            <Section id="clips">
-              <H2>A quote with no context</H2>
-              <CaseStudyBody>
-                A quote without a timestamp forces you to hunt the recording. The player opens at
-                the exact second, with the transcript in sync.
-              </CaseStudyBody>
-              <ProductFigureBlock
-                scenario="clip-player"
-                title="Interview player at 01:38 with the speaker row highlighted in the synced transcript"
-                assetId="D-10"
-                wrapRaster={wrap}
-                frameLabel="Solution: clip starts at 01:38 so the card-failed quote can be checked in one click"
-              />
-            </Section>
-
-            <Section id="chart-library">
-              <H2>A chart only when the data asks for one</H2>
-              <CaseStudyBody>
-                Each pair puts the common choice next to mine, on the same data.
-              </CaseStudyBody>
-              <DialogueChartLibrary />
-            </Section>
-
-            <Section id="thin-data">
-              <H2>Say when the data is thin</H2>
-              <CaseStudyBody>
-                A chart of four interviews looks like a trend. The warning makes the evidence size the
-                first thing you see.
-              </CaseStudyBody>
-              <CaseStudyBody>
-                The next step copies a ready-to-paste prompt for the follow-up study. People work out
-                of generated docs and idea docs, so the plan should travel there, not stay in the chat.
-              </CaseStudyBody>
-              <ProductFigureBlock
-                scenario="thin-data"
-                title="Study chat answer that leads with the interview count and holds the chart back"
-                assetId="D-13"
-                wrapRaster={wrap}
-                frameLabel="Thin data: a finding from four interviews must not reach a roadmap as a trend."
-              />
-            </Section>
-
-            <Section id="full-answer">
-              <H2>One answer, start to finish</H2>
-              <CaseStudyBody>
-                You ask a follow-up, get a filtered answer, tap a source, and every supporting clip
-                for that answer sits in one drawer. The structure does not reset when the question
-                narrows.
-              </CaseStudyBody>
-              <CaseStudyBody>
-                A second answer is already on this page: the payment question above, where the
-                count leads and the chart is held back.
-              </CaseStudyBody>
-              <ProductFigureBlock
-                scenario="full-answer"
-                title="Follow-up answer for mobile only, with every supporting clip in one drawer"
-                assetId="D-15"
-                wrapRaster={wrap}
-                frameLabel="Solution: follow-up filter, sources, chart, and clips stay linked in one drawer"
-              />
-              <div className="dialogue-full-answer-outcome">
+            <section
+              id="takeaway"
+              className="cs-takeaway"
+              style={{
+                scrollMarginTop: 96,
+              }}
+            >
+              <ScrollReveal>
+                <p className="cs-takeaway__text">
+                  Fast and deep can share one answer when depth waits for a tap.
+                </p>
                 <CaseStudyBody>
-                  Limit: the chat has to hold summary, chart, and clips without feeling crowded.
+                  <Placeholder>your learning from the Levels reversal: you opened every level at once, then learned to start from the insight</Placeholder>
                 </CaseStudyBody>
-              </div>
-            </Section>
+              </ScrollReveal>
+            </section>
           </article>
           <CaseStudyPager href="/dialogue" />
         </div>

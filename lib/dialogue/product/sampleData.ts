@@ -1,4 +1,4 @@
-export const LEAD_COMPARE_QUESTION = "How many participants dropped off at shipping address in checkout?";
+export const LEAD_COMPARE_QUESTION = "How do shoppers read \u2018Arrives by Friday\u2019?";
 /** Mobile-only funnel, as shown in the full answer figure. */
 export const MOBILE_FUNNEL_STEPS = [
   { label: "Cart", pct: 100 },
@@ -7,14 +7,20 @@ export const MOBILE_FUNNEL_STEPS = [
   { label: "Payment", pct: 33 },
 ] as const;
 
-export const CHECKOUT_QUESTION = "Where did people drop off in checkout?";
+export const CHECKOUT_QUESTION = "How do shoppers read \u2018Arrives by Friday\u2019?";
 
-export const STUDY_SUBTITLE = "Checkout usability, 24 interviews";
+export const STUDY_SUBTITLE = "Answering questions about this study";
 
 /** Problem figure: short wall of text (2 sentences). */
 export const PARAGRAPH_ANSWER_BRIEF = [
-  "Most participants hesitated at shipping address, delivery, and payment.",
-  "Nothing in the thread linked quotes back to footage or funnel steps.",
+  "Shoppers talked about the delivery date and fees at the cart.",
+  "Many found \u2018Arrives by Friday\u2019 unclear, and some checked the date before ordering.",
+];
+
+/** P7 problem figure: the prose answer at study scale, vague quantifiers and no path to a person. */
+export const PARAGRAPH_ANSWER_WALL = [
+  "Across the study, shoppers talked most about the delivery date and fees at the cart. Many found \u2018Arrives by Friday\u2019 unclear, and several said they checked the date before ordering. Some read Friday as this week, while others assumed the Friday after their order shipped.",
+  "Repeat shoppers raised it less often than first-time shoppers. A few tied the confusion to free returns, and a handful said it made them hesitate at payment.",
 ];
 
 /** Lead option: full paragraph wall for comparison. */
@@ -25,8 +31,8 @@ export const PARAGRAPH_ANSWER = [
 ];
 
 export const CHECKOUT_FUNNEL = {
-  summary: "Shipping address loses 38% of participants, the largest single-step drop in checkout.",
-  emphasis: "loses 38% of participants",
+  summary: "Shipping address loses 38 points, the largest single-step drop in checkout.",
+  emphasis: "loses 38 points",
   steps: [
     { label: "Cart", pct: 100 },
     { label: "Address", pct: 62, focal: true, drop: 38 },
@@ -37,46 +43,33 @@ export const CHECKOUT_FUNNEL = {
 };
 
 export const SOURCES = [
-  { participant: "Jordan M.", topic: "checkout", time: "14:03" },
-  { participant: "Marcus W.", topic: "payment", time: "21:08" },
-  { participant: "Priya K.", topic: "address", time: "15:47" },
-  { participant: "Hannah L.", topic: "payment", time: "22:41" },
+  { participant: "Mei L.", topic: "delivery date", time: "18:27" },
+  { participant: "Owen P.", topic: "delivery date", time: "07:12" },
+  { participant: "Aisha K.", topic: "price at cart", time: "15:40" },
+  { participant: "Tomas R.", topic: "returns", time: "12:04" },
+  { participant: "Hannah L.", topic: "delivery date", time: "09:18" },
 ];
 
-export const FOLLOW_UPS = ["Show mobile only", "Compare to round 1"];
+export const FOLLOW_UPS = ["Address step only", "Compare to the first study"];
 
 export const CLIPS = [
   {
-    id: "ship-1",
-    participant: "Jordan M.",
-    segment: "14:03–14:19",
-    transcript: "The apartment field kept clearing when I picked autocomplete, and I almost closed the tab.",
-    highlight: "almost closed the tab",
-  },
-  {
-    id: "ship-2",
-    participant: "Priya K.",
-    segment: "15:47–16:04",
-    transcript: "International format wasn't obvious; I typed the whole address twice before it stuck.",
-    highlight: "typed the whole address twice",
-  },
-  {
-    id: "mobile-intl",
-    participant: "Priya K.",
-    segment: "16:02–16:18",
-    transcript: "On my phone the country switch reset everything, so I had to start the address over.",
-    highlight: "start the address over",
+    id: "friday-1",
+    participant: "Mei",
+    segment: "18:27\u201318:49",
+    transcript: "Friday which week?",
+    highlight: "Friday which week?",
   },
 ];
 
 export const SENTIMENT_LINE = {
-  title: "Sentiment climbs after autocomplete ships in round two.",
+  title: "Sentiment climbs after autocomplete ships.",
   points: [
     { label: "Round 1", value: 2.4 },
     { label: "Round 2", value: 3.1 },
     { label: "Round 3", value: 3.6 },
   ],
-  question: "How did sentiment shift across the 3 prototype rounds?",
+  question: "How did sentiment shift across the study?",
 };
 
 /** Segment comparison: same metric across participant groups (not a funnel). */
@@ -101,6 +94,38 @@ export const COVERAGE_ADDRESS = {
   rows: [
     { label: "Mentioned it", count: 18, focal: true },
     { label: "Did not", count: 6 },
+  ],
+};
+
+/** Full-answer section: the address step follow-up, filtered from the checkout answer. */
+export const ADDRESS_FOLLOWUP = {
+  question: "Address step only",
+  summary: "At the address step, the apartment field clearing on autocomplete was the sharpest complaint.",
+  drawerSub: "Clips from 18 interviews at the address step",
+  clips: [
+    {
+      id: "addr-1",
+      participant: "Jordan M.",
+      segment: "14:03–14:19",
+      transcript:
+        "The apartment field kept clearing when I picked autocomplete, and I almost closed the tab.",
+      highlight: "almost closed the tab",
+    },
+    {
+      id: "addr-2",
+      participant: "Priya K.",
+      segment: "16:02–16:18",
+      transcript:
+        "On my phone the country switch reset everything, so I had to start the address over.",
+      highlight: "start the address over",
+    },
+    {
+      id: "addr-3",
+      participant: "Sam R.",
+      segment: "11:22–11:40",
+      transcript: "I gave up on saved address and typed it again with my thumbs.",
+      highlight: "gave up on saved address",
+    },
   ],
 };
 
@@ -137,9 +162,20 @@ export const MOBILE_FOLLOWUP = {
 };
 
 export const QUOTE_LIST = [
-  { participant: "Jordan M.", quote: "I almost closed the tab when autocomplete cleared the apartment field." },
-  { participant: "Priya K.", quote: "International format wasn't obvious on mobile." },
-  { participant: "Sam R.", quote: "Fees showed up late enough that I double-checked the cart." },
+  { participant: "Mei", time: "18:27\u201318:49", quote: "Friday which week?" },
+  { participant: "Owen", time: "07:12\u201307:30", quote: "I checked the date to be sure." },
+];
+
+/** Hearthside mock for the 225 "this Friday" side (P14 item 7). */
+export const QUOTE_LIST_FRIDAY = [
+  { participant: "Ana", time: "04:10\u201304:24", quote: "It says Friday, so I planned for this Friday." },
+  { participant: "Dev", time: "11:02\u201311:15", quote: "Friday means the closest one to me." },
+];
+
+/** Hearthside mock: first-time shoppers (P14 bar tap, P15 chart templates). */
+export const QUOTE_LIST_NEW = [
+  { participant: "Kai", time: "02:14\u201302:28", quote: "I am new here, so Friday meant this week to me." },
+  { participant: "Rae", time: "09:01\u201309:16", quote: "First order. I put Friday on my calendar as the nearest one." },
 ];
 
 export const ANATOMY_LABELS = [

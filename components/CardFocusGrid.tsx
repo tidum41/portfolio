@@ -28,7 +28,8 @@ export default function CardFocusGrid({ children }: { children: React.ReactNode 
       className="project-grid portfolio-grid"
       style={{
         paddingTop: "var(--space-5)",
-        paddingBottom: "var(--space-8)",
+        /* 120px above the footer on home: 72 here + the wrap's 48. */
+        paddingBottom: 72,
         display: "grid",
         gridTemplateColumns: "repeat(2, minmax(1px, 1fr))",
         gap: "var(--grid-gutter)",

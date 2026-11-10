@@ -1,10 +1,15 @@
 "use client";
 
-import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import CopyEmail from "@/components/CopyEmail";
-import CDPlayer from "@/components/CDPlayer";
-import BentoHero from "@/components/BentoHero";
-import { ScrollReveal, StaggerReveal, StaggerItem } from "@/components/ScrollReveal";
+import { albums } from "@/components/embeds/cd-player/data/albums";
 import {
   ABOUT_BIO,
   ABOUT_INTERESTS,
@@ -12,42 +17,26 @@ import {
   ORGS,
   SOCIALS,
 } from "@/lib/about";
-import { ENTRANCE_DEFAULTS } from "@/lib/motion";
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 style={{
-      fontFamily: "var(--font-page-title)",
-      fontSize: "var(--fs-h2)",
-      fontWeight: 400,
-      lineHeight: "var(--lh-h2)",
-      letterSpacing: "-0.8px",
-      color: "var(--color-text-primary)",
-      margin: "0 0 var(--cs-h2-mb)",
-    }}>{children}</h2>
-  );
-}
+/*
+ * About as a spec sheet (TASTE, Oct 25 2026): a strict 12 column grid on
+ * --grid-max-w, labels in cols 1 to 3, content in cols 4 to 9 at one measure,
+ * meta in cols 10 to 12 right aligned. Every row is ruled with a 1px top
+ * hairline in --color-border-subtle and padded --space-3 top and bottom.
+ * All copy is Mudit's existing About text, word for word; only the layout
+ * changed. Media slots are one system: 1:1, 64px (48px under 640px),
+ * --radius-card, 1px --color-border-subtle on --color-placeholder. No
+ * fitting BruinLease line glyph exists for the interest rows, so their
+ * slots are empty frames, per the brief's fallback.
+ */
 
-/** Compositor fade-up. Resting opacity is 1 — Framer hidden:0 was eating copy. */
-const ABOUT_HERO_STEPS = 5;
-const ABOUT_ENTER_MS = Math.round(
-  Math.min(
-    ENTRANCE_DEFAULTS.stagger,
-    ENTRANCE_DEFAULTS.maxSpread / (ABOUT_HERO_STEPS - 1),
-  ) * 1000,
-);
-const enterMs = (step: number) => ABOUT_ENTER_MS * step;
-
+/** Compositor fade-up. Resting opacity is 1. One fade for the whole sheet. */
 function Enter({
-  delay = 0,
   children,
-  style,
   playEnter,
   enterEpoch,
 }: {
-  delay?: number;
   children: ReactNode;
-  style?: CSSProperties;
   playEnter: boolean;
   enterEpoch: number;
 }) {
@@ -64,22 +53,106 @@ function Enter({
   }, [playEnter, enterEpoch]);
 
   return (
-    <div
-      ref={ref}
-      className={playEnter ? "ps3-enter" : undefined}
-      style={
-        playEnter
-          ? { ...style, ["--ps3-enter-delay" as string]: `${delay}ms` }
-          : style
-      }
-    >
+    <div ref={ref} className={playEnter ? "ps3-enter" : undefined}>
       {children}
     </div>
   );
 }
 
+/** Live Los Angeles time for the hero's top right meta cell. The server
+ *  renders a stable placeholder so hydration never mismatches. */
+function LosAngelesTime() {
+  const [label, setLabel] = useState("Los Angeles --:--");
+  useEffect(() => {
+    const fmt = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Los_Angeles",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    const tick = () => setLabel(`Los Angeles ${fmt.format(new Date())}`);
+    tick();
+    const id = setInterval(tick, 30_000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <p
+      style={{
+        fontFamily: "var(--font-mono)",
+        fontSize: "var(--fs-sm)",
+        color: "var(--color-text-muted)",
+        margin: 0,
+        fontVariantNumeric: "tabular-nums",
+      }}
+    >
+      {label}
+    </p>
+  );
+}
+
+const labelStyle: CSSProperties = {
+  fontSize: "var(--fs-sm)",
+  lineHeight: "var(--lh-body)",
+  color: "var(--color-text-muted)",
+  margin: 0,
+};
+
+const metaStyle: CSSProperties = {
+  fontSize: "var(--fs-sm)",
+  lineHeight: "var(--lh-body)",
+  color: "var(--color-text-muted)",
+  margin: 0,
+  fontVariantNumeric: "tabular-nums",
+};
+
+const bodyTextStyle: CSSProperties = {
+  fontSize: "var(--fs-body)",
+  lineHeight: "var(--lh-body)",
+  letterSpacing: "var(--ls-body)",
+  color: "var(--color-text-secondary)",
+  margin: 0,
+};
+
+function Row({
+  label,
+  meta,
+  media = false,
+  children,
+}: {
+  label?: string;
+  meta?: string;
+  /** Media rows center the label against the 64px frame instead of
+   *  baseline aligning it to the frame's bottom edge. */
+  media?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className="about-row"
+      style={media ? { alignItems: "center" } : undefined}
+    >
+      <p className="about-row__label" style={labelStyle}>
+        {label ?? ""}
+      </p>
+      <div className="about-row__content">{children}</div>
+      <p className="about-row__meta" style={metaStyle}>
+        {meta ?? ""}
+      </p>
+    </div>
+  );
+}
+
+function MediaSlot({ children }: { children?: ReactNode }) {
+  return (
+    <span className="about-media" aria-hidden={children ? undefined : true}>
+      {children}
+    </span>
+  );
+}
+
+const album = albums[0];
+
 export default function AboutPageContent({
-  visible = true,
   playEnter = false,
   enterEpoch = 0,
 }: {
@@ -88,195 +161,268 @@ export default function AboutPageContent({
   enterEpoch?: number;
 }) {
   return (
-    <div style={{ paddingInline: "var(--page-px)", paddingTop: "var(--space-5)", paddingBottom: "var(--space-9)" }}>
-      <div style={{ fontFamily: "var(--font-sans)", maxWidth: "var(--content-max-w)", marginInline: "auto" }}>
-        <div style={{ marginBottom: "var(--space-7)" }}>
-          <div className="about-hero">
-            <div className="about-hero-bio">
-              <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(0)}>
-                <h1 style={{
-                  fontFamily: "var(--font-page-title)",
-                  fontSize: "var(--fs-h2)",
-                  fontWeight: 400,
-                  lineHeight: "var(--lh-h2)",
-                  letterSpacing: "-0.8px",
-                  color: "var(--color-text-primary)",
-                  margin: "0 0 var(--space-2)",
-                }}>Hello, I&apos;m Mudit</h1>
-              </Enter>
-
-              <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(1)}>
-                <p style={{
-                  fontSize: "var(--fs-meta)",
-                  lineHeight: "var(--lh-meta)",
-                  color: "var(--color-text-muted)",
-                  margin: "0 0 24px",
-                }}>B.S. Cognitive Science | UCLA &apos;27</p>
-              </Enter>
-
-              <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(2)}>
-                <p style={{
-                  fontSize: "var(--fs-body)",
-                  lineHeight: "var(--lh-body)",
-                  letterSpacing: "var(--ls-body)",
-                  color: "var(--color-text-secondary)",
-                  margin: "0 0 32px",
-                  textWrap: "pretty",
-                }}>
-                  {ABOUT_BIO}
-                </p>
-              </Enter>
-
-              <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(3)}>
-                <p style={{
-                  fontSize: "var(--fs-body)",
-                  lineHeight: "var(--lh-body)",
-                  letterSpacing: "var(--ls-body)",
-                  color: "var(--color-text-secondary)",
-                  margin: "0 0 4px",
-                }}>You can find me</p>
-              </Enter>
-
-              <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(4)}>
-                <ul style={{
-                  fontSize: "var(--fs-body)",
-                  lineHeight: "var(--lh-body)",
-                  letterSpacing: "var(--ls-body)",
-                  color: "var(--color-text-secondary)",
-                  margin: 0,
-                  paddingLeft: 20,
-                  listStyleType: "disc",
-                }}>
-                  {ABOUT_INTERESTS.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </Enter>
-            </div>
-
-            <div className="about-hero-bento-col">
-              <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(1)} style={{ marginBottom: 5 }}>
-                <BentoHero
-                  featured={{ src: "/images/about/bento-large.jpg", alt: "Mudit in London" }}
-                  top={{ src: "/images/about/bento-top-right.webp", alt: "Getty Villa courtyard" }}
-                  bottom={{ src: "/images/about/bento-bottom-right.avif", alt: "Sitting by a window" }}
-                  priority={visible}
-                />
-              </Enter>
-
-              <nav aria-label="Social links" style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: 24,
-              }}>
-                {SOCIALS.map((item) =>
-                  "copyEmail" in item ? (
-                    <CopyEmail
-                      key={item.label}
-                      unstyled
-                      className="nav-link about-social"
-                      style={{
-                        fontSize: "var(--fs-meta)",
-                        color: "var(--color-text-secondary)",
-                      }}
-                    >
-                      {item.label}
-                    </CopyEmail>
-                  ) : (
-                    <a
-                      key={item.label}
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="nav-link about-social"
-                      style={{
-                        fontSize: "var(--fs-meta)",
-                        color: "var(--color-text-secondary)",
-                      }}
-                    >
-                      {item.label}
-                    </a>
-                  ),
-                )}
-              </nav>
-            </div>
-          </div>
-        </div>
-
-        <ScrollReveal>
-          <section style={{ marginBottom: "var(--space-7)" }}>
-            <SectionLabel>Favorite Albums</SectionLabel>
-            <CDPlayer active={visible} style={{ marginTop: 16, minHeight: 520 }} variant="about" />
-          </section>
-        </ScrollReveal>
-
-        <section style={{ marginBottom: "var(--space-7)" }}>
-          <ScrollReveal><SectionLabel>Experience</SectionLabel></ScrollReveal>
-          <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-            {EXPERIENCE.filter((e) => !("hidden" in e && e.hidden)).map((exp) => {
-              const { company, role, dates, description } = exp;
-              const href = "href" in exp ? exp.href : undefined;
-              return (
-                <StaggerItem key={company} style={{ padding: "20px 0" }}>
-                  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16 }}>
-                    <p style={{ fontSize: "var(--fs-body)", fontWeight: 500, color: "var(--color-text-primary)", margin: 0, minWidth: 0 }}>
-                      {href ? (
-                        <a href={href} target="_blank" rel="noopener noreferrer" className="nav-link about-link" style={{ color: "inherit" }}>{company}</a>
-                      ) : company}
-                    </p>
-                    <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{dates}</p>
-                  </div>
-                  <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: "2px 0 0" }}>{role}</p>
-                  <p style={{ fontSize: "var(--fs-meta)", lineHeight: 1.5, color: "var(--color-text-secondary)", margin: "8px 0 0", maxWidth: "52ch", textAlign: "left" }}>{description}</p>
-                </StaggerItem>
-              );
-            })}
-          </StaggerReveal>
-        </section>
-
-        <section style={{ marginBottom: "var(--space-7)" }}>
-          <ScrollReveal><SectionLabel>Organizations</SectionLabel></ScrollReveal>
-          <StaggerReveal style={{ display: "flex", flexDirection: "column" }}>
-            {ORGS.map((org) => {
-              const { name, role } = org;
-              const href = "href" in org ? org.href : undefined;
-              const nameStyle: CSSProperties = {
-                fontSize: "var(--fs-body)",
+    <div
+      style={{
+        paddingInline: "var(--page-px)",
+        paddingTop: "var(--space-5)",
+        paddingBottom: "var(--space-9)",
+        maxWidth: "var(--grid-max-w)",
+        marginInline: "auto",
+        fontFamily: "var(--font-sans)",
+      }}
+    >
+      <style>{`
+        .about-hero-grid {
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          column-gap: var(--grid-gutter);
+          align-items: start;
+          margin-bottom: var(--space-5);
+        }
+        .about-hero-main { grid-column: 1 / 10; min-width: 0; }
+        .about-hero-meta { grid-column: 10 / 13; text-align: right; }
+        .about-row {
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          column-gap: var(--grid-gutter);
+          align-items: baseline;
+          padding-top: var(--space-3);
+          padding-bottom: var(--space-3);
+          border-top: 1px solid var(--color-border-subtle);
+        }
+        .about-row:last-child { border-bottom: 1px solid var(--color-border-subtle); }
+        .about-row:hover { background: var(--color-accent-subtle); }
+        .about-row__label { grid-column: 1 / 4; min-width: 0; }
+        .about-row__content { grid-column: 4 / 10; min-width: 0; }
+        .about-row__meta { grid-column: 10 / 13; text-align: right; }
+        .about-row__with-media {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+        }
+        .about-media {
+          display: block;
+          flex: none;
+          width: 64px;
+          height: 64px;
+          border: 1px solid var(--color-border-subtle);
+          border-radius: var(--radius-card);
+          background: var(--color-placeholder);
+          overflow: hidden;
+        }
+        .about-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .about-links {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--space-3);
+        }
+        .about-links a,
+        .about-links button {
+          display: inline-flex;
+          align-items: center;
+          min-height: 44px;
+        }
+        @media (max-width: 767px) {
+          .about-hero-main { grid-column: 1 / 13; }
+          .about-hero-meta { grid-column: 1 / 13; text-align: left; margin-top: var(--space-2); }
+          .about-row { grid-template-columns: 1fr auto; align-items: start; }
+          .about-row__label { grid-column: 1 / -1; }
+          .about-row__content { grid-column: 1; margin-top: var(--space-1); }
+          .about-row__meta { grid-column: 2; text-align: left; margin-top: var(--space-1); margin-left: var(--space-2); }
+        }
+        @media (max-width: 639px) {
+          .about-media { width: 48px; height: 48px; }
+        }
+      `}</style>
+      <Enter playEnter={playEnter} enterEpoch={enterEpoch}>
+        <header className="about-hero-grid">
+          <div className="about-hero-main">
+            <h1
+              style={{
+                fontFamily: "var(--font-sans)",
+                fontSize: "var(--fs-hero)",
+                fontWeight: 500,
+                lineHeight: "var(--lh-h2)",
+                letterSpacing: "-0.8px",
                 color: "var(--color-text-primary)",
+                margin: "0 0 var(--space-2)",
+              }}
+            >
+              Hello, I&apos;m Mudit
+            </h1>
+            <p
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "var(--fs-lg)",
+                lineHeight: "var(--lh-body)",
+                color: "var(--color-text-secondary)",
                 margin: 0,
-                minWidth: 0,
-                flex: 1,
-              };
-              // Size the anchor to its text so focus/hit box and underline hug the glyphs.
-              const linkStyle: CSSProperties = { ...nameStyle, flex: "0 1 auto", width: "fit-content" };
-              return (
-              <StaggerItem key={name} style={{
-                display: "flex",
-                alignItems: "baseline",
-                justifyContent: "space-between",
-                gap: 16,
-                padding: "16px 0",
-              }}>
-                {href ? (
+              }}
+            >
+              B.S. Cognitive Science | UCLA &apos;27
+            </p>
+          </div>
+          <div className="about-hero-meta">
+            <LosAngelesTime />
+          </div>
+        </header>
+
+        <div>
+          <Row>
+            <p style={{ ...bodyTextStyle, textWrap: "pretty" }}>{ABOUT_BIO}</p>
+          </Row>
+
+          {ABOUT_INTERESTS.map((item, i) => (
+            <Row key={item} label={i === 0 ? "You can find me" : undefined} media>
+              <div className="about-row__with-media">
+                <MediaSlot />
+                <p style={bodyTextStyle}>{item}</p>
+              </div>
+            </Row>
+          ))}
+
+          <Row label="Favorite Albums" media>
+            <div className="about-row__with-media">
+              <MediaSlot>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={album.artUrl} alt="" />
+              </MediaSlot>
+              <div>
+                <p style={{ ...bodyTextStyle, color: "var(--color-text-primary)" }}>
+                  {album.title}
+                </p>
+                <p
+                  style={{
+                    fontSize: "var(--fs-sm)",
+                    lineHeight: "var(--lh-body)",
+                    color: "var(--color-text-muted)",
+                    margin: 0,
+                  }}
+                >
+                  {album.artist}
+                </p>
+              </div>
+            </div>
+          </Row>
+
+          <Row label="Social links">
+            <nav aria-label="Social links" className="about-links">
+              {SOCIALS.map((item) =>
+                "copyEmail" in item ? (
+                  <CopyEmail
+                    key={item.label}
+                    unstyled
+                    className="nav-link about-social"
+                    style={{
+                      fontSize: "var(--fs-body)",
+                      color: "var(--color-text-secondary)",
+                    }}
+                  >
+                    {item.label}
+                  </CopyEmail>
+                ) : (
                   <a
-                    href={href}
+                    key={item.label}
+                    href={item.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="nav-link about-link"
-                    style={linkStyle}
+                    className="nav-link about-social"
+                    style={{
+                      fontSize: "var(--fs-body)",
+                      color: "var(--color-text-secondary)",
+                    }}
                   >
-                    {name}
+                    {item.label}
                   </a>
-                ) : (
-                  <p style={nameStyle}>{name}</p>
-                )}
-                <p style={{ fontSize: "var(--fs-sm)", color: "var(--color-text-muted)", margin: 0, textAlign: "right" }}>{role}</p>
-              </StaggerItem>
+                ),
+              )}
+            </nav>
+          </Row>
+
+          {EXPERIENCE.filter((e) => !("hidden" in e && e.hidden)).map(
+            (exp, i) => {
+              const href = "href" in exp ? exp.href : undefined;
+              return (
+                <Row
+                  key={exp.company}
+                  label={i === 0 ? "Experience" : undefined}
+                  meta={exp.dates}
+                >
+                  <p
+                    style={{
+                      ...bodyTextStyle,
+                      fontWeight: 500,
+                      color: "var(--color-text-primary)",
+                    }}
+                  >
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="nav-link about-link"
+                        style={{ color: "inherit" }}
+                      >
+                        {exp.company}
+                      </a>
+                    ) : (
+                      exp.company
+                    )}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "var(--fs-sm)",
+                      lineHeight: "var(--lh-body)",
+                      color: "var(--color-text-muted)",
+                      margin: "2px 0 0",
+                    }}
+                  >
+                    {exp.role}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "var(--fs-meta)",
+                      lineHeight: 1.5,
+                      color: "var(--color-text-secondary)",
+                      margin: "8px 0 0",
+                    }}
+                  >
+                    {exp.description}
+                  </p>
+                </Row>
               );
-            })}
-          </StaggerReveal>
-        </section>
-      </div>
+            },
+          )}
+
+          {ORGS.map((org, i) => {
+            const href = "href" in org ? org.href : undefined;
+            return (
+              <Row
+                key={org.name}
+                label={i === 0 ? "Organizations" : undefined}
+                meta={org.role}
+              >
+                <p style={{ ...bodyTextStyle, color: "var(--color-text-primary)" }}>
+                  {href ? (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="nav-link about-link"
+                      style={{ color: "inherit" }}
+                    >
+                      {org.name}
+                    </a>
+                  ) : (
+                    org.name
+                  )}
+                </p>
+              </Row>
+            );
+          })}
+        </div>
+      </Enter>
     </div>
   );
 }

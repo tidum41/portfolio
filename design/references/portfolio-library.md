@@ -1,0 +1,96 @@
+# Portfolio library
+
+One line per portfolio: name · student or senior · the one thing worth stealing · `pattern tags`. ★ = Open Doors Editor's Pick. Screenshots are on the box at `/workspace/research/hero/shots/`. Tags: name-sentence, build-claim, role+place, work-first, interactive, status, availability, voice, sparse, logos, technical, AI.
+
+## Senior design engineers and designers
+- [Rauno Freiberg](https://rauno.me) · senior · Name sentence with role and places over animated type · `name-sentence · interactive`
+- [Emil Kowalski](https://emilkowal.ski) · senior · 16px name, then named open-source projects as the work list · `role+place · technical · sparse`
+- [Paco Coursey](https://paco.me) · senior · "Crafting interfaces." then ⌘K and Next Themes as projects · `technical · sparse`
+- [Josh Puckett](https://joshpuckett.me) · senior · Collaborator list as social proof · `logos`
+- [Jakub Krehel](https://jakub.kr) · senior · Role at company plus a GitHub link in the first paragraph · `role+place · technical`
+- [Shu Ding](https://shud.in) · senior · "Making things at Vercel." · `role+place · sparse`
+- [shadcn](https://shadcn.com) · senior · Named artifacts plus a live numbers table · `technical · proof`
+- [Pablo Stanley](https://pablostanley.com) · senior · Dated list of shipped side projects with links · `voice · technical`
+- [Brian Lovin](https://brianlovin.com) · senior · One sentence: role, city, company · `role+place · sparse`
+- [Karri Saarinen](https://karrisaarinen.com) · senior · "a place for people and agents" · `role+place · AI`
+- [Nikolas Klein](https://nikolasklein.de) · senior · Names one real feature (code layers in Figma) · `technical`
+- [Alasdair Monk](https://www.alasdairmonk.com) · senior · "is a software designer." understatement plus a logo list · `name-sentence · logos`
+- [Raphael Salaja](https://raphaelsalaja.com) · senior · Motion samples as the first work · `work-first · voice`
+- [Lochie Axon](https://www.lochieaxon.com) · senior · `npm i` lines as projects · `technical`
+- [Marc Bouchenoire](https://marcbouchenoire.com) · senior · Live counter and animated role words · `interactive · technical`
+- [Jhey Tompkins](https://www.jhey.dev) · senior · Live weather plus experiment thumbnails · `status · work-first`
+- [Rafa el Conde](https://rafa.design) · senior · Photo plus current app video, full bleed · `work-first · voice`
+- [Anthony Hobday](https://anthonyhobday.com) · senior · "I design software interfaces." plus stats · `sparse · proof`
+- [Koen Bok](https://www.koenbok.com) · senior · "half designer, half programmer" · `build-claim`
+- [Andy Matuschak](https://andymatuschak.org) · senior · Research statement centred on people · `claim · people`
+- [Ryo Lu](https://ryo.lu) · senior · Live location headline plus ryOS demo plus past logos · `status · interactive · logos`
+
+## Students and new grads (set A)
+- [Carolyn Lee](https://www.carolynlee.me) · student · Chips (Stanford, Microsoft CoreAI, Figma) plus a live UI card at y265 · `role+place · work-first · interactive`
+- [Elaine Yu](https://www.elaineyu.design) · student · "recruiter mode" toggle plus "looking for summer 2027" · `availability · voice`
+- [Shruthi Aragonda](https://www.shruthiaragonda.com) · new grad · Cycling verbs in the headline · `motion · AI`
+- [Fiona Fang](https://www.fionafang.ca) · student · Illustrated hero, work video at the fold · `voice`
+- [Magenta Ong](https://magentaong.vercel.app) · student · Giant name graphic (low information) · `visual`
+- [Samiran De](https://samworks.vercel.app) · student · Stack named inline (React, Tailwind, Motion) · `technical`
+
+## Open Doors (junior, 60 live)
+- ★ [Airla Fan](https://airladesigns.com/) · student/new grad · Work floats as a draggable 3D orbit; "Designer of unique brands and interfaces" · `EP · interactive · work-as-hero`
+- ★ [Andrea Da Silva](https://adasilv2.framer.website/) · student/new grad · The hero is a small toy canvas with a tool palette; one playful idea, few words · `EP · interactive · voice`
+- ★ [Jackson Ringger](https://chaachiedesigns.framer.website/) · student/new grad · Name sentence with two words set in coloured italic; work cards peek at the fold · `EP · name-sentence · type-accent`
+- ★ [Jenn Choi](https://jennwchoi.com/) · student/new grad · "Product Designer who ships the code" plus a live NYC clock; work grid starts at the top · `EP · build-claim · status · work-first`
+- ★ [Rachel Chen](https://www.rachelchen.tech/) · student/new grad · Name sentence "Rachel Chen is a product designer who builds for fun." then a Currently/Previously row, then cards · `EP · name-sentence · role+place · work-first`
+- [Ambika Ramesh Menon](https://ambikamenon.com/) · student/new grad · Plain intro line plus a client logo row (Optimizely and others) right under it · `role+place · logos`
+- [Amy La](https://amylalai.com/) · student/new grad · Positioning in one phrase: "a creator that designs for creators" · `niche-claim`
+- [Anastasia Tumasova](https://atumasova.webflow.io/) · student/new grad · Letter-by-letter animated name; Work count in the nav ("Work – 4") · `motion · nav-count`
+- [Anurag Bhavsar](https://www.anuragbhavsar.com/) · student/new grad · "Open to work" badge above the name · `availability`
+- [Ariane Keona Ochoa](https://www.arianekeona.com/) · student/new grad · "OPEN FOR WORK / ORANGE COUNTY, CA" status bar plus a pronunciation guide · `availability · voice`
+- [Beverly Yip](https://www.bevyip.com/) · student/new grad · "a designer built on engineering" plus Google Creative Lab, previously coded at Salesforce · `build-claim · role+place · logos`
+- [Bill Guo](https://www.billguo.me/) · student/new grad · Third-person profile block in a magazine layout · `name-sentence · visual`
+- [Brian Yang](https://brianyang.ca/) · student/new grad · Lowercase name sentence with location and "previously designed @ google, sap" · `name-sentence · logos`
+- [Caleb Wu](https://www.calebwu.ca/) · student/new grad · "sweating the visual details." with Currently/Previously @ lines · `role+place · craft`
+- [Christine Liang](https://www.christineliangdesign.com/) · student/new grad · "From user research to production code" as the subhead · `build-claim · technical`
+- [Cindy Ly](https://www.cindyly.design/) · student/new grad · "I craft for emotion." plus "Last updated 10/26" freshness stamp · `voice · status`
+- [Darren Millar](https://darrenmillar.ca/) · student/new grad · "is an interaction designer, among other things" plus a text list of works · `name-sentence · sparse`
+- [Debodyuti Biswas](https://debodyutibiswas.framer.website/) · student/new grad · "product designer & engineer" as the role tag in the nav · `build-claim`
+- [Edna Ho](https://ednaho.com/) · student/new grad · 19 words: name plus one domain line ("AI product designer who designs for education...") · `sparse · domain`
+- [Emmi Wu](https://emmiwu.com/) · student/new grad · "Emmi is an interdisciplinary designer with a love for prototyping, storytelling, and visual craft"; at Google · `name-sentence · role+place`
+- [Georgius Bryan](https://georgiusbw.com/) · student/new grad · Small type, long plain paragraph about how software feels · `plain · craft`
+- [Giang Tran](https://giangs.art/) · student/new grad · Animated name sentence with "+ award-winning" tag · `name-sentence · motion`
+- [Harsha Gowda](https://iknowharsha.framer.website/) · student/new grad · "Open to full-time roles" inline under the intro · `availability`
+- [Helen Li](https://helenxli.com/) · student/new grad · "I design products around how people actually think" (cognition angle, close to Mudit) · `claim · people`
+- [Itzie Pulido](https://itzie.design/) · student/new grad · Project status chips ("0-1", "shipped") before the intro · `card-metadata`
+- [Jaya Advani](https://www.jayaadvani.com/) · student/new grad · Seattle location plus a three-part creed (avoid the list of three) · `role+place`
+- [Jessica Hsu](https://jessicahsu.design/) · student/new grad · "designs & builds information-rich products that support high-stakes decisions" · `build-claim · domain`
+- [Joanna Ni](https://joannani.com/) · student/new grad · Currently @ The New York Times, with a tiny hero and lots of whitespace · `role+place · sparse`
+- [Jordan Putnam](https://jordanputnam.framer.website/) · student/new grad · "AI Experience Designer" title plus a films tab · `AI · multidisciplinary`
+- [Justin Mason](https://www.justinmasondesign.com/) · student/new grad · 18 words total; "Open to 2027 roles" in the hero · `availability · sparse`
+- [Justin Shi](https://justinshi.me/) · student/new grad · "I design and build my ideas." one line, then role at HPE · `build-claim · role+place`
+- [Karen Lou](https://karenlou.com/) · student/new grad · "aspiring generalist" honest framing · `voice`
+- [Kate Nikles](https://katenikles.xyz/) · student/new grad · Discipline filter tabs (Graphic, UI + UX, Illustration) in the hero · `filter`
+- [Lana Farkas](https://lana-farkas.vercel.app/) · student/new grad · "product designer driven by curiosity and playful front-end thinking"; MHCI at CMU · `build-claim · school`
+- [Leo Fu](https://leofu.ca/) · student/new grad · A 1000-word essay as the homepage (costly) · `essay`
+- [Madhurima Chatterjee](https://www.madhurima.me/) · student/new grad · Third-person "Madhurima Chatterjee is a product designer." then one sentence · `name-sentence`
+- [Manasi Ghutukade](https://www.manasighutukade.work/) · student/new grad · "I design & ship technology* for those who think nobody's listening" with a footnote asterisk · `build-claim · voice`
+- [Matt Fredette](https://www.mattfredette.com/) · student/new grad · Career-switch framing: "spent a decade understanding people before designing for them" · `story`
+- [Megan Yap](https://meganyap.me/) · student/new grad · Intro gate "Welcome to Megan's World" with skip intro (costly: zero info at first paint) · `intro · voice`
+- [Michelle Liu](https://www.liumichelle.com/) · student/new grad · "Designing tools for human connection & creativity." Currently Instagram, previously Roblox and NASA · `role+place · logos`
+- [Mihir Sonalkar](https://misodesign.framer.website/) · student/new grad · "See my work" button as the only CTA · `cta`
+- [Mitchell Zeller](https://mitchellzeller.framer.website/) · student/new grad · Names the tools inline (Figma, Framer, React Native, Astro) · `tools-named · technical`
+- [Nicolas Donati](https://nicolasdonati.framer.website/) · student/new grad · "I'm the product designer behind these products:" followed by the products · `work-first`
+- [Nimisha Malreddy](https://nimishamalreddy.com/) · student/new grad · Product Design @ Fletch, previously @ ... line · `role+place`
+- [Nivedha Nirmal](https://www.nivedhanirmal.com/) · student/new grad · Bracketed nav labels plus a "Work with me" CTA · `availability · type`
+- [Pradeep Yellapu](https://www.pradeepyellapu.com/) · student/new grad · "Leading design for AI and spatial systems." big statement · `claim · AI`
+- [Queenie Hsiao](https://queenie.works/) · student/new grad · Hero drawn as a design-tool canvas with rulers and coordinates · `interactive · tool-native`
+- [Rhea Mittal](https://rhea-portfolio.vercel.app/portfolio-v2.html) · student/new grad · "I design & I ship." in huge type, MS-HCI in the chip line · `build-claim · school`
+- [Rishi Mudaliar](https://rishi.design/) · student/new grad · Project status chips ("0 to 1 project", "in development") on cards · `card-metadata`
+- [Rita Wang](https://www.ritawangarchive.com/) · student/new grad · Loader then a name sentence (loader costs first paint) · `intro · name-sentence`
+- [Rithvika Reddy](https://rithvika.framer.website/) · student/new grad · Huge name in a coloured block · `visual`
+- [Siddharth Hardikar](https://siddharthhardikar.framer.website/) · student/new grad · Location plus live clock, then "currently designing end-to-end AI experiences" · `status · AI`
+- [Sophia Liu](https://www.sophia-liu.work/) · student/new grad · Highlighted key phrases inside the intro · `type-accent`
+- [Sophie Manalo](https://sophiamanalo.com/) · student/new grad · "technical product designer with a background in visual design & frontend development" · `build-claim · technical`
+- [Sydney Nguyen](https://sydneyknguyen.com/) · student/new grad · "get to know me!" and "experience + education" labels next to About and Resume · `links`
+- [Sydney Rasmussen](https://sydneyrasmussen.framer.website/) · student/new grad · "Combining enterprise UX expertise with AI-enhanced design process" · `AI · domain`
+- [Uday Shankar](https://www.uxdayshankar.com/) · student/new grad · "designs how products feel and builds how they work, end to end" plus "Available for work" · `build-claim · availability`
+- [Vivian Zhao](https://vivianzhao.ca/) · student/new grad · Lowercase voice plus "currently designing @blueprint & studying @uwaterloo" · `school · role+place · voice`
+- [Xiaoyang Hu](https://xiaoyanghu.com/) · student/new grad · "Designs and ships AI-native products from a vague ask to production" · `build-claim · AI`
+- [Yash Fataniya](https://yashf.in/) · student/new grad · "AI-native Product Designer & Craftist" plus Let's Talk CTA · `AI · cta`

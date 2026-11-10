@@ -25,12 +25,11 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
           justify-content: space-between;
           padding: 24px var(--page-px);
           padding-bottom: calc(24px + env(safe-area-inset-bottom));
-          min-height: 69px;
         }
         .footer-links {
           display: flex;
           align-items: center;
-          gap: 20px;
+          gap: 24px;
           list-style: none;
           margin: 0;
           padding: 0;
@@ -39,20 +38,25 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
         .footer-links li {
           line-height: var(--lh-body);
         }
+        /* Every footer link target is at least 44 by 44, the one-letter
+           X link included (round L). */
+        .footer-links a,
+        .footer-links button.footer-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 44px;
+        }
         /* Phone only. At 480px and up the row stays name-left, links-right. */
         @media (max-width: 479px) {
           .footer-inner {
             flex-direction: column;
             align-items: flex-start;
             justify-content: flex-start;
-            gap: 20px;
+            gap: 8px;
           }
           .footer-links {
-            gap: 20px;
-          }
-          .footer-links a,
-          .footer-links button.footer-link {
-            min-height: 0;
+            column-gap: 24px;
           }
         }
       `}</style>

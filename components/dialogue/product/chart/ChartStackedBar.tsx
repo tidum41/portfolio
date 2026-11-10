@@ -18,6 +18,8 @@ type Props = {
   /** Also print each share inside its segment. */
   showShare?: boolean;
   legend?: boolean;
+  /** Paper spec chart A: one legend line with two lanes, each a swatch, a muted label and its tabular count. */
+  lanes?: boolean;
   note?: ReactNode;
   className?: string;
 };
@@ -29,6 +31,7 @@ export default function ChartStackedBar({
   ticks,
   showShare = false,
   legend = false,
+  lanes = false,
   note,
   className,
 }: Props) {
@@ -57,7 +60,20 @@ export default function ChartStackedBar({
           ))}
         </div>
       ) : null}
-      {legend ? (
+      {lanes ? (
+        <div className="dp-chart-stack__lanes" data-annotate-part="stack-lanes">
+          {segments.map((seg, i) => (
+            <span key={seg.label} className="dp-chart-stack__lane" data-focal={seg.focal ? "" : undefined}>
+              <span className="dp-chart-stack__swatch" data-focal={seg.focal ? "" : undefined} data-index={i} aria-hidden />
+              <span className="dp-chart-stack__lane-label">{seg.label}</span>
+              <span className="dp-chart-stack__lane-value">
+                <span className="dp-chart-stack__lane-count">{seg.value.toLocaleString("en-US")}</span>
+                <span className="dp-chart-stack__lane-share" aria-hidden>{Math.round((seg.value / total) * 100)}%</span>
+              </span>
+            </span>
+          ))}
+        </div>
+      ) : legend ? (
         <div className="dp-chart-stack__legend" data-annotate-part="stack-legend">
           {segments.map((seg, i) => (
             <span key={seg.label} className="dp-chart-stack__legend-item">
@@ -68,12 +84,17 @@ export default function ChartStackedBar({
         </div>
       ) : (
         <div className="dp-chart-stack__labels">
-          {segments.map((seg) => (
+          {segments.map((seg, i) => (
             <span
               key={seg.label}
               className="dp-chart-stack__label"
               data-focal={seg.focal ? "" : undefined}
-              style={{ width: `${(seg.value / total) * 100}%` }}
+              data-last={i === segments.length - 1 ? "" : undefined}
+              style={
+                i === segments.length - 1
+                  ? undefined
+                  : { width: `${(seg.value / total) * 100}%`, maxWidth: `calc(100% - 7.5em)` }
+              }
               data-annotate-part={`stack-label-${annotateSlug(seg.label)}`}
             >
               <span className="dp-chart-stack__label-value">{seg.display}</span> {seg.label}

@@ -25,8 +25,9 @@ type Option = {
 };
 
 type Props = {
-  heading: string;
-  subheading: string;
+  chosenFirst?: boolean;
+  heading?: string;
+  subheading?: string;
   options: Option[];
   chosenId: string;
   annotateRaster?: RasterAnnotator;
@@ -97,13 +98,16 @@ export default function DialogueLeadAnswerCompare({
   options,
   chosenId,
   annotateRaster,
+  chosenFirst = false,
 }: Props) {
   return (
-    <div className="dialogue-lead-answer">
-      <p className="dialogue-caption dialogue-caption--block">
-        <span className="dialogue-caption__label">{heading}</span>
-        <span className="dialogue-caption__sentence">{subheading}</span>
-      </p>
+    <div className={["dialogue-lead-answer", chosenFirst ? "dialogue-lead-answer--chosen-first" : ""].filter(Boolean).join(" ")}>
+      {heading || subheading ? (
+        <p className="dialogue-caption dialogue-caption--block">
+          <span className="dialogue-caption__label">{heading}</span>
+          <span className="dialogue-caption__sentence">{subheading}</span>
+        </p>
+      ) : null}
       <DialogueRachelFrame tone="system" className="dialogue-lead-answer__well">
         <div className="dialogue-lead-answer__row dialogue-lead-answer__row--trio">
           {options.map((option) => (

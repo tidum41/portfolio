@@ -45,7 +45,7 @@ export default function ChartDotPlot({
                 ))
               : null}
             <span
-              className={["dp-chart-dots__dot", row.focal ? "dp-chart-dots__dot--focal" : ""].filter(Boolean).join(" ")}
+              className={["dp-chart-dots__dot", row.focal ? "dp-chart-dots__dot--focal" : row.secondary ? "dp-chart-dots__dot--secondary" : ""].filter(Boolean).join(" ")}
               style={{ left: pct(row.value) }}
               data-annotate-part={`dot-${annotateSlug(row.label)}`}
             />

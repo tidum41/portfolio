@@ -1,6 +1,92 @@
+Read [TASTE.md](TASTE.md) first: it is the source of truth for decided facts, likes, rejects and open items, and wins any conflict with this file. Font is Helvetica Neue with Arial fallback; Areal is abandoned.
+
+Every build and review reads STORY-PRINCIPLES.md and AI-TELLS.md with this file.
+
 # Dialogue case study rules
 
 Standing rules: sentence case, no em dashes, site weight cap 500 (Dialogue UI keeps its real 600). Figures stay the approved components with no hover state. Clicking a figure opens a lightbox (see below). Do not commit fonts, Dialogue screenshots, or unblurred frames.
+
+## 2026-10-25 (round K, TASTE decisions)
+
+- Hero title is "Interactive insights for UX Research teams". The problem heading and body are Mudit's Oct 25 text, and the why-it-matters section is gone.
+- The three-way compare lives in its own section, "Bringing more depth to answers", with the labels Text only, Direct quotes, and Answer and evidence. The quotes card carries a View session action. The chosen card's sources row scales: a few initial avatars plus a "+N more" control that opens the list, with the count stated.
+- Chart library order follows what research teams reach for: themes counted by participant (the default), the funnel for task flows only, group comparisons, change over time, and the two-sided split. Counts come before percentages and the denominator stays in view. Mock data is allowed only in the worked example and is marked as mock wherever it appears.
+- The dropoff entry keeps only the simplified funnel; the coverage pair is one diverging bar (75% and 25%). A theme under 3 participants is an anecdote, flagged as a lead.
+- Anatomy annotation numbers share one alignment at the rail's right edge. Inside the anatomy scene the clip thumbnails flex to fit the card at 360px.
+- Counter-evidence's third participant is Alex P.; Sam R. is only the struggling user.
+- The full-answer figure shows two screens of the same answer; the second marks the tap on the source and opens the drawer on that clip.
+- The chart card's title divider runs the full width of the card. Pager arrows do not animate. TOC labels are short.
+
+## 2026-10-23 (story build)
+
+- Every decision names its cost in the same breath as its win; a cost deferred to the end of the page reads as fine print.
+- Missing evidence is admitted in the body where the claim is made (no customers, no metrics), with what was done instead.
+- A comparison earns its place per pair; when two pairs teach the same lesson, the weaker one is cut, not kept for completeness.
+- The section gap has one owner; verify the rendered gap in the browser at both widths instead of trusting the CSS.
+- Every figure gets the same caption treatment, a label plus at most one sentence, the hero included; a fact stated in a figure is not restated as a list under it.
+- The figures are recreations of the redesign, never describe them as built from the product's own components.
+
+## 2026-10-23 (cold critique)
+
+- A claim sits next to the figure that proves it; if the section's own figure does not show it, the claim moves or goes.
+- The problem section shows the problem state as a figure, it does not only describe it in prose.
+- A closing sentence is read aloud before it ships; the last paragraph is the one a tired reader remembers.
+- Body text and the caption under the next figure never carry the same claim twice; the number lives in one place.
+- On phones a comparison leads with its chosen option, the same way the answers it argues for lead with the answer.
+- Insider shorthand from the work (ticket names, clipped compounds) is spelled out or cut; a cold reader cannot decode it.
+
+## 2026-10-23 (light check)
+
+- Numbers inside figures must reconcile across every figure on the page; the same finding carries the same interview and moment counts everywhere it appears.
+- A filtered answer shows its own count in the evidence footer, never the full study count.
+- Hyphenate compound modifiers in prose (AI-moderated, follow-up, counter-evidence, mid-thought) and match the UI label spelling exactly.
+
+## 2026-10-23 (story depth)
+
+- An annotation row that names a spec (data shape, encoding) is not a reason; rows under a comparison carry the first reach, why it failed, and the cost.
+- If the page fixes an order, it argues the sequence, not only the fixedness; each position in the structure earns its place in one sentence.
+- A choice reads as a choice when the rejected default is named first; an unnamed alternative makes the design look inevitable.
+
+## 2026-10-23 (round F)
+
+- One unit per figure: a filtered answer restates its own subset count in the same unit across the search line, the evidence footer, and the clips line, and that count matches the coverage figure for the same finding.
+
+## 2026-10-23 (round J)
+
+- Below 768px the anatomy and full-answer figures drop their height cap and bottom fade (ScaledChatViewport `uncapOnMobile`, opted in from DialogueProductFigure), so the clips drawer, the follow-ups and every source chip are fully visible on phones. The transcript scroll button gets a right gutter at 600px and below so it never covers a line. The follow-up figure's dot values stay inside their chart card at 360 (value column 30px, chart min width 0, scoped to .dp-full-answer).
+- Counter-evidence is the one product block that sits bare on the frame well: in dark mode its ink and muted tokens flip to light values for that section block only. The version-one table card stays white in both themes. On phones the evolution stacks in version order (two, three, eight); the chosen-first stack remains at tablet widths.
+- Wording: chart titles and chips never read as counts, so "round" and "session" are out of titles, chips and figure verdict copy ("Sentiment over time", "Compare to the first study", "Change over time"). Sam is Sam R. everywhere. Page copy uses US spelling. The Carbon line reads "no shipped chart carries a legend", because the fuller first drafts do carry legends.
+- Story shape: the data viz and Carbon section sits directly after the evolution, carries a beat on what research teams need to see (the step that matters and the count behind it, at a glance), and the page ends by returning to the hero card as the win. A paragraph after a figure starts 24px clear of its caption.
+
+## 2026-10-23 (round I)
+
+- The story is the answer card's data viz, told non-linearly: the page opens on the finished card (version 8), rewinds to version 1, and walks the versions between. Four of the eight versions appear as figures: the table, paragraphs, quotes only, and the grouped answer. Every version states where it works and where it doesn't; the word "priority" never appears.
+- Version 1 (the markdown table) has no surviving asset in the repo. It is recreated faithfully from the study's own numbers (checkout funnel, segment resets) in plain black and white, and the recreation is listed in the round report. No invented numbers anywhere; 18/6, 4 of 24 and 64/31/22% stay exact.
+- The chart section cites IBM Carbon's data visualization guidance inline: bars start at zero, lines may crop, values labeled on the marks (no legend), the answer sentence as the title, the peak annotated without covering data. Dialogue bends the palette (stone neutrals plus one cherry mark in place of Carbon's 14 colors) and adds a gate Carbon does not have: the evidence count decides whether a chart appears at all.
+- Restored r24 work is load-bearing: the interview player, the Paper avatar on transcript rows, Add to my plan, and the four-entry chart library must survive story rounds. A story rewrite may reframe sections around them, never remove them.
+- In the live answer moments (query moments and the hero) the source chips wrap at phone widths instead of scrolling, so no name is cut mid word at the shell edge. Scaled product figures keep the sideways-scrolling row.
+- The session and round count placeholders are retired by Mudit's instruction: the sentence is deleted and the card version count is stated as 8. The three unanswered placeholders stay visible (why the first version shipped without sources; why the cutoff sits where it does; what would change his mind about the cutoff).
+
+## 2026-10-23 (round H)
+
+- The hero is one full-width query-answer moment: question, search step, summary, sources, then the funnel beside the coverage split and counter-evidence, then a clip beside the thin slice (4 of 24), then follow-ups. Supporting evidence and counter-evidence share one card; nothing in the hero may invent a number.
+- Query-answer moments carry no icon rail or step markers; the parts sit in the answer's own order.
+- No chart, value, label or card may be cut off at 1440, 1024, 768, 390 or 360 in either theme; the only sideways overflow allowed is an intentional scroll row.
+- On mobile the source chips are a single row that scrolls sideways (no wrap, no stack), and the search step is tightened (shorter found label, smaller padding and type) so it wraps to at most two lines.
+- Counter-evidence quotes wrap on mobile instead of ellipsising.
+- The lead-answer comparison stacks at 940px and below (chosen first), because three squeezed panels fall under the readable scale floor and clip; three columns resume at 941px and up.
+- The search step's default found label is the short form ("found 18 moments"); a scoped label (the drawer's "address moments") still names its step.
+
+## 2026-10-23 (round G)
+
+- The page opens by splitting what Dialogue is, the problem, why it was hard, and the role into separate claim headings, and a lead line after the hero points at the final answer before the first section.
+- Counts the writer has not supplied stay visible as [PLACEHOLDER: count], and reasoning the writer has not supplied stays visible as [PLACEHOLDER: why ...]. Never invent a number or a reason to fill one.
+- Counter-evidence gets its own section, not a sentence inside another section.
+- A comparison is told in the order the options were tried, and each option's caption line says what it prioritised.
+- Clips and follow-ups each carry a short ruled-out unit naming the option that was not taken.
+- Thin data is the climax: the 4-of-24 rule, the 18-of-24 case as a full query-and-answer figure, where the cutoff sits, and what would move it.
+- Query-and-answer moments reuse the real answer components and the study's own sample data only. Their trail steps and query-moment rows (people, insight chart, quote) carry no icons.
+- Chart specimens in one pair share a height, and the inner chart card radius is concentric with its frame (frame radius minus the frame padding). Secondary chart colors are the exact DS values (stone-500 #79716b, cherry #b43f7f, cherry-300 #fe93ce in dark).
 
 ## 2026-10-21
 
@@ -112,3 +198,7 @@ Agentation is configured with `identifyingAttributes` including `data-annotate` 
 - Transcript Dialogue rows use the original Paper avatar (the Dialogue mark in a 48px circle, public/dialogue/dialogue-avatar.svg).
 - Plain bars stay at about 40 to 45% of charts; 6 of 13 is accepted where Mudit asks for bars (lead compare).
 - Exception to the r23 fill rule: in a dense two-series chart the second series is a stone-300 fill with a 1px stone-500 outline, so adjacent series separate by outline.
+
+## 2026-10-23 (restore r24)
+
+- Every new round must start from a base that contains all approved commits; verify with git merge-base --is-ancestor before building.

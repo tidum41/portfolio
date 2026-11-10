@@ -1,0 +1,26 @@
+# P7 loop log (review/round-p7 off 9284d4f)
+
+## Options round (before loop 1)
+- Problem before figure. A: the brief two-line prose (P6). B: the prose at study scale, two paragraphs of vague quantifiers. C: B answering "How many shoppers misread..." Picked C: the question asks for a count and the answer can only say many and some, so the pain is visible without a caption doing the work (Christine Liang's "AI failure as an observable symptom"). Compare: `shots/p7/opts/compare-problem-1440.png`.
+- Levels. A: 2+1 with the chosen card last (P6). B: chosen card first at full width, ruled-out pair below. Picked B: the final answer leads, then the options it beat (Rachel Chen, "the final flows were simple, but..."). Compare: `shots/p7/opts/opt1-levels-1440.png` vs `opt2-levels-1440.png`.
+- Data viz. A: two pairs with the Data shape, Encoding and Tradeoff rows. B: same without those rows. C: B with the segments pair first. Picked C: the rows were a list of three on every pair and duplicated the verdict; the segments pair is the call the body argues, and the coverage pair repeats the counts section, so it goes second. Compare: `shots/p7/opts/compare-data-viz-1440.png`.
+
+## Loop 1
+- Found: problem h2 below the 1440x900 fold (P4 and P6 mistake repeated). Fix: hero body cut to two sentences. Result: the problem h2 sits inside the fold (`shots/p7/loop1/fold-1440.png`).
+- Found: at 390 the chosen Levels card still came last, because the round J phone rule forces version order. Fix: the chosen-first opt-in overrides it at every width.
+- Found: at 390 the chosen card's bar label clipped to "75 of 300 D". Fix: shorter label "Unsure", which also matches what Mei and Owen say.
+- Learned: every fold and clip fix has to be checked at 390 too; a desktop-only media query silently loses to an older phone rule.
+
+## Loop 2
+- Found: at 390 the chosen card still clipped, now as "75 of 300 U". Fix: the minority side shows "75" with the label "Unsure"; the majority keeps "225 of 300", so the denominator is still read once.
+- Found: the ending restated the hero and the measure section read as a metrics wish list. Fix, after Ori Porat's "What shipped and what's coming" and Caleb Wu's closing learnings: the h2 becomes "Counts shipped, and I'd test the rest on speed and depth together", the body says what shipped and what is concept, and the takeaway keeps a learning placeholder. TOC label is now "Shipped and next".
+- Found: the Levels placeholder asked which version failed, which invites a recount. Fix: it now asks for the reversal (what you assumed would help that ended up hurting), Caleb Wu's "initially assumed... actually created decision paralysis" move.
+- Learned: a shorter label is a weaker fix than dropping redundant text; the denominator only has to appear once per bar.
+
+## Loop 3
+- Skim test (headings and captions only, from `dlg copy`): problem, count, depth, charts, clips, thin data, what shipped. It reads as one thread. The data viz h2 is the one heading that doesn't carry speed versus depth; it is a TASTE-decided h2, so the caption carries the point instead.
+- Found: the measure status line said "Proposed, no results yet" under a heading that opens with "Counts shipped". Fix: "Counts shipped. The test is proposed, with no results yet".
+- Found, not fixed: in dark mode the chosen Levels card renders dark while the two ruled-out cards stay light (`shots/p7/loop3/dark-mid.png`). It predates P7; the cause sits in the shared compare CSS and needs a scoped fix.
+- Found, not fixed: at 1440 the chosen-first layout leaves an empty band between the chosen card's caption and the ruled-out pair, from the subgrid rows.
+- Gates: check:dialogue-system, check:dialogue-tokens and check:dialogue-preview pass; `dlg copy` reports 0 em dashes and 887 words.
+- Learned: status lines are copy too; when a heading changes, reread the line under it.

@@ -14,6 +14,8 @@ type Props = {
   hideHeader?: boolean;
   /** Interviews behind the answer; omit for a card that is not an answer. */
   evidence?: number;
+  /** Out-of group for the evidence footer when it is a segment, e.g. { of: 63, group: "lapsed buyers" }. */
+  evidenceOf?: { of: number; group: string };
   /** @deprecated Anatomy targets live on answer parts, not the chat head. */
   anatomy?: boolean;
 };
@@ -25,6 +27,7 @@ export default function StudyChatShell({
   hideComposer,
   hideHeader,
   evidence,
+  evidenceOf,
 }: Props) {
   return (
     <div
@@ -65,7 +68,7 @@ export default function StudyChatShell({
       <div className="dp-study-chat__scroll">
         <div className="dp-study-chat__body" data-annotate-part="chat-body">{children}</div>
       </div>
-      {evidence !== undefined ? <EvidenceFooter count={evidence} /> : null}
+      {evidence !== undefined ? <EvidenceFooter count={evidence} of={evidenceOf?.of} group={evidenceOf?.group} /> : null}
       {!hideComposer ? <ChatComposer /> : null}
     </div>
   );

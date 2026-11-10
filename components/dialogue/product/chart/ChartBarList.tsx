@@ -17,6 +17,8 @@ type Props = {
   className?: string;
   /** Quarter gridlines over the tracks (the analyst's first draft). */
   gridlines?: boolean;
+  /** Columns side by side instead of rows (a standard two-bar chart, drawn for the Counts explorations). */
+  vertical?: boolean;
 };
 
 /** Horizontal bar list — funnel, distribution, quote frequency, segment companion. */
@@ -27,8 +29,30 @@ export default function ChartBarList({
   note,
   className,
   gridlines = false,
+  vertical = false,
 }: Props) {
   const max = maxProp ?? Math.max(...rows.map((r) => r.value), 1);
+  if (vertical) {
+    return (
+      <div className={["dp-chart-root dp-chart-cols", className].filter(Boolean).join(" ")}>
+        <div className="dp-chart-cols__plot">
+          {rows.map((row, i) => (
+            <div key={row.label} className="dp-chart-cols__col" data-annotate-part={`col-${annotateSlug(row.label)}`}>
+              <span className={["dp-chart-bars__value", row.focal ? "dp-chart-bars__value--focal" : ""].filter(Boolean).join(" ")}>{row.display ?? String(row.value)}</span>
+              <div className="dp-chart-cols__track">
+                <div
+                  className="dp-chart-cols__bar"
+                  style={{ height: `${Math.max(0, Math.min(100, (row.value / max) * 100))}%`, backgroundColor: chartBarFill(i, row.focal, row.secondary) }}
+                />
+              </div>
+              <span className="dp-chart-cols__label">{row.label}</span>
+            </div>
+          ))}
+        </div>
+        {note ? <p className="dp-chart-bars__note">{note}</p> : null}
+      </div>
+    );
+  }
   const hasDetail = rows.some((r) => r.detail);
 
   return (
@@ -41,7 +65,7 @@ export default function ChartBarList({
         const fill =
           fillMode === "magnitude"
             ? chartBarFillByMagnitude(row.value, max, row.focal)
-            : chartBarFill(i, row.focal);
+            : chartBarFill(i, row.focal, row.secondary);
         return (
           <div key={row.label} className="dp-chart-bars__row" data-annotate-part={`bar-row-${annotateSlug(row.label)}`}>
             <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}</span>
@@ -65,7 +89,12 @@ export default function ChartBarList({
                 .filter(Boolean)
                 .join(" ")}
             >
-              {row.display ?? String(row.value)}
+              {row.pct ? (
+                <>
+                  <span className="dp-chart-bars__v-count">{row.display ?? String(row.value)}</span>
+                  <span className="dp-chart-bars__v-share" aria-hidden>{row.pct}</span>
+                </>
+              ) : (row.display ?? String(row.value))}
             </span>
             {hasDetail ? (
               <span className="dp-chart-bars__detail" data-annotate-part={`bar-detail-${annotateSlug(row.label)}`}>

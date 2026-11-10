@@ -1,10 +1,5 @@
-import {
-  DIALOGUE_PLACEMENT_INTERVIEW_STILL_HEIGHT,
-  DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC,
-  DIALOGUE_PLACEMENT_INTERVIEW_STILL_WIDTH,
-} from "@/lib/caseStudies/dialoguePlacementStill";
+import { WaveformIcon } from "@/components/dialogue/product/icons";
 
-const PLAYED = 14.04;
 const BUFFERED = 17.269;
 
 function PlayIcon() {
@@ -26,6 +21,16 @@ function SkipIcon({ back = false }: { back?: boolean }) {
         <text x={back ? 5.8 : 8.2} y="11.1" textAnchor="middle">10</text>
       </svg>
     </span>
+  );
+}
+
+/** P16: opens the full session in a new tab. Same 18px filled glyph language as the Paper player icons. */
+function OpenSessionIcon() {
+  return (
+    <svg className="dp-qplayer__icon" viewBox="0 0 18 18" aria-hidden>
+      <path d="M10 2.75c0-.414.336-.75.75-.75h4.5c.414 0 .75.336.75.75v4.5a.75.75 0 0 1-1.5 0V4.56l-5.47 5.47a.75.75 0 1 1-1.06-1.06l5.47-5.47h-2.69a.75.75 0 0 1-.75-.75" />
+      <path d="M4.75 4.5A1.25 1.25 0 0 0 3.5 5.75v7.5c0 .69.56 1.25 1.25 1.25h7.5c.69 0 1.25-.56 1.25-1.25V10.5a.75.75 0 0 1 1.5 0v2.75A2.75 2.75 0 0 1 12.25 16h-7.5A2.75 2.75 0 0 1 2 13.25v-7.5A2.75 2.75 0 0 1 4.75 3H7.5a.75.75 0 0 1 0 1.5z" />
+    </svg>
   );
 }
 
@@ -57,29 +62,23 @@ function FullscreenIcon() {
 }
 
 /** Paper player (file 01M58MSRB3KSVHQR7762JKXVX7, node 597-0): blurred still, glass control bar, static. */
-export function DialogueInterviewPlayer() {
+const toSec = (t: string) => t.split(":").reduce((a, n) => a * 60 + Number(n), 0);
+
+/** Each digit sits in its own fixed cell, so a time never changes width as the seconds tick (the product font's tabular
+ *  figures are not guaranteed to load, and "1" is narrow in its proportional figures). */
+export function TimeDigits({ time }: { time: string }) {
+  return <>{[...time].map((c, i) => (/\d/.test(c) ? <span key={i} className="dp-time-d">{c}</span> : c))}</>;
+}
+
+/** current and total are mm:ss; the played bar follows them so the clip time matches the quote row. */
+export function DialogueInterviewPlayer({ current = "18:27", total = "42:10", start }: { current?: string; total?: string; /** When set, the timeline is the clip: it runs from `start` to `total` instead of from 0. */ start?: string } = {}) {
+  const from = start ? toSec(start) : 0;
+  const played = Math.max(0, Math.min(100, Math.round(((toSec(current) - from) / (toSec(total) - from)) * 1000) / 10));
   return (
     <div className="dp-qplayer" data-placement-crop="player" data-annotate-part="player">
-      <div
-        className="dp-qplayer__still-box"
-        style={{ aspectRatio: `${DIALOGUE_PLACEMENT_INTERVIEW_STILL_WIDTH} / ${DIALOGUE_PLACEMENT_INTERVIEW_STILL_HEIGHT}` }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          data-dialogue-placement-still="true"
-          data-annotate-part="player-still"
-          src={DIALOGUE_PLACEMENT_INTERVIEW_STILL_SRC}
-          alt=""
-          width={1920}
-          height={888}
-          className="dp-qplayer__still"
-        />
-        <div
-          aria-hidden
-          data-face-blur="true"
-          data-annotate-part="player-face-blur"
-          className="dp-qplayer__face-blur"
-        />
+      {/* A neutral speaker placeholder: no frame from any real recording appears in a visual. */}
+      <div className="dp-qplayer__placeholder" aria-hidden data-annotate-part="player-still">
+        <WaveformIcon className="dp-qplayer__placeholder-icon" />
       </div>
       <div className="dp-qplayer__gradient" aria-hidden data-annotate-part="player-gradient" />
       <div className="dp-qplayer__bar" aria-hidden data-annotate-part="player-controls">
@@ -89,20 +88,22 @@ export function DialogueInterviewPlayer() {
           <span className="dp-qplayer__btn" data-annotate-part="player-skip-forward"><SkipIcon /></span>
         </div>
         <div className="dp-qplayer__time-controls">
-          <span className="dp-qplayer__time" data-annotate-part="player-time-current">01:39</span>
+          <span className="dp-qplayer__time" data-annotate-part="player-time-current"><TimeDigits time={current} /></span>
           <div className="dp-qplayer__scrub">
             <div className="dp-qplayer__track" data-annotate-part="player-track">
-              <span className="dp-qplayer__buffered" style={{ width: `${BUFFERED}%` }} />
-              <span className="dp-qplayer__played" style={{ width: `${PLAYED}%` }} />
+              <span className="dp-qplayer__buffered" style={{ width: `${Math.max(BUFFERED, played + 6)}%` }} />
+              <span className="dp-qplayer__played" style={{ width: `${played}%` }} />
             </div>
           </div>
-          <span className="dp-qplayer__time" data-annotate-part="player-time-total">11:45</span>
+          <span className="dp-qplayer__time" data-annotate-part="player-time-total"><TimeDigits time={total} /></span>
         </div>
         <div className="dp-qplayer__group dp-qplayer__group--end">
           <span className="dp-qplayer__btn dp-qplayer__btn--text" data-annotate-part="player-speed">1×</span>
           <span className="dp-qplayer__btn" data-annotate-part="player-volume"><VolumeIcon /></span>
           <span className="dp-qplayer__btn" data-annotate-part="player-pip"><PipIcon /></span>
           <span className="dp-qplayer__btn" data-annotate-part="player-fullscreen"><FullscreenIcon /></span>
+          {/* P16: the session link lives in the player, the same in the product UI and every case-study visual. */}
+          <span className="dp-qplayer__btn" data-annotate-part="player-session" title="Open session in a new tab"><OpenSessionIcon /></span>
         </div>
         <span className="dp-qplayer__bar-ring" aria-hidden />
       </div>

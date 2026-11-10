@@ -1,5 +1,6 @@
 "use client";
 
+import PlayPauseButton from "@/components/PlayPauseButton";
 import { useRef, useEffect, useState, type ComponentType } from "react";
 import { useDialKit } from "dialkit";
 import { warmRootMargin } from "@/lib/networkHint";
@@ -138,36 +139,7 @@ export default function PhoneMockup({
   };
 
   const playPauseButton = videoSrc && !muxPlaybackId ? (
-    <button
-      onClick={togglePlay}
-      onMouseEnter={() => {
-        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) setIsHovered(true);
-      }}
-      onMouseLeave={() => setIsHovered(false)}
-      aria-label={isPlaying ? "Pause" : "Play"}
-      className="phone-mockup-play-btn"
-      style={{
-        position: "absolute", top: 8, right: 8, zIndex: 10,
-        width: 44, height: 44, borderRadius: "50%",
-        background: "var(--color-placeholder)",
-        boxShadow: isHovered ? "inset 0 0 0 1.5px var(--color-text-muted)" : "none",
-        border: "none", cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
-        flexShrink: 0,
-        transition: "box-shadow 150ms ease",
-      }}
-    >
-      {isPlaying ? (
-        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-          <rect x="1.5" y="1.5" width="3" height="8" rx="1" fill="var(--color-text-secondary)" />
-          <rect x="6.5" y="1.5" width="3" height="8" rx="1" fill="var(--color-text-secondary)" />
-        </svg>
-      ) : (
-        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true" style={{ marginLeft: 1 }}>
-          <path d="M2 1.5 L9.5 5.5 L2 9.5 Z" fill="var(--color-text-secondary)" />
-        </svg>
-      )}
-    </button>
+    <PlayPauseButton isPlaying={isPlaying} onToggle={togglePlay} />
   ) : null;
 
   const phoneContent = (

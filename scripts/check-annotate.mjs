@@ -113,20 +113,16 @@ if (expectProd) {
 
   await annotate(
     page,
-    "chart dot",
-    '[data-annotate^="dialogue-chart-groups-chosen/dot-"]:not([data-annotate*="dot-row"]):not([data-annotate*="dot-label"]):not([data-annotate*="dot-plot"]):not([data-annotate*="dot-value"]):not([data-annotate*="dot-axis"])',
-    await page.evaluate(() =>
-      [...document.querySelectorAll('[data-annotate^="dialogue-chart-groups-chosen/dot-"]')]
-        .map((e) => e.getAttribute("data-annotate"))
-        .find((a) => !/dot-(row|label|plot|value|axis)/.test(a)),
-    ),
-    "Chart dot sits too close to its value label",
+    "bar segment",
+    '[data-annotate="dialogue-counts-open/stack-seg-did-not"]',
+    "dialogue-counts-open/stack-seg-did-not",
+    "Bar segment sits too close to its label",
   );
   await annotate(
     page,
     "pill",
-    '[data-annotate="dialogue-hero/clip-quote-priya-k"]',
-    "dialogue-hero/clip-quote-priya-k",
+    '[data-annotate="dialogue-hero/clip-quote-mei"]',
+    "dialogue-hero/clip-quote-mei",
     "Selected quote row needs more contrast",
   );
 
@@ -140,8 +136,8 @@ if (expectProd) {
 
   await toggle(page).click();
   await page.waitForTimeout(300);
-  await page.locator('[data-annotate="dialogue-hero/zoom"]').first().scrollIntoViewIfNeeded();
-  await page.locator('[data-annotate="dialogue-hero/zoom"]').first().click();
+  await page.locator('[data-annotate="dialogue-problem-paragraphs/zoom"]').first().scrollIntoViewIfNeeded();
+  await page.locator('[data-annotate="dialogue-problem-paragraphs/zoom"]').first().click();
   await page.waitForSelector(".cs-lightbox-backdrop", { timeout: 4000 });
   await page.waitForTimeout(500);
   await toggle(page).click();
@@ -151,15 +147,15 @@ if (expectProd) {
     () => [...document.querySelectorAll('.cs-lightbox-backdrop [data-annotate]')].map((e) => e.getAttribute("data-annotate")),
   );
   log(
-    lbParts.includes("dialogue-hero/lightbox-dialog") && lbParts.includes("dialogue-hero/lightbox-close"),
+    lbParts.includes("dialogue-problem-paragraphs/lightbox-dialog") && lbParts.includes("dialogue-problem-paragraphs/lightbox-close"),
     `lightbox parts present (${lbParts.length}, incl. dialog and close)`,
   );
   await annotate(
     page,
     "lightbox pill",
-    '.cs-lightbox-backdrop [data-annotate="dialogue-hero-lightbox/clip-quote-priya-k"]',
-    "dialogue-hero-lightbox/clip-quote-priya-k",
-    "Quote row in the enlarged view is clipped",
+    '.cs-lightbox-backdrop [data-annotate="dialogue-problem-paragraphs-lightbox/user-message"]',
+    "dialogue-problem-paragraphs-lightbox/user-message",
+    "Message in the enlarged view is clipped",
   );
 
   const tb = await page.getByRole("button", { name: "Copy feedback" }).boundingBox();
@@ -173,10 +169,10 @@ if (expectProd) {
   await page.waitForTimeout(500);
   const md = await page.evaluate(() => navigator.clipboard.readText());
   console.log("\n----- copied markdown -----\n" + md + "\n---------------------------\n");
-  log(/chart-groups-chosen\/dot-/.test(md), "markdown names the chart dot by data-annotate");
-  log(/hero\/clip-quote-priya-k/.test(md), "markdown names the quote row by data-annotate");
+  log(/counts-open\/stack-seg-did-not/.test(md), "markdown names the bar segment by data-annotate");
+  log(/hero\/clip-quote-mei/.test(md), "markdown names the quote row by data-annotate");
   log(/dialogue-thin-data\/low-signal/.test(md), "markdown names the thin-data warning by data-annotate");
-  log(/dialogue-hero-lightbox\/clip-quote-priya-k/.test(md), "markdown names the lightbox element by data-annotate");
+  log(/dialogue-problem-paragraphs-lightbox\/user-message/.test(md), "markdown names the lightbox element by data-annotate");
   await page.close();
 }
 
@@ -207,7 +203,7 @@ for (const [path, point] of [
   });
   await toggle(page).click();
   await page.waitForTimeout(300);
-  const pt = point ?? (await centerOf(page, '[data-annotate="dialogue-hero/clip-quote-priya-k"]'));
+  const pt = point ?? (await centerOf(page, '[data-annotate="dialogue-hero/clip-quote-mei"]'));
   await page.mouse.click(pt.x, pt.y);
   await page.waitForTimeout(500);
   const box = page.locator("agentation-toolbar textarea:visible").first();

@@ -11,7 +11,7 @@
   --dp-chart-bar-thickness: 8px;
   --dp-chart-bar-gap: 10px;
   --dp-chart-label-width: 110px;
-  --dp-chart-value-width: 40px;
+  --dp-chart-value-width: 64px; /* P15 item 10: one right-aligned column wide enough for "88 of 125" in every chart */
   --dp-chart-gutter: 8px;
   --dp-chart-min-width: 240px;
   --dp-chart-line-stroke: var(--dp-icon-stroke);
@@ -158,6 +158,19 @@
   color: var(--dp-chart-focal);
 }
 
+/* —— Vertical two-bar chart (Counts exploration) —— */
+.dp-chart-cols { min-width: 0; width: 100%; }
+.dp-chart-cols__plot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: end; }
+.dp-chart-cols__col { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.dp-chart-cols__track { display: flex; align-items: flex-end; width: 100%; height: 96px; background: var(--dp-chart-track); border-radius: var(--dp-radius-bar); overflow: hidden; }
+.dp-chart-cols__bar { width: 100%; border-radius: var(--dp-radius-bar); }
+.dp-chart-cols__label {
+  font-size: var(--dp-chart-label-size);
+  line-height: var(--dp-chart-label-leading);
+  color: var(--dp-chart-label-color);
+  text-align: center;
+}
+
 .dp-chart-bars__note {
   margin: 8px 0 0;
   font-size: var(--dp-chart-label-size);
@@ -296,6 +309,10 @@
   --dp-chart-detail-width: 36px;
 }
 
+.dp-chart-dots--detail {
+  --dp-chart-detail-width: 64px;
+}
+
 .dp-chart-bars__detail,
 .dp-chart-dots__detail {
   width: var(--dp-chart-detail-width);
@@ -371,6 +388,10 @@
 
 .dp-chart-dots__dot--focal {
   background: var(--dp-chart-focal);
+}
+
+.dp-chart-dots__dot--secondary {
+  background: var(--dp-chart-secondary);
 }
 
 .dp-chart-dots__value {
@@ -453,14 +474,28 @@
 
 .dp-chart-stack__labels {
   display: flex;
+  min-width: 0;
+  width: 100%;
+  overflow: visible;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .dp-chart-stack__label {
   min-width: 0;
+  overflow: visible;
   font-size: var(--dp-chart-label-size);
   line-height: var(--dp-chart-label-leading);
   color: var(--dp-chart-label-color);
   white-space: nowrap;
+}
+
+/* Last label (e.g. 75 of 300 Unsure) sizes to its text so the card never clips it. */
+.dp-chart-stack__label[data-last] {
+  flex: 0 0 auto;
+  width: auto;
+  text-align: right;
+  margin-left: auto;
 }
 
 .dp-chart-stack__label-value {

@@ -14,7 +14,7 @@ const SECTIONS = [
   { id: "lead", sel: ".dialogue-lead-answer" },
   { id: "anatomy", sel: '[data-dialogue-asset-id="D-08"]' },
   { id: "gallery", sel: ".dialogue-chart-gallery" },
-  { id: "clip-player", sel: '[data-dialogue-asset-id="D-10"], #clips .dialogue-live-block' },
+  { id: "clip-player", sel: '[data-dialogue-asset-id="D-10"], #levels .dialogue-live-block' },
   { id: "placement", sel: "#placement" },
   { id: "problem", sel: '[data-dialogue-asset-id="D-02"]' },
   { id: "hero", sel: ".dialogue-hero-media" },

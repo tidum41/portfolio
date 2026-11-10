@@ -277,7 +277,13 @@
   margin: 8px 0;
 }
 
-.dp-search-step-wrap + .dp-summary {
+.dp-search-step-wrap + .dp-prose-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dp-summary {
   margin: 0 0 8px;
 }
 
@@ -2688,10 +2694,8 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 10px 12px;
-  border-radius: var(--dp-radius-chip);
-  background: var(--dp-warn-bg);
-  color: var(--dp-warn-fg);
+  padding: 0;
+  color: var(--dp-muted);
 }
 
 .dp-low-signal__icon {
@@ -2699,7 +2703,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   height: 16px;
   flex-shrink: 0;
   margin-top: 2px;
-  color: var(--dp-warn-fg);
+  color: var(--dp-muted);
 }
 
 .dp-low-signal__text {
@@ -3436,32 +3440,14 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   font-family: var(--dp-font-family);
 }
 
-.dp-qplayer__still-box {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.dp-qplayer__still {
+.dp-qplayer__placeholder {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--dp-ink) 22%, var(--dp-bg)); /* a neutral speaker tile, not a dark slab */
 }
-
-.dp-qplayer__face-blur {
-  position: absolute;
-  left: 73.8%;
-  top: 48.3%;
-  width: 20.1%;
-  height: 28.7%;
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-}
+.dp-qplayer__placeholder-icon { width: 32px; height: 32px; color: color-mix(in srgb, var(--dp-ink) 45%, transparent); }
 
 .dp-qplayer__gradient {
   position: absolute;
@@ -3628,7 +3614,9 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 }
 
 @container (max-width: 300px) {
-  .dp-qplayer__btn--text {
+  .dp-qplayer__btn--text,
+  .dp-qplayer__scrub,
+  .dp-qplayer__time[data-annotate-part="player-time-total"] {
     display: none;
   }
 
@@ -3643,3 +3631,781 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
     max-height: none;
   }
 }
+
+/* Round P8: sample of one side of a count. Spacing reuses the answer card's 8 and 12 steps. */
+.dp-side-sample {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dp-side-sample__head {
+  margin: 4px 0 0;
+}
+
+/* Round P10 motion demos. Measured: enter 300 ms opacity 0.5 to 1; spin 1000 ms linear;
+   cards land whole with a scroll ease-out of about 133 ms. Tap cue durations are estimates. */
+.dlg-rel { position: relative; }
+.dlg-composer-wrap { position: relative; margin-top: auto; }
+.dp-study-chat__composer-text { margin: 0; color: var(--dp-ink); }
+.dlg-querying {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px 16px;
+  border: 1px solid var(--dp-border);
+  border-radius: var(--dp-radius-control);
+  color: var(--dp-muted);
+  font-size: var(--text-body-size);
+  line-height: 20px;
+  align-self: flex-start;
+}
+.dlg-enter { animation: dlg-enter 300ms ease both; }
+@keyframes dlg-enter { from { opacity: 0.5; } to { opacity: 1; } }
+.dlg-querying__spin { animation: dlg-spin 1000ms linear infinite; }
+@keyframes dlg-spin { to { transform: rotate(360deg); } }
+.dlg-land { animation: dlg-land 140ms cubic-bezier(0.33, 1, 0.68, 1) both; }
+@keyframes dlg-land { from { transform: translateY(24px); } to { transform: none; } }
+.dlg-hidden { visibility: hidden; }
+.dlg-tap-cue {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--dp-radius-pill);
+  border: 2px solid var(--dp-brand);
+  background: var(--dp-brand-soft);
+  opacity: 0;
+  transform: scale(1.3);
+  pointer-events: none;
+}
+.dlg-tap-cue--on { animation: dlg-tap 450ms ease-out both; }
+@keyframes dlg-tap {
+  0% { opacity: 0; transform: scale(1.3); }
+  40% { opacity: 1; transform: scale(1); }
+  100% { opacity: 1; transform: scale(0.92); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dlg-enter, .dlg-land, .dlg-querying__spin, .dlg-tap-cue--on { animation: none; }
+}
+.dlg-empty { display: flex; flex-direction: column; gap: 8px; padding: 4px 0 8px; }
+.dlg-empty__lead { margin: 0 0 4px; font-size: var(--text-body-size); line-height: 20px; color: var(--dp-ink); }
+.dlg-suggest {
+  margin: 0;
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid var(--dp-border);
+  border-radius: var(--dp-radius-pill);
+  font-size: var(--text-meta-size);
+  line-height: 20px;
+  color: var(--dp-muted);
+}
+.dlg-querying { font-family: var(--dp-font-mono); }
+
+.dlg-scroll .dp-study-chat__scroll { overflow: hidden; }
+.dlg-scroll .dp-study-chat__body { transition: transform 133ms ease-out; }
+.dlg-scroll--down .dp-study-chat__body { transform: translateY(-96px); }
+@media (prefers-reduced-motion: reduce) { .dlg-scroll .dp-study-chat__body { transition: none; } }
+
+.dlg-flow-demo { position: relative; }
+
+/* Round P10 live recreation. Keyframes copied verbatim from Dialogue's frontend
+   (dialogue-anim/run2/keyframes.css: tw-animate enter, Tailwind spin) and spec.md (ellipsis). */
+@keyframes enter {
+  0% { opacity: var(--tw-enter-opacity, 1); transform: translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0) scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), var(--tw-enter-scale, 1)) rotate(var(--tw-enter-rotate, 0)); filter: blur(var(--tw-enter-blur, 0)); }
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+@keyframes ellipsis-1 { 0% { opacity: .3; } 13% { opacity: 1; } 40% { opacity: .3; } 100% { opacity: .3; } }
+@keyframes ellipsis-2 { 0% { opacity: .3; } 20% { opacity: .3; } 33% { opacity: 1; } 60% { opacity: .3; } 100% { opacity: .3; } }
+@keyframes ellipsis-3 { 0% { opacity: .3; } 40% { opacity: .3; } 53% { opacity: 1; } 80% { opacity: .3; } 100% { opacity: .3; } }
+.dlg-live .animate-in { animation: enter var(--tw-duration, 150ms) ease; }
+.dlg-live .fade-in-50 { --tw-enter-opacity: .5; }
+.dlg-live .duration-300 { --tw-duration: 300ms; }
+.dlg-live .dlg-spin { animation: spin 1000ms linear infinite; }
+.dlg-ellipsis { animation-duration: 1500ms; animation-timing-function: linear; animation-iteration-count: infinite; }
+.dlg-ellipsis--1 { animation-name: ellipsis-1; }
+.dlg-ellipsis--2 { animation-name: ellipsis-2; }
+.dlg-ellipsis--3 { animation-name: ellipsis-3; }
+.dlg-live { display: flex; flex-direction: column; }
+.dlg-live .dp-study-chat__scroll { overflow-y: auto; scrollbar-width: none; }
+.dlg-live .dp-study-chat__scroll::-webkit-scrollbar { display: none; }
+.dlg-analyzing { margin: 0; color: var(--dp-muted); font-size: var(--text-body-size); }
+.dlg-live .dlg-querying { display: flex; align-items: center; gap: 8px; }
+.dlg-querying__label { font-family: var(--dp-font-mono); }
+.dlg-querying__count { margin-left: auto; }
+.dlg-querying .dlg-spin { margin-left: auto; }
+.dlg-live .dlg-suggest { text-align: left; background: transparent; cursor: pointer; font-family: inherit; }
+.dlg-live .dlg-suggest:disabled { cursor: default; }
+.dlg-live__bar { position: relative; }
+.dlg-live__side { position: absolute; top: -6px; bottom: -6px; border: 0; background: transparent; cursor: pointer; border-radius: var(--dp-radius-control); }
+/* Default (live page, single hit target) and --unsure cover the 75 segment; --friday covers 225. */
+.dlg-live__side:not(.dlg-live__side--friday), .dlg-live__side--unsure { right: -6px; width: calc(25% + 12px); }
+.dlg-live__side--friday { left: -6px; width: calc(75% + 12px); }
+.dlg-live__side:focus-visible { outline: 2px solid var(--dp-brand); }
+.dlg-live__sample .dp-clip-quote { cursor: pointer; }
+.dlg-live__send { opacity: .5; }
+.dlg-live__reset { background: transparent; border: 0; cursor: pointer; color: inherit; }
+@media (prefers-reduced-motion: reduce) {
+  .dlg-live .animate-in, .dlg-live .dlg-spin, .dlg-ellipsis { animation: none; }
+}
+
+/* Variant A depth picker: Dialogue's composer row plus a segmented control from system tokens. */
+.dlg-depth { display: flex; gap: 4px; padding: 4px; margin-bottom: 8px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-control); background: var(--dp-card); } /* Dialogue tab row (Overall / Sections / Participants) */
+.dlg-depth__opt { flex: 1; padding: 4px 8px; border: 0; border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-muted); font-family: inherit; font-size: var(--text-meta-size); cursor: pointer; }
+.dlg-depth__opt[aria-checked="true"], .dlg-depth__opt[aria-pressed="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); } /* Dialogue active tab chip; cumulative on picker + toggles (P14 item 6) */
+.dlg-depth__opt:disabled { cursor: default; }
+/* Selected chips: no hover change, no X. Step back by tapping a lower level. */
+.dlg-depth__opt[aria-pressed="true"]:hover, .dlg-depth__opt[aria-checked="true"]:hover, .dlg-depth__opt[aria-current="true"]:hover { background: var(--dp-nav-active-bg); color: var(--dp-ink); cursor: default; }
+/* P14 item 5: picker only — composer keeps the 2-line height so typed ↔ placeholder never jumps the chip row. Hero must not inherit this or the answer scrolls/clips. */
+.dlg-stage--picker .dp-study-chat__composer-box { min-height: 108px; box-sizing: border-box; }
+.dlg-followups { display: flex; flex-direction: column; gap: 8px; }
+/* Variant B disclosure: a text button in the answer card. */
+.dlg-disclose { align-self: flex-start; margin-top: 8px; padding: 4px 12px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-pill); background: transparent; color: var(--dp-muted); font-family: inherit; font-size: var(--text-meta-size); cursor: pointer; }
+.dlg-segment { margin: 12px 0 0; color: var(--dp-muted); font-size: var(--text-meta-size); }
+.dlg-demo { position: static; width: 100%; max-width: 100%; margin: 40px 0 0; line-height: 0; }
+.dlg-demo__video { display: block; width: 100%; height: auto; margin: 0; }
+/* .dlg-demo stays static so the play button (absolute, 8px top right) anchors to the figure's background well, .dialogue-rachel-frame, as PhoneMockup does on BruinLease; never over the product UI.
+   Each recording carries its own 24px well margin and fills the well's width (so its smallest text renders at 12px or more at 1440).
+   The 40px top gutter (8 + 44 + the recording's own margin) keeps the 44px button above the video at every width. */
+.dlg-demo-pair { display: grid; grid-template-columns: 1fr; gap: 40px; } /* stacked so each recording plays at full well width, readable at 1440 */
+/* Levels reasoning: the bet as one line, then the earlier rounds' check / X / minus list. */
+.dlg-reason { margin: 0 0 12px; }
+.dlg-reason__bet { margin: 0 0 8px; color: var(--color-text-primary); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); font-weight: 500; text-wrap: pretty; }
+.dlg-demo-pair__label { margin: 0 0 8px; }
+@media (max-width: 600px) { .dlg-demo-pair { grid-template-columns: 1fr; } }
+.dlg-demo-pair__note { margin: 0 0 8px; color: var(--dp-muted); font-size: var(--text-meta-size); }
+.cs-hero-media-frame .dlg-demo { width: 100%; }
+/* P14 item 14: hero only. Drop the 40px band; video fills the frame and the button floats over the recording's own well air. */
+.cs-hero-media-frame .dlg-demo { margin: 0; }
+.cs-hero-media-frame .dialogue-rachel-frame__pad { padding: 0; }
+/* At 390 the recording's 48px well air scales to ~16px, under the 52px the button needs. Keep the band on small screens so the button stays clear of the panel. */
+@media (max-width: 600px) {
+  .cs-hero-media-frame .dlg-demo { margin: 40px 0 0; }
+}
+
+.dlg-live-stage__slot { width: 471px; margin: 40px auto; }
+.dlg-hero-opt { padding: 40px; display: grid; gap: 48px; justify-items: center; }
+.dlg-hero-opt__a { width: 640px; }
+.dlg-hero-opt__b { width: 923px; }
+.dlg-hero-opt .dialogue-rachel-frame { padding: 20px; }
+.dlg-hero-opt__panel { width: 471px; margin: 0 auto; }
+.dlg-hero-opt__b .dlg-hero-opt__panel { zoom: 1.45; }
+
+/* P5 / TASTE: thin-data is a stone line, not amber. Keep the icon centred on the first line. */
+.dp-low-signal {
+  align-items: flex-start;
+  gap: 8px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--dp-muted);
+}
+.dp-low-signal__icon { margin-top: calc((var(--text-meta-leading) - 16px) / 2); color: var(--dp-muted); }
+.dp-low-signal__text { font-weight: 400; color: var(--dp-muted); }
+
+/* Round P10 interaction states, in Dialogue's language: Tailwind's default colour transition
+   (150 ms cubic-bezier(0.4, 0, 0.2, 1), measured on the real quote cards), warm hover fill,
+   active fill one step darker, brand focus ring. Enter feedback reuses tw-animate fade-in-50. */
+.dp-animate-in { animation: enter 300ms ease; --tw-enter-opacity: .5; }
+.dp-next-study, .dlg-live .dlg-suggest, .dlg-disclose, .dlg-depth__opt, .dlg-live__side, .dlg-live__sample .dp-clip-quote, .dlg-live__reset {
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dp-next-study:active, .dp-next-study--done { background: var(--dp-nav-active-bg); }
+.dlg-live .dlg-suggest:not(:disabled):hover, .dlg-disclose:hover, .dlg-depth__opt:not(:disabled):hover, .dlg-live__reset:hover { background: var(--dp-warm); color: var(--dp-ink); }
+.dlg-live .dlg-suggest:not(:disabled):active, .dlg-disclose:active, .dlg-depth__opt:not(:disabled):active, .dlg-live__reset:active { background: var(--dp-nav-active-bg); }
+.dlg-live .dlg-suggest:focus-visible, .dlg-disclose:focus-visible, .dlg-depth__opt:focus-visible, .dlg-live__reset:focus-visible, .dlg-live__sample .dp-clip-quote:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
+.dlg-live__sample .dp-clip-quote:hover { border-color: var(--dp-ink); }
+.dlg-live__sample .dp-clip-quote:active { background: var(--dp-nav-active-bg); }
+/* Counts: no box around the hit area. The grey segment itself takes hover, press and open states. */
+.dlg-live__side, .dlg-live__side:hover, .dlg-live__side:active { box-shadow: none; background: transparent; }
+.dlg-live__bar .dp-chart-stack__seg { transition: background-color 150ms ease, opacity 240ms ease; }
+
+.dlg-sample-key { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: var(--dp-radius-chip); background: var(--dp-chart-muted); vertical-align: 1px; } /* the segment's own swatch ties the rows to it */
+.dlg-stage__sample[data-side="friday"] .dlg-sample-key,
+.dlg-stage__sample[data-side="new"] .dlg-sample-key { background: var(--dp-chart-focal); }
+.dlg-stage__sample[data-side="unsure"] .dlg-sample-key { background: var(--dp-chart-muted); }
+/* P14 item 9: hit target over the first (focal) bar row in a ChartBarList answer. */
+.dlg-live__bars { position: relative; }
+.dlg-live__bar-hit {
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  top: -4px;
+  height: calc(var(--text-meta-leading, 20px) + 16px);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--dp-radius-control);
+}
+.dlg-live__bar-hit:focus-visible { outline: 2px solid var(--dp-brand); }
+.dlg-live__bars:has(.dlg-live__bar-hit[aria-expanded="true"]) .dp-chart-bars__row:not(:first-child) { opacity: 0.35; transition: opacity 240ms ease; }
+.dlg-live__bars .dp-chart-bars__row { transition: opacity 240ms ease; }
+.dlg-live__bar[data-side="unsure"] .dp-chart-stack__labels > :last-child,
+.dlg-live__bar[data-side="friday"] .dp-chart-stack__labels > :first-child { color: var(--dp-ink); font-weight: 500; }
+/* Clip: the player hangs off the selected row (name, time, collapse) with the row's 8px rhythm. */
+.dlg-live__sample .dp-clip-quote--selected { cursor: default; }
+.dlg-live__clip { margin-top: 8px; line-height: 0; }
+.dlg-clip-collapse { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-ink); cursor: pointer; transition: background-color 150ms ease, color 150ms ease; } /* same ink as the panel minimize */
+.dlg-clip-collapse:hover { background: var(--dp-warm); color: var(--dp-ink); }
+.dlg-clip-collapse:active { background: var(--dp-nav-active-bg); }
+.dlg-clip-collapse:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
+.dlg-live__sample .dp-clip-quotes { padding-bottom: 4px; }
+/* Bare panel for the case study: no header, subtitle or composer; the thread sits at the bottom like a chat. */
+.dlg-live.dlg-live--bare .dp-study-chat__body { padding-top: var(--dp-chat-pad); }
+.dlg-live .dp-user-bubble p { text-wrap: balance; }
+.dlg-live .dp-prose-stack p, .dlg-live .dp-chart-viz-card p { text-wrap: pretty; }
+@media (prefers-reduced-motion: reduce) { .dp-animate-in { animation: none; } }
+
+.cs-hero-media-frame .dlg-demo__video { border-radius: 5.1% / 5%; } /* 471x480 recording, full Study chat chrome (the one establishing shot) */
+
+/* P11: the panel header keeps a clean edge; scrolled content stops at a hairline instead of showing through. */
+/* P13: Dialogue's header sits on the panel surface with no rule; py-7 top, gap-4 (16) to the thread (states/06). */
+.dp-study-chat.dlg-live:not(.dlg-live--bare) .dp-study-chat__head { position: relative; z-index: 1; padding: var(--dp-chat-pad) var(--dp-chat-pad) 0; background: var(--dp-surface); box-shadow: none; }
+.dlg-live:not(.dlg-live--bare) .dp-study-chat__body { padding-top: 16px; }
+/* Count sample: head carries the collapse; +73 more is a real button around the source pill. */
+.dlg-live .dp-side-sample__head { display: flex; align-items: center; gap: 4px; }
+.dlg-live .dp-side-sample__head { align-items: flex-start; }
+.dlg-live .dp-side-sample__head .dlg-sample-key { flex: 0 0 auto; margin: 10px 4px 0 0; }
+.dlg-sample-head__text { min-width: 0; padding-top: 2px; }
+.dlg-nowrap { white-space: nowrap; }
+.dlg-more { padding: 0; border: 0; background: transparent; font: inherit; cursor: pointer; border-radius: var(--dp-radius-control); }
+.dlg-more:hover .dp-source-pill { background: var(--dp-warm); color: var(--dp-ink); }
+.dlg-more:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
+/* Clip bounds on the scrubber: the quote's span inside the whole interview. */
+.dlg-live__clip .dp-qplayer__track { position: relative; }
+/* Variant B depth row inside the answer: the composer's segmented control, pressed levels filled. */
+.dlg-depth--inline { margin: 8px 0 0; }
+.dlg-demo--static { line-height: normal; }
+.dlg-live .dp-study-chat__body > * { flex-shrink: 0; }
+
+/* Static recreations show the resting state only: no hover, press or pointer interaction (hover lives in the videos). */
+.dlg-demo--static, .dlg-demo--static * { pointer-events: none; }
+.dlg-demo--static .dlg-live__bar:has(.dlg-live__side) .dp-chart-stack__seg:not([data-focal]) { box-shadow: none; }
+.dialogue-lib__chart, .dialogue-lib__chart * { pointer-events: none; }
+/* Selected quote keeps its brand edge under the cursor; hover never overrides selection. */
+.dlg-live__sample .dp-clip-quote--selected, .dlg-live__sample .dp-clip-quote--selected:hover { border-color: var(--dp-brand); }
+/* P14 item 8: keep border at 1px and add an inset ring for the 2px look, so selection never shifts layout. */
+.dlg-stage .dp-clip-quote--selected {
+  border-width: 1px;
+  border-color: var(--dp-clip-focal-border);
+  box-shadow: inset 0 0 0 1px var(--dp-clip-focal-border);
+}
+/* Old answer: paragraphs keep the prose stack's gap. */
+.dlg-before { display: flex; flex-direction: column; gap: 12px; }
+/* Data viz: my version as the chat answers it, question bubble over the chart, no panel padding. */
+.dlg-specimen-chat { display: flex; flex-direction: column; gap: 12px; }
+.dlg-specimen-chat .dp-user-bubble { align-self: flex-end; }
+
+/* ===== P11 motion stage (design/TASTE.md "Motion"; build/p11-motion-spec.md) ===== */
+.dlg-motion-page { padding: 40px; }
+.dlg-motion-frame { width: 535px; padding: 56px; box-sizing: border-box; overflow: hidden; border-radius: 0; box-shadow: none; }
+.dlg-motion-frame__panel { width: 423px; overflow: visible; } /* the product root clips; the stage card's shadow needs its rounded bottom corners */
+/* The card sits whole inside 32px of air, with Dialogue's chat shadow; its body scrolls, the card never resizes. */
+.dlg-stage { height: 100%; display: flex; flex-direction: column; } /* panel surface, border and shadow stay Dialogue's own (.dp-study-chat) */
+.dlg-stage .dlg-stage__body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.dlg-stage .dlg-stage__body::-webkit-scrollbar { display: none; }
+.dlg-stage__body { display: flex; flex-direction: column; padding: var(--dp-chat-pad); }
+.dlg-stage__item + .dlg-stage__item { margin-top: 12px; }
+.dlg-stage__analyzing { display: flex; align-items: center; gap: 8px; }
+/* P14 item 8: grow height with grid rows so rows below move continuously; fade first on close, then fold. */
+.dlg-grow { display: grid; }
+.dlg-grow__inner { min-height: 0; overflow: hidden; }
+.dlg-grow--in { animation: dlg-grow-open 360ms cubic-bezier(0.2, 0, 0, 1) both; }
+.dlg-grow--out { animation: dlg-grow-close 450ms cubic-bezier(0.2, 0, 0, 1) both; }
+.dlg-grow--in .dlg-grow__inner { animation: dlg-grow-fade-in 200ms cubic-bezier(0.2, 0, 0, 1) 80ms both; }
+.dlg-grow--out .dlg-grow__inner { animation: dlg-grow-fade-out 150ms ease both; }
+@keyframes dlg-grow-open { from { grid-template-rows: 0fr; } to { grid-template-rows: 1fr; } }
+@keyframes dlg-grow-close {
+  0% { grid-template-rows: 1fr; }
+  33% { grid-template-rows: 1fr; } /* hold while opacity fades (150ms of 450) */
+  100% { grid-template-rows: 0fr; }
+}
+@keyframes dlg-grow-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dlg-grow-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes dlg-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes dlg-exit { from { opacity: 1; } to { opacity: 0; } }
+/* Opacity crossfades use a symmetric ease so no single frame carries most of a large luma change. */
+.dlg-stage .dp-clip-quote { transition: background-color 300ms cubic-bezier(0.2, 0, 0, 1), border-color 300ms cubic-bezier(0.2, 0, 0, 1); }
+@keyframes dlg-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.dlg-rise { animation: dlg-rise 240ms cubic-bezier(0.2, 0, 0, 1) both; }
+@keyframes dlg-fill { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.dlg-fill .dp-chart-stack__bar { animation: dlg-fill 600ms cubic-bezier(0.2, 0, 0, 1) 200ms both; }
+.dlg-stage .dlg-clip-collapse { opacity: 0; transition: opacity 200ms ease; }
+.dlg-stage .dlg-clip-collapse[data-shown] { opacity: 1; }
+/* P14 item 2: player edges line up with the quote text (quote pad is 12px; cancel any full-bleed). */
+.dlg-stage .dlg-live__clip { padding-top: 8px; margin: 0; }
+.dlg-line { opacity: 0; transition: opacity 350ms cubic-bezier(0.2, 0, 0, 1); }
+.dlg-line[data-shown] { opacity: 1; }
+.dlg-mark { background-image: linear-gradient(var(--dp-brand), var(--dp-brand)); background-repeat: no-repeat; background-position: 0 100%; background-size: 0% 2px; transition: background-size 300ms cubic-bezier(0.2, 0, 0, 1); }
+.dlg-mark[data-on] { background-size: 100% 2px; }
+.dlg-stage .dp-study-chat__composer-text { margin: 0; color: var(--dp-ink); font-size: var(--text-body-size); }
+.dlg-stage .dlg-live__send[data-ready] { opacity: 1; }
+.dlg-stage .dlg-live__bar .dp-chart-stack__seg { transition: background-color 150ms ease, box-shadow 150ms ease; }
+.dlg-stage .dp-clip-quote { transition: background-color 150ms ease, border-color 150ms ease; }
+.dlg-stage .dlg-live__sample .dp-clip-quote:active, .dlg-stage .dp-clip-quote:active { background: var(--dp-nav-active-bg); }
+/* Case-study cursor: 28 px on the page (about 23 css px at the 519 px stage shown 640 wide). */
+#dlg-cursor { position: fixed; left: 0; top: 0; width: 16px; height: 16px; z-index: 99; pointer-events: none; opacity: 0; transition: opacity 200ms ease; }
+#dlg-cursor svg { display: block; width: 100%; height: 100%; transition: transform 120ms ease; transform-origin: 2px 2px; }
+#dlg-cursor.down svg { transform: scale(0.92); }
+.dlg-stage__item:has(> .dp-user-bubble) { display: flex; flex-direction: column; align-items: flex-end; }
+/* Hero: the panel fills the frame like the shipped chat, composer pinned to the bottom. */
+.dlg-stage--hero { height: 100%; display: flex; flex-direction: column; }
+.dlg-stage--hero .dlg-stage__body { flex: 1; min-height: 0; }
+.dlg-demo.dlg-demo--static { width: min(471px, 100%); margin: 0 auto; align-self: center; }
+
+/* Pause and play on Dialogue's tinted wells: 85% white with a hairline so it reads (BruinLease keeps its own). */
+.dialogue-rachel-frame .phone-mockup-play-btn, .cs-hero-media-frame .dlg-demo .phone-mockup-play-btn { background: var(--dlg-play-bg); box-shadow: 0 0 0 1px var(--dlg-figure-hairline); }
+/* The constraint: one line under the problem heading, quieter than body copy. */
+.dlg-constraint { margin: 0 0 16px; max-width: 640px; color: var(--color-text-secondary); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
+/* Variant B: levels add up, so every level up to the current one keeps the active chip; the current one is also set in medium weight. Hover is the sidebar row hover. */
+.dlg-depth--inline .dlg-depth__opt[aria-current="true"] { font-weight: var(--dp-weight-medium); }
+.dlg-depth__opt:not([aria-pressed="true"]):not([aria-checked="true"]):hover { background: var(--dp-warm); color: var(--dp-ink); }
+.dlg-depth--inline .dlg-depth__opt[aria-current="true"] { cursor: default; }
+
+/* P13 spacing parity with Dialogue's panel (flex-col gap-4 px-7 py-7): header 28 top, 16 to the thread, 16 thread to input, 28 bottom. */
+.dlg-stage--hero .dlg-stage__body { padding: 16px var(--dp-chat-pad) 0; }
+.dlg-stage--hero .dp-study-chat__composer { padding: 16px var(--dp-chat-pad) var(--dp-chat-pad); }
+.dlg-stage--picker .dp-study-chat__composer { padding-top: 16px; }
+.dlg-stage--picker .dlg-stage__body { padding-bottom: 0; }
+.dlg-live .dp-study-chat__minimize { margin: -8px -8px 0 0; }
+/* P13: DM Sans sits high in a 16px line; shift the label 1px down so caps and x-height centre optically in the 20px chip. */
+.dlg-live .dp-study-chat__beta { padding: 3px 8px 1px; }
+
+/* ===== P15 (Mudit fixes 1 to 17, audit fixes 1 to 22) ===== */
+/* Items 1, 2, 7: one shared well; the panel lifts off it by Dialogue's chat shadow alone, and nothing inside carries its own tint. */
+.dlg-stage.dp-study-chat { border-color: transparent; }
+.dlg-stage .dp-chart-viz-card, .dlg-templates .dp-chart-viz-card { background: var(--dp-surface); }
+/* Item 3: a static annotation in the recording's right gutter. Small muted text and a thin leader from the panel edge,
+   level with what it names. It only fades; it never moves and never sits over the panel. */
+.dlg-note { position: absolute; left: 467px; top: var(--y); width: 172px; display: flex; align-items: center; gap: 8px; transform: translateY(-50%); opacity: 0; transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
+.dlg-note[data-on] { opacity: 1; }
+.dlg-note__line { flex: 0 0 28px; height: 1px; background: var(--color-text-muted); opacity: 0.6; }
+.dlg-note__text { font-family: var(--font-sans); font-size: var(--text-small-size); line-height: var(--text-small-leading); color: var(--color-text-secondary); text-wrap: pretty; }
+/* Item 9: View session shows on hover of a quote row, at the right of its name and time. */
+/* P16: the session link moved into the player bar (DialogueInterviewPlayer, open-in-new-tab icon). */
+.dlg-stage .dp-clip-quote__who { display: flex; align-items: center; }
+/* Item 17: the thin answer offers Dialogue's chat-start chips; the tapped chip keeps the stone-200 selected fill. */
+.dlg-thin { display: flex; flex-direction: column; gap: 8px; }
+.dlg-thin .dp-summary { margin: 0; }
+.dlg-thin__label { margin: 8px 0 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--dp-muted); }
+.dlg-thin .dp-clips-link { margin: 0; }
+.dlg-thin__chips { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding-top: 4px; }
+.dlg-live .dlg-suggest.dlg-thin__chip[aria-pressed="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); }
+/* Item 5: letter and mark share a 16px column; label and reason text share one left edge. */
+.dlg-reason { display: flex; flex-direction: column; gap: 4px; margin: 0 0 12px; }
+.dlg-reason__row { display: grid; grid-template-columns: 16px 1fr; column-gap: 8px; align-items: start; margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); }
+.dlg-reason__key { display: flex; align-items: center; justify-content: center; width: 16px; height: var(--text-meta-leading); margin: 0; font-variant-numeric: tabular-nums; }
+.dlg-reason__row .dlg-reason__key.dialogue-lib__mark { margin-top: 0; }
+/* Items 1, 7: a video figure is the recording edge to edge, sized to the take's own aspect, so no CSS well shows beside it.
+   The recording carries its own well air, so the play button always sits in the gutter, off the panel. */
+.dialogue-case-study .cs-figure .dialogue-rachel-frame:has(.dlg-demo) > .dialogue-rachel-frame__pad { padding: 0; }
+.dialogue-case-study .cs-figure .dlg-demo, .cs-hero-media-frame .dlg-demo { margin: 0; }
+.dialogue-case-study .dlg-demo__video { background: var(--figure-well-dialogue); }
+.cs-hero-media-frame .dlg-demo__video { border-radius: inherit; }
+@media (max-width: 600px) { .dialogue-case-study .cs-figure .dlg-demo, .cs-hero-media-frame .dlg-demo { margin: 0; } }
+/* Phone takes are cropped to the card, so the well grows a strip above it and the play control stays on the well, off the product UI. */
+@media (max-width: 600px) { .dialogue-case-study .cs-figure .dialogue-rachel-frame:has(.dlg-demo .phone-mockup-play-btn) > .dialogue-rachel-frame__pad { padding-top: 60px; } }
+/* Items 11 to 16: chart templates. Picker and notes are case-study chrome; the panel holds only the answer. */
+.dlg-templates { padding: 32px 48px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px; }
+.dlg-templates__pick { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.dlg-templates__opt { margin: 0; padding: 4px 0; border: 0; background: none; font: inherit; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-secondary); cursor: pointer; box-shadow: inset 0 -1px 0 transparent; }
+.dlg-templates__opt[aria-pressed="true"] { color: var(--color-text-primary); box-shadow: inset 0 -1px 0 currentColor; }
+.dlg-templates__opt:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: 2px; }
+.dlg-templates__stage { position: relative; display: grid; grid-template-columns: minmax(0, 423px) 1fr; column-gap: 8px; align-items: start; }
+.dlg-templates__panel { position: relative; display: flex; flex-direction: column; gap: 12px; padding: var(--dp-chat-pad); border-color: transparent; box-sizing: border-box; overflow: visible; }
+.dlg-templates__note { position: relative; margin: 0; display: flex; align-items: center; gap: 8px; transform: translateY(calc(var(--y) - 50%)); }
+.dlg-templates__about { display: flex; flex-direction: column; gap: 8px; max-width: 423px; }
+.dlg-templates__carbon { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); }
+.dlg-templates__carbon > span { color: var(--color-text-secondary); margin-right: 8px; }
+.dlg-templates__reason { margin: 0; }
+.dlg-templates__people { margin-top: 0; }
+/* Item 11: the share shows on hover, muted after the row label; the count column never moves. */
+/* Round 18: a row that carries a share swaps its count for it on hover; both sit in one grid cell, so the column never moves. */
+.dp-chart-bars__value:has(.dp-chart-bars__v-share) { display: inline-grid; justify-items: end; }
+.dp-chart-bars__value > span { grid-area: 1 / 1; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dp-chart-bars__v-share { opacity: 0; }
+.dp-chart-bars__row:hover .dp-chart-bars__v-share { opacity: 1; }
+.dp-chart-bars__row:hover .dp-chart-bars__v-count { opacity: 0; }
+@media (max-width: 600px) {
+  .dlg-templates { padding: 24px 16px; }
+  .dlg-templates__stage { grid-template-columns: minmax(0, 1fr); row-gap: 8px; }
+  .dlg-templates__note { transform: none; flex-direction: row; padding-left: 16px; }
+}
+/* P15 hero root cause: the hero figure kept the body figures' 24px top margin, so a band of CSS well showed above the
+   recording. The hero frame is now the recording edge to edge, clipped to the frame's radius. */
+.dialogue-case-study .cs-hero-media-frame .cs-figure { margin: 0; }
+
+/* P16: the case-study clips show an illustrated interview still in place of the grey speaker tile. */
+.dlg-stage .dp-qplayer__placeholder { background: url("/dialogue/clip-still.svg") center / cover no-repeat; }
+.dlg-stage .dlg-live__clip[data-who="ana"] .dp-qplayer__placeholder { background-image: url("/dialogue/clip-still-ana.svg"); }
+.dlg-stage .dp-qplayer__placeholder-icon { display: none; }
+
+/* P16 chart templates: a direct picker. Question types on the left, the chosen template's chart on the right. */
+.dlg-templates__carbon + .dlg-templates__reason { margin-top: 0; }
+.dlg-templates--picker { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 16px; }
+.dlg-templates__list { display: flex; flex-direction: column; gap: 4px; }
+.dlg-templates__row { display: flex; flex-direction: column; gap: 2px; text-align: left; margin: 0; padding: 8px 12px; border: 0; border-radius: var(--radius-control); background: none; font: inherit; cursor: pointer; color: var(--color-text-secondary); }
+.dlg-templates__row[aria-checked="true"] { background: var(--dp-surface); color: var(--color-text-primary); box-shadow: inset 0 0 0 1px var(--dlg-figure-hairline); }
+.dlg-templates__row:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: 2px; }
+.dlg-templates__row-ask { font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
+.dlg-templates__row-name { font-size: var(--text-small-size); line-height: var(--text-small-leading); color: var(--color-text-secondary); }
+.dlg-templates__side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+@media (max-width: 600px) { .dlg-templates--picker { grid-template-columns: minmax(0, 1fr); } }
+
+/* The player opens and folds as one solid block: height only, no opacity, the same 520 ms ease in and out. The row's warm
+   surface changes on the same clock, and the row's own padding never changes (the 4px under the player lives inside the
+   fold), so no frame holds a step. */
+.dlg-stage .dp-clip-quote .dlg-grow--in { animation: dlg-grow-open 520ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.dlg-stage .dp-clip-quote .dlg-grow--out { animation: dlg-grow-fold 520ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+.dlg-stage .dp-clip-quote .dlg-grow--in .dlg-grow__inner,
+.dlg-stage .dp-clip-quote .dlg-grow--out .dlg-grow__inner { animation: none; opacity: 1; }
+@keyframes dlg-grow-fold { from { grid-template-rows: 1fr; } to { grid-template-rows: 0fr; } }
+
+/* P16 round 3: the two well notes are words in the caption on phones, where the takes have no gutter. */
+.dlg-mobile-only { display: none; }
+@media (max-width: 600px) { .dlg-mobile-only { display: inline; } }
+/* P16 round 3: on the 320px phone card the two bar labels wrap instead of overlapping. */
+[data-mobile] .dp-chart-stack__label { white-space: normal; }
+
+/* P16 round 4: more room under the last row, so an open player never sits on the panel's bottom edge. */
+.dlg-stage .dlg-stage__body { padding-bottom: calc(var(--dp-chat-pad) * 1.5); }
+/* The clip take starts and ends on the same unscrolled chat, so its resting state must fit the card with no overflow to settle. */
+.dlg-stage--clip .dlg-stage__body { padding-bottom: var(--dp-chat-pad); }
+[data-mobile] .dlg-stage--clip .dlg-stage__body { padding-bottom: 8px; }
+.dlg-stage.dlg-stage--picker .dlg-stage__body { padding-bottom: 0; }
+/* P16 round 4 (key decision): player times are fixed-width tabular figures, so the scrub never shifts as seconds tick. */
+.dp-qplayer__time { font-feature-settings: "tnum" 1; flex: 0 0 auto; min-width: 5ch; }
+.dp-qplayer__time[data-annotate-part="player-time-current"] { text-align: right; }
+
+/* P16 round 4 (Mudit): the early-signal flag gets its warm surface back, so it reads as a flag before it is read. */
+.dlg-thin .dp-low-signal { padding: var(--dp-flag-pad, 10px 12px); border-radius: var(--dp-radius-chip); background: var(--dp-warn-bg); color: var(--dp-warn-fg); }
+.dlg-thin .dp-low-signal__icon { color: var(--dp-warn-fg); }
+/* The follow-ups sit under a labelled group: the label leads with a small mark, and each chip states its answer count. */
+.dlg-thin__label { display: flex; align-items: center; gap: 6px; margin-top: 12px; color: var(--dp-ink); font-weight: 500; }
+
+.dlg-templates--pairs { gap: 32px; }
+.dlg-templates--grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+.dlg-templates--stack { width: 100%; padding-inline: 40px; }
+@media (max-width: 600px) {
+  .dlg-templates--grid { grid-template-columns: minmax(0, 1fr); }
+  .dlg-templates--stack { padding-inline: 16px; }
+  /* The 1 to 5 plot keeps a usable track on a phone: group and size on one line, the plot and its value under it. */
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label detail" "plot value"; column-gap: var(--dp-chart-gutter); row-gap: 4px; }
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__label { grid-area: label; width: auto; }
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__detail { grid-area: detail; width: auto; }
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__plot { grid-area: plot; }
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__value { grid-area: value; }
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__row--axis { grid-template-areas: "plot value"; }
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__row--axis .dp-chart-dots__label,
+  .dlg-templates .dp-chart-dots--detail .dp-chart-dots__row--axis .dp-chart-dots__detail { display: none; }
+}
+
+/* Round 8: the data viz figure is one table on the well (page tokens, both themes). Three levels of type: the chart
+   name carries weight, the question type and the reason sit under it quietly, and the chart is the product's own card. */
+.dlg-guide__block { display: flex; flex-direction: column; gap: 12px; }
+.dlg-guide__head { margin: 0; color: var(--color-text-secondary); }
+.dlg-flow { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); text-wrap: pretty; max-width: 56ch; }
+.dlg-matches { display: flex; flex-direction: column; }
+.dlg-match { display: grid; grid-template-columns: 168px minmax(0, 1fr); column-gap: 24px; padding: 24px 0; border-top: 1px solid var(--dlg-guide-rule); }
+.dlg-match:last-child { padding-bottom: 8px; }
+.dlg-match__why { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.dlg-match__why > p, .dlg-match__carbon { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
+.dlg-match__why > .dlg-match__ask { margin: 0; font-family: var(--font-sans-medium); font-weight: 500; font-size: var(--dlg-fs-16); line-height: 24px; color: var(--color-text-primary); text-wrap: balance; }
+.dlg-match__why > .dlg-match__name { gap: 6px; margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-secondary); }
+.dlg-match__name { display: flex; align-items: center; }
+.dlg-match__name > svg { flex: 0 0 auto; color: var(--color-text-tertiary); }
+.dlg-match__reason { color: var(--color-text-secondary); text-wrap: pretty; }
+.dlg-match__chart { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dlg-match__panel { padding: 0; }
+.dlg-templates__panel.dlg-match__panel .dp-chart-bars__row { grid-template-columns: 156px minmax(0, 1fr) 64px; }
+.dlg-templates__panel.dlg-match__panel .dp-chart-bars__label { width: auto; }
+.dlg-match__carbon { display: flex; flex-direction: column; gap: 2px; color: var(--color-text-tertiary); }
+.dlg-match__carbon > span { color: var(--color-text-secondary); }
+.dlg-edges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; margin: 0; }
+@media (max-width: 600px) {
+  .dlg-match { grid-template-columns: minmax(0, 1fr); row-gap: 12px; }
+  .dlg-edges { grid-template-columns: minmax(0, 1fr); }
+  /* On a phone the group bars keep a readable track: label and count share a line, the track runs full width under it. */
+  .dlg-templates__panel.dlg-match__panel .dp-chart-bars__row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "track track"; row-gap: 4px; }
+  .dlg-templates__panel.dlg-match__panel .dp-chart-bars__row > .dp-chart-bars__label { grid-area: label; }
+  .dlg-templates__panel.dlg-match__panel .dp-chart-bars__row > .dp-chart-bars__track { grid-area: track; }
+  .dlg-templates__panel.dlg-match__panel .dp-chart-bars__row > span:last-child { grid-area: value; }
+}
+
+/* ===== P16 round 5: Paper spec fixes (/workspace/p16-sheets/paper/dialogue-spec.md, audit.md). Scoped to the product UI
+   in the case study (motion stages, the live chat and the template panels). ===== */
+/* 6) Product type: DM Sans 14/24 inside the product, so the page's 15/26 never leaks into a container (audit 2). */
+.dlg-live, .dlg-templates__panel { font-size: var(--ds-text-sm); line-height: 24px; }
+/* Panel edge: 1px stone-200 with radius 24, on top of the case-study drop shadow (audit 3). */
+.dlg-stage { border: 1px solid var(--dp-border); border-radius: var(--ds-radius-3xl); box-sizing: border-box; }
+/* Composer rests on stone-200, the warm border (audit 4). */
+.dlg-live .dp-study-chat__composer-box { border-color: var(--dp-border); }
+
+/* 4) Depth picker, variation B: Dialogue's tab row. Borderless, 36 tall, warm active fill, single select. */
+.dlg-depth { height: 36px; box-sizing: border-box; padding: 2px; gap: 4px; border: 0; border-radius: var(--ds-radius); background: transparent; margin-bottom: 8px; }
+.dlg-depth--inline { margin: 8px 0 0; }
+.dlg-depth .dlg-depth__opt { height: 32px; padding: 0 12px; border-radius: var(--dp-radius-chip); font-size: var(--ds-text-sm); line-height: 20px; font-weight: 400; color: var(--dp-muted); }
+.dlg-depth .dlg-depth__opt[aria-pressed="true"], .dlg-depth .dlg-depth__opt[aria-checked="true"],
+.dlg-depth .dlg-depth__opt[aria-pressed="true"]:hover, .dlg-depth .dlg-depth__opt[aria-checked="true"]:hover { background: var(--dp-nav-active-bg); color: var(--dp-ink); font-weight: 500; }
+
+/* 1) Thin flag, variation A: warm surface, 40 tall. Follow-up chips full width, 36 tall, count in a fixed 64px lane. */
+.dlg-thin .dp-low-signal { align-items: center; min-height: 40px; box-sizing: border-box; padding: 8px 12px; border-radius: var(--dp-radius-chip); background: var(--dp-warm); color: var(--dp-muted); }
+.dlg-thin .dp-low-signal__icon { margin-top: 0; color: var(--dp-muted); }
+.dlg-thin .dp-low-signal__text { font-size: var(--ds-text-sm); line-height: 24px; color: var(--dp-muted); text-wrap: balance; }
+.dlg-thin .dp-clips-link { font-size: var(--ds-text-sm); line-height: 20px; font-weight: 500; color: var(--dp-ink); text-decoration: underline; }
+.dlg-thin__label { gap: 8px; font-size: var(--ds-text-sm); line-height: 20px; }
+.dlg-thin__chips { align-items: stretch; }
+.dlg-live .dlg-suggest.dlg-thin__chip { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; box-sizing: border-box; padding: 6px 8px 6px 12px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-chip); background: var(--dp-surface); }
+.dlg-thin__chip-plus { flex: 0 0 16px; width: 16px; height: 16px; color: var(--dp-muted); }
+.dlg-thin__chip-q { flex: 1 1 auto; min-width: 0; font-size: var(--ds-text-sm); line-height: 20px; color: var(--dp-ink); }
+/* The count is a small chip of its own, a fixed 40px lane so both rows end on the same edge. */
+.dlg-thin__chip-n { flex: 0 0 40px; width: 40px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; height: 24px; border-radius: var(--dp-radius-chip); background: var(--dp-warm); font-size: var(--ds-text-xs); line-height: 16px; font-weight: 500; color: var(--dp-ink); font-variant-numeric: tabular-nums; }
+
+/* 2) Charts, variation A: 16 padding, 24px bar with a 2px seam, two tabular legend lanes, 120px label lane. */
+.dlg-live .dp-chart-viz-card, .dlg-templates__panel .dp-chart-viz-card { padding: 16px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-control); background: var(--dp-surface); }
+.dlg-live .dp-chart-viz-card__inner, .dlg-templates__panel .dp-chart-viz-card__inner { display: flex; flex-direction: column; gap: 16px; padding: 0; }
+.dlg-live .dp-chart-title, .dlg-templates__panel .dp-chart-title { margin: 0; padding: 0; border: 0; font-size: var(--ds-text-sm); line-height: 24px; font-weight: 400; color: var(--dp-ink); }
+.dlg-live .dp-chart-stack__bar, .dlg-templates__panel .dp-chart-stack__bar { height: 24px; gap: 2px; background: transparent; border-radius: calc(var(--ds-radius-xs) * 2); overflow: hidden; }
+.dlg-live .dp-chart-stack__seg, .dlg-templates__panel .dp-chart-stack__seg { height: 24px; border-radius: 0; }
+.dp-chart-stack__lanes { display: flex; justify-content: space-between; gap: 16px; margin-top: 0; }
+.dp-chart-stack__lane { display: inline-flex; align-items: center; gap: 8px; font-size: var(--ds-text-xs); line-height: 16px; }
+.dp-chart-stack__lane .dp-chart-stack__swatch { width: 8px; height: 8px; border-radius: var(--ds-radius-xs); flex: 0 0 auto; }
+.dp-chart-stack__lane-label { color: var(--dp-muted); }
+.dp-chart-stack__lane-value { font-weight: 500; color: var(--dp-ink); font-variant-numeric: tabular-nums; }
+.dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-value { color: var(--dp-brand); }
+.dlg-live .dp-chart-bars, .dlg-templates__panel .dp-chart-bars { display: flex; flex-direction: column; gap: 8px; }
+.dlg-live .dp-chart-bars__row, .dlg-templates__panel .dp-chart-bars__row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 72px; align-items: center; column-gap: 16px; min-height: 24px; }
+.dlg-live .dp-chart-bars__label, .dlg-templates__panel .dp-chart-bars__label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: var(--ds-text-xs); line-height: 16px; color: var(--dp-muted); }
+.dlg-live .dp-chart-bars__track, .dlg-templates__panel .dp-chart-bars__track { height: 8px; border-radius: calc(var(--ds-radius-xs) * 2); background: var(--dp-warm); }
+.dlg-live .dp-chart-bars__bar, .dlg-templates__panel .dp-chart-bars__bar { height: 8px; border-radius: calc(var(--ds-radius-xs) * 2); }
+
+/* 5) Counts rows, variation A: cards 12 x 16, 8 between, clip lengths in a fixed 40px lane. */
+.dlg-live .dp-clip-quotes { display: flex; flex-direction: column; gap: 8px; }
+.dlg-live .dp-clip-quote { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-control); background: var(--dp-surface); }
+.dlg-live .dp-clip-quote + .dp-clip-quote { margin-top: 0; }
+.dlg-live .dp-clip-quote__who { gap: 8px; font-size: var(--ds-text-xs); line-height: 16px; }
+.dlg-live .dp-clip-quote__text { margin: 0; font-size: var(--ds-text-sm); line-height: 24px; }
+/* One fixed right lane on every row. Source fills it with a warm play chip (icon, clip length) in the same box, so the
+   tap target appears without moving a pixel. The lane's -8px margin keeps the length on the row's right padding. */
+.dlg-dur { margin: -4px -8px -4px auto; flex: 0 0 68px; width: 68px; height: 24px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; padding: 0 8px; border-radius: var(--dp-radius-chip); background: transparent; font-size: var(--ds-text-xs); line-height: 16px; color: var(--ds-stone-500); font-variant-numeric: tabular-nums; transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), color 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-dur[data-open] { opacity: 0; }
+.dlg-dur .dlg-play-clip__icon { flex: 0 0 12px; width: 12px; height: 12px; opacity: 0; transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-dur[data-play] { background: var(--dp-warm); color: var(--dp-ink); font-weight: 500; }
+.dlg-dur[data-play] .dlg-play-clip__icon { opacity: 1; }
+.dp-time-d { display: inline-flex; justify-content: center; width: 0.64em; }
+.dlg-live .dp-sources { margin-top: 8px; }
+.dlg-live .dp-source-pill { display: inline-flex; align-items: center; height: 36px; box-sizing: border-box; padding: 8px 16px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-chip); font-size: var(--ds-text-sm); line-height: 20px; font-weight: 500; color: var(--dp-ink); font-variant-numeric: tabular-nums; }
+
+/* 3) Clip player, variation A: the selected card is warm with a stone-200 edge, 16 below the player, 40px time lanes. */
+.dlg-live .dp-clip-quote--selected, .dlg-stage .dp-clip-quote--selected, .dlg-live__sample .dp-clip-quote--selected, .dlg-live__sample .dp-clip-quote--selected:hover { background: var(--dp-warm); border-color: var(--dp-border); box-shadow: none; }
+/* The row's 4px flex gap and the player's 8px lead-in live inside the fold, so mounting the grow adds no pixel to the row. */
+.dlg-stage .dp-clip-quote > .dlg-grow { margin-top: -4px; }
+.dlg-stage .dlg-live__clip { padding: 12px 0 4px; }
+.dlg-live .dp-qplayer__time { flex: 0 0 40px; width: 40px; min-width: 40px; }
+.dlg-live .dp-qplayer__time[data-annotate-part="player-time-total"] { text-align: right; }
+/* P16 round 5: the spec's 12x16 rows and 36px pills no longer fit the square stage, so the stage drops the "+N more"
+   pill; the count line already says how many are shown. */
+.dlg-stage .dlg-stage__sample .dp-sources { display: none; }
+.dlg-stage .dp-clip-quote { transition: background-color 520ms cubic-bezier(0.4, 0, 0.2, 1), border-color 520ms cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Levels A/B takes: the pair's one cherry focal is the kept mark beside the figure, so the recordings carry no cherry. */
+.dlg-stage[data-neutral], .dlg-match__panel[data-neutral], .dlg-edge__panel[data-neutral] { --dp-brand: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); --dp-chart-focal: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); }
+
+/* Round 9: one encoding for the 225 and the 75 in every figure. The 225 is the focal segment (cherry; neutral only inside a
+   figure that already carries another cherry focal). The 75 is stone-500 in the segment and in its legend swatch, so a
+   swatch always matches the segment it names (the pinned chart drew the segment stone-600 and the swatch stone-500). */
+.dialogue-product-root .dp-chart-stack__seg[data-index]:nth-child(even):not([data-focal]),
+.dlg-live .dp-chart-stack__seg[data-index]:nth-child(even):not([data-focal]) { background: var(--dp-chart-muted); }
+.dlg-reason .dialogue-lib__mark[data-kind="pro"] { color: var(--color-text-secondary); }
+@media (min-width: 601px) {
+  .dlg-match[data-template="ranked"] .dlg-templates__panel.dlg-match__panel .dp-chart-bars__row { grid-template-columns: 188px minmax(0, 1fr) 72px; }
+}
+
+/* Round 10: on desktop the toggles card hugs its content, so the Insight frame is not half blank; the other levels grow it. */
+#frame:not([data-mobile]) .dlg-stage--toggles { height: auto; max-height: 100%; }
+#frame:not([data-mobile]) .dlg-stage--toggles .dlg-grow--gap { --pull0: -16px; --pull1: 0px; }
+#frame:not([data-mobile]) .dlg-stage--toggles .dlg-grow.dlg-stage__item { --pull0: 0px; --pull1: 12px; }
+#frame:not([data-mobile]) .dlg-stage--toggles .dlg-grow--gap.dlg-grow--in,
+#frame:not([data-mobile]) .dlg-stage--toggles .dlg-grow.dlg-stage__item.dlg-grow--in { animation: dlg-hug-open 700ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+#frame:not([data-mobile]) .dlg-stage--toggles .dlg-grow--gap.dlg-grow--out,
+#frame:not([data-mobile]) .dlg-stage--toggles .dlg-grow.dlg-stage__item.dlg-grow--out { animation: dlg-hug-close 1050ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+@keyframes dlg-hug-open { from { grid-template-rows: 0fr; margin-top: var(--pull0); } to { grid-template-rows: 1fr; margin-top: var(--pull1); } }
+@keyframes dlg-hug-close {
+  0%, 33% { grid-template-rows: 1fr; margin-top: var(--pull1); }
+  100% { grid-template-rows: 0fr; margin-top: var(--pull0); }
+}
+
+/* Round 11: held frames for the near-misses and awkward shapes. A mini panel is a product card at half the figure width,
+   so its bar rows put the label and value on one line with the track under them (the phone layout, at every width). */
+.dlg-match__pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.dlg-match__half { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dlg-match__tag { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-tertiary); }
+.dlg-match__tag[data-kept] { color: var(--color-text-primary); }
+.dlg-templates__panel.dlg-mini .dp-chart-bars__row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "track track"; row-gap: 4px; }
+.dlg-templates__panel.dlg-mini .dp-chart-bars__row > .dp-chart-bars__label { grid-area: label; width: auto; white-space: normal; }
+.dlg-templates__panel.dlg-mini .dp-chart-bars__row > .dp-chart-bars__track { grid-area: track; }
+.dlg-templates__panel.dlg-mini .dp-chart-bars__row > span:last-child { grid-area: value; }
+.dlg-templates__panel.dlg-mini .dp-chart-stack__lanes { flex-wrap: wrap; gap: 4px 16px; }
+.dlg-edge { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dlg-edge__when { margin: 0; font-family: var(--font-sans-medium); font-weight: 500; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); }
+.dlg-edge__then { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-secondary); text-wrap: pretty; }
+.dlg-edge__panel { display: flex; flex-direction: column; gap: 8px; padding: 0; }
+.dlg-edge__chip { display: flex; align-items: center; gap: 8px; min-height: 36px; box-sizing: border-box; margin: 0; padding: 6px 8px 6px 12px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-chip); background: var(--dp-surface); }
+.dlg-edge__other .dp-chart-bars__row:last-child .dp-chart-bars__bar { background: repeating-linear-gradient(135deg, var(--dp-chart-muted) 0 4px, transparent 4px 8px) !important; }
+.dlg-ph { font-weight: 500; color: var(--dp-ink); }
+.dlg-thin-miss { max-width: 448px; margin-inline: auto; }
+.dlg-counts-x { display: flex; flex-direction: column; gap: 16px; }
+
+/* Round 16 (Mudit): explored options are finished work, not faded sketches. Both cards of a pair are full strength; the
+   explored label row (letter, "Explored", the X) says what was ruled out, and a hairline and 48px of air separate the options.
+   The stage's own drop shadow lifts each UI off its well. This overrides Round 13b's 0.62 opacity. */
+.dlg-demo-pair { gap: 0; }
+.dlg-demo-pair > div + div { margin-top: 48px; padding-top: 48px; border-top: 1px solid var(--dlg-guide-rule); }
+
+/* Round 11b: on the phone the first try needs scroll room, so the open player can carry the count fully out of view
+   instead of stopping with a sliver of the bar under the card's top edge. */
+[data-mobile] .dlg-stage--every .dlg-stage__body { padding-bottom: 160px; }
+
+
+/* ---- Round 16: segments, selection, hover and press (Mudit, Nov 3 2026) ----
+   1) The seam between the two segments is the flex gap alone, in every state, so selecting a side moves nothing.
+   2) A selected segment keeps its colour and carries a 2px marker 6px under the bar, in its own hue; its quote rows carry
+      the same hue on their left edge, and the quotes line names the group. A hover shows the marker at 40%.
+   3) Every clickable shows hover on arrival and a distinct press, at the product's 150ms timing. */
+.dlg-live .dp-chart-stack__seg + .dp-chart-stack__seg, .dlg-templates__panel .dp-chart-stack__seg + .dp-chart-stack__seg, .dlg-live__bar[data-side] .dp-chart-stack__seg { box-shadow: none; }
+.dlg-live__bar .dp-chart-stack__bar { overflow: visible; border-radius: 0; }
+.dlg-live__bar .dp-chart-stack__seg { min-width: 8px; }
+.dlg-live__bar .dp-chart-stack__seg:first-child { border-radius: calc(var(--ds-radius-xs) * 2) 0 0 calc(var(--ds-radius-xs) * 2); }
+.dlg-live__bar .dp-chart-stack__seg:last-child { border-radius: 0 calc(var(--ds-radius-xs) * 2) calc(var(--ds-radius-xs) * 2) 0; }
+.dlg-live__bar .dp-chart-stack__seg { position: relative; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+/* Hover darkens the segment toward ink; press darkens it again. A receded 225 comes back to 65%. */
+.dlg-live__bar:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-ink)); }
+.dlg-live__bar:has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 80%, var(--dp-ink)); }
+.dlg-live__bar:has(.dlg-live__side--friday:active) .dp-chart-stack__seg[data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 70%, var(--dp-ink)); }
+.dlg-live__bar:has(.dlg-live__side--unsure:active) .dp-chart-stack__seg:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 65%, var(--dp-ink)); }
+/* The legend names the open group in ink; no weight change, so no width change. */
+.dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
+.dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-label { color: var(--dp-ink); }
+/* Legend swatch: its bottom sits on the text baseline and its height is the 12px cap height (8px), so it lines up with the digits. */
+.dp-chart-stack__lane { align-items: baseline; gap: 8px; }
+.dp-chart-stack__lane .dp-chart-stack__swatch { width: 8px; height: 8px; }
+/* Rows in a take behave like product rows: hover tints and inks the edge, press darkens, the play chip follows. */
+.dlg-stage .dp-clip-quote { cursor: pointer; }
+.dlg-stage .dp-clip-quote--selected { cursor: default; }
+.dlg-stage .dp-clip-quote:not(.dp-clip-quote--selected):hover { border-color: var(--dp-ink); background: var(--dp-warm); }
+.dlg-stage .dp-clip-quote:not(.dp-clip-quote--selected):active { border-color: var(--dp-ink); background: var(--dp-nav-active-bg); }
+.dlg-stage .dp-clip-quote:not(.dp-clip-quote--selected):hover .dlg-dur[data-play] { background: var(--dp-nav-active-bg); }
+.dlg-stage .dp-clip-quote:not(.dp-clip-quote--selected):active .dlg-dur[data-play] { background: var(--dp-surface); }
+.dlg-dur { transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+/* Tabs and the depth picker: the press rule has to beat the not-pressed hover rule above it. */
+.dlg-depth .dlg-depth__opt:not([aria-pressed="true"]):not([aria-checked="true"]):not(:disabled):active { background: var(--dp-nav-active-bg); color: var(--dp-ink); transform: scale(0.97); }
+.dlg-depth .dlg-depth__opt:not(:disabled) { transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-depth .dlg-depth__opt[aria-pressed="true"]:not(:disabled):hover, .dlg-depth .dlg-depth__opt[aria-checked="true"]:not(:disabled):hover { background: var(--dp-nav-active-bg); }
+/* The selected tab keeps its fill on hover (P14: no hover change on a selected chip) and only gives on press. */
+.dlg-depth .dlg-depth__opt[aria-pressed="true"]:not(:disabled):active, .dlg-depth .dlg-depth__opt[aria-checked="true"]:not(:disabled):active { transform: scale(0.97); }
+/* Player controls: the bar buttons take hover and press like the product's. */
+.dlg-stage .dp-qplayer__btn { transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); border-radius: var(--dp-radius-chip); }
+.dlg-stage .dp-qplayer__btn:hover { background: color-mix(in srgb, var(--ds-white) 18%, transparent); }
+.dlg-stage .dp-qplayer__btn:active { background: color-mix(in srgb, var(--ds-white) 32%, transparent); }
+/* Chevron, chips: hover and press were present; the chip also lifts one step on press. */
+.dlg-live .dlg-suggest:not(:disabled):active { transform: scale(0.99); }
+
+/* Round 16: the composer send is a real button. Ready, it lightens one step on hover and gives on press. */
+.dlg-live .dlg-live__send { border: 0; padding: 0; font: inherit; cursor: default; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), opacity 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-live .dlg-live__send[data-ready] { cursor: pointer; }
+.dlg-live .dlg-live__send[data-ready]:hover { background: color-mix(in srgb, var(--dp-ink) 78%, var(--dp-surface)); }
+.dlg-live .dlg-live__send[data-ready]:active { background: color-mix(in srgb, var(--dp-ink) 60%, var(--dp-surface)); transform: scale(0.94); }
+
+/* ---- Round 16 item 5: answer card stress test (app/dialogue/answer-stress). Options only; the takes use the current card. ---- */
+.dlg-stress { display: flex; flex-direction: column; gap: 48px; padding: 40px; background: var(--figure-well-dialogue); min-width: max-content; }
+.dlg-stress__name { margin: 0 0 16px; font-size: var(--ds-text-sm); line-height: 24px; font-weight: 500; color: var(--dp-ink); }
+.dlg-stress__row { display: flex; gap: 40px; align-items: flex-start; }
+.dlg-stress__col { display: flex; flex-direction: column; gap: 8px; }
+.dlg-stress__tag { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--dp-muted); }
+.dlg-stress__panel { box-sizing: border-box; }
+.dlg-stress__body { gap: 16px; }
+/* A: crowded legends stack in a column, labels wrap inside their lane, a segment never draws under 8px. */
+.dlg-stress--fit .dp-chart-stack__seg { min-width: 8px; }
+.dlg-stress--fit .dp-chart-stack__lanes { flex-wrap: wrap; gap: 4px 16px; }
+.dlg-stress--fit [data-crowded] .dp-chart-stack__lanes { flex-direction: column; flex-wrap: nowrap; gap: 4px; }
+.dlg-stress--fit .dp-chart-stack__lane-label { overflow-wrap: break-word; }
+/* B (now the real answer card, .dlg-answer--rows) and C: a row per group, label above its bar so a long label wraps instead of squeezing the track. */
+.dlg-stress--rows .dp-chart-bars__row,
+.dlg-answer--rows .dp-chart-bars__row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "track track"; row-gap: 4px; }
+.dlg-stress--rows .dp-chart-bars__row > .dp-chart-bars__label,
+.dlg-answer--rows .dp-chart-bars__row > .dp-chart-bars__label { grid-area: label; width: auto; white-space: normal; overflow: visible; text-overflow: clip; }
+.dlg-stress--rows .dp-chart-bars__row > .dp-chart-bars__track,
+.dlg-answer--rows .dp-chart-bars__row > .dp-chart-bars__track { grid-area: track; }
+.dlg-stress--rows .dp-chart-bars__row > span:last-child,
+.dlg-answer--rows .dp-chart-bars__row > span:last-child { grid-area: value; width: auto; overflow: visible; white-space: nowrap; }
+
+/* ---- Round 16 item 9: simpler data viz options (app/dialogue/viz-options). Options only. ---- */
+.dlg-viz-options { display: flex; flex-direction: column; gap: 48px; width: 640px; margin: 0 auto; padding: 40px 0; }
+.dlg-viz-options__tag { margin: 0 0 8px; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-secondary); }
+.dlg-index { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.dlg-index li { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--dlg-guide-rule); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-primary); }
+.dlg-index li > span:last-child { color: var(--color-text-secondary); }
+.dlg-viz-options .dlg-edge__then, .dlg-viz-options .dlg-flow { text-align: left; }
+.dlg-viz-options { font-family: var(--font-sans); }
+.dlg-viz-options .dlg-templates__panel { padding: 0; }
+.dlg-viz-options .dlg-match__chart { align-items: stretch; text-align: left; }
+
+/* ---- Round 18 (Mudit, Nov 3 2026) ----
+   Selection is carried by what the system already has: the segment's fill, the head line naming the group with its swatch,
+   and the legend in ink. The 2px marker under the bar and the coloured left edge on quote rows are gone. Whichever segment
+   is not open steps down to stone-300, in both directions, so no off-ramp tint of cherry is drawn and nothing is receded
+   on one side only. Hover and press bring a stepped-down segment back to its own colour. */
+.dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index][data-focal] { background: var(--ds-stone-300); }
+.dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__swatch[data-index][data-focal],
+.dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__swatch[data-index]:not([data-focal]) { background: var(--ds-stone-300); }
+.dlg-live .dlg-live__bar[data-side]:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-index][data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-ink)); }
+.dlg-live .dlg-live__bar[data-side]:has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg[data-index]:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 80%, var(--dp-ink)); }
+.dlg-live .dlg-live__bar[data-side]:has(.dlg-live__side--friday:active) .dp-chart-stack__seg[data-index][data-focal] { background: color-mix(in srgb, var(--dp-chart-focal) 70%, var(--dp-ink)); }
+.dlg-live .dlg-live__bar[data-side]:has(.dlg-live__side--unsure:active) .dp-chart-stack__seg[data-index]:not([data-focal]) { background: color-mix(in srgb, var(--dp-chart-muted) 65%, var(--dp-ink)); }
+/* The open group's quotes line names it with the same swatch the legend uses; the head line is the one tie to the rows. */
+.dlg-stage__sample[data-side="friday"] .dlg-sample-key { background: var(--dp-chart-focal); }
+.dlg-stage__sample[data-side="unsure"] .dlg-sample-key { background: var(--dp-chart-muted); }
+
+/* Round 19 hero (option C): the header names the open segment, the source pills are the timestamps, the quote is full width.
+   The selected pill shares the quote card's warm fill, and the pills carry rest, hover and press. */
+.dlg-stage .dlg-stage__sample[data-hero] { display: flex; flex-direction: column; gap: var(--space-2); }
+.dlg-hero-head { display: flex; align-items: center; gap: 8px; margin: 0; font-size: var(--ds-text-sm); line-height: 24px; font-weight: 500; color: var(--dp-ink); }
+.dlg-hero-head .dlg-sample-key { margin: 0; border-radius: var(--ds-radius-xs); }
+.dlg-stage__sample[data-hero] .dp-clip-quote { background: var(--dp-warm); border-color: var(--dp-border); }
+.dlg-hero-head__count { font-weight: 400; font-variant-numeric: tabular-nums; color: var(--dp-muted); }
+.dlg-stage .dlg-stage__sample[data-hero] .dp-sources { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; }
+.dlg-stage__sample[data-hero] .dp-source-pill { background: var(--dp-surface); cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease; }
+.dlg-stage__sample[data-hero] .dp-source-pill--selected { background: var(--dp-warm); border-color: var(--dp-border); cursor: default; }
+.dlg-stage__sample[data-hero] .dp-source-pill:not(.dp-source-pill--selected):hover { border-color: var(--dp-ink); }
+.dlg-stage__sample[data-hero] .dp-source-pill:not(.dp-source-pill--selected):active { border-color: var(--dp-ink); background: var(--dp-warm); }
+
+/* Round 18: the thin card's info icon carries the reason in the existing tooltip chip. */
+.dlg-info { position: relative; display: inline-flex; flex: 0 0 auto; padding: 12px 12px 12px 16px; margin: -12px -12px -12px -16px; border-radius: var(--dp-radius-chip); outline: none; cursor: default; }
+.dlg-info:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 0; }
+.dlg-info .dlg-info__tip { left: calc(100% - 4px); top: 50%; bottom: auto; transform: translateY(-50%); width: max-content; max-width: 264px; white-space: normal; z-index: 3; opacity: 0; visibility: hidden; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1), visibility 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlg-info:hover .dlg-info__tip, .dlg-info:focus-visible .dlg-info__tip { opacity: 1; visibility: visible; }
+
+/* Round 18: hovering a stacked bar switches its legend from counts to shares. Both live in one grid cell, so the lane never changes width. */
+.dp-chart-stack__lane-value { display: inline-grid; justify-items: end; }
+.dp-chart-stack__lane-value > span { grid-area: 1 / 1; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dp-chart-stack__lane-share { opacity: 0; }
+.dp-chart-stack:hover .dp-chart-stack__lane-share, .dlg-live__bar:hover .dp-chart-stack__lane-share { opacity: 1; }
+.dp-chart-stack:hover .dp-chart-stack__lane-count, .dlg-live__bar:hover .dp-chart-stack__lane-count { opacity: 0; }
+
+/* Round 18: the data viz figure breathes. Its spacing comes from the page scale (--space-*, 8/16/24/32/48): 48 between the
+   question and its chart rows, 32 above and below each row, 16 between a chart and its line. */
+.dlg-templates--pairs { gap: var(--space-4); padding: var(--space-4) var(--space-5) var(--space-5); }
+.dlg-templates--pairs .dlg-match { grid-template-columns: 176px minmax(0, 1fr); column-gap: var(--space-4); padding: var(--space-4) 0; }
+.dlg-templates--pairs .dlg-match:last-child { padding-bottom: var(--space-1); }
+.dlg-templates--pairs .dlg-match__why { gap: var(--space-1); }
+.dlg-templates--pairs .dlg-match__chart { gap: var(--space-2); }
+.dlg-templates--pairs .dlg-templates__panel { gap: var(--space-2); }
+@media (max-width: 600px) {
+  .dlg-templates--pairs { padding: var(--space-3) var(--space-2); }
+  .dlg-templates--pairs .dlg-match { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-2); padding: var(--space-3) 0; }
+}
+
+/* Round 19: the constraint line moves under the problem figure, so it needs air below the caption. */
+.cs-caption + .dlg-constraint { margin-top: var(--space-3); }
