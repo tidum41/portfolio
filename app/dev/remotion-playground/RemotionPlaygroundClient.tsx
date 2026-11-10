@@ -21,6 +21,7 @@ import {
   JOOLA_DURATION,
   JOOLA_FPS,
 } from "@/remotion/src/JoolaB2B";
+import { useFilmDialExtras } from "./useFilmDialExtras";
 
 const LAB_Z = 50;
 const COMP_W = 1920;
@@ -62,36 +63,42 @@ export default function RemotionPlaygroundClient() {
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Nested shot folders: zoom + framing (cx/cy) under each parent shot.
   const camera = useDialKit(
     "Film Camera",
     {
-      shotACx: [FILM_DEFAULTS.shotACx, 200, 900, 0.1],
-      shotACy: [FILM_DEFAULTS.shotACy, 40, 400, 0.1],
-      shotAZoom: [FILM_DEFAULTS.shotAZoom, 1, 6, 0.01],
-      shotQtyCx: [FILM_DEFAULTS.shotQtyCx, 400, 1100, 0.1],
-      shotQtyCy: [FILM_DEFAULTS.shotQtyCy, 120, 600, 0.1],
-      shotQtyZoom: [FILM_DEFAULTS.shotQtyZoom, 1, 6, 0.01],
-      shotSavedCx: [FILM_DEFAULTS.shotSavedCx, 600, 1300, 0.1],
-      shotSavedCy: [FILM_DEFAULTS.shotSavedCy, 200, 700, 0.1],
-      shotSavedZoom: [FILM_DEFAULTS.shotSavedZoom, 1, 5, 0.01],
-      shotOrderCx: [FILM_DEFAULTS.shotOrderCx, 400, 1100, 0.1],
-      shotOrderCy: [FILM_DEFAULTS.shotOrderCy, 200, 600, 0.1],
-      shotOrderZoom: [FILM_DEFAULTS.shotOrderZoom, 0.8, 3, 0.01],
-      cardScale: [FILM_DEFAULTS.cardScale, 1.5, 4, 0.01],
+      shotA: {
+        zoom: [FILM_DEFAULTS.shotAZoom, 1, 6, 0.01],
+        cx: [FILM_DEFAULTS.shotACx, 200, 900, 0.1],
+        cy: [FILM_DEFAULTS.shotACy, 40, 400, 0.1],
+      },
+      shotQty: {
+        zoom: [FILM_DEFAULTS.shotQtyZoom, 1, 6, 0.01],
+        cx: [FILM_DEFAULTS.shotQtyCx, 400, 1100, 0.1],
+        cy: [FILM_DEFAULTS.shotQtyCy, 120, 600, 0.1],
+      },
+      shotSaved: {
+        zoom: [FILM_DEFAULTS.shotSavedZoom, 1, 5, 0.01],
+        cx: [FILM_DEFAULTS.shotSavedCx, 600, 1300, 0.1],
+        cy: [FILM_DEFAULTS.shotSavedCy, 200, 700, 0.1],
+      },
+      shotOrder: {
+        zoom: [FILM_DEFAULTS.shotOrderZoom, 0.8, 3, 0.01],
+        cx: [FILM_DEFAULTS.shotOrderCx, 400, 1100, 0.1],
+        cy: [FILM_DEFAULTS.shotOrderCy, 200, 600, 0.1],
+      },
+      cards: {
+        scale: [FILM_DEFAULTS.cardScale, 1.5, 4, 0.01],
+      },
     },
     { id: "remotion-film-camera", persist: true },
   );
 
+  // Cam Ease gates which move-duration folder is visible (CSS). Hidden
+  // folders stay mounted so values remain wired to the player.
   const timing = useDialKit(
     "Film Timing",
     {
-      openMoveDuration: [FILM_DEFAULTS.openMoveDuration, 6, 40, 1],
-      zoomOutDuration: [FILM_DEFAULTS.zoomOutDuration, 8, 48, 1],
-      revealDuration: [FILM_DEFAULTS.revealDuration, 8, 48, 1],
-      zoomLinesDuration: [FILM_DEFAULTS.zoomLinesDuration, 8, 48, 1],
-      pillFillDuration: [FILM_DEFAULTS.pillFillDuration, 4, 36, 1],
-      confRecenterDuration: [FILM_DEFAULTS.confRecenterDuration, 4, 30, 1],
-      logoOutDuration: [FILM_DEFAULTS.logoOutDuration, 1, 20, 1],
       camEase: {
         type: "select" as const,
         options: [
@@ -101,6 +108,21 @@ export default function RemotionPlaygroundClient() {
         ],
         default: FILM_DEFAULTS.camEase,
       },
+      content: {
+        logoOutDuration: [FILM_DEFAULTS.logoOutDuration, 1, 20, 1],
+        pillFillDuration: [FILM_DEFAULTS.pillFillDuration, 4, 36, 1],
+      },
+      openPush: {
+        openMoveDuration: [FILM_DEFAULTS.openMoveDuration, 6, 40, 1],
+      },
+      midFilm: {
+        zoomOutDuration: [FILM_DEFAULTS.zoomOutDuration, 8, 48, 1],
+        revealDuration: [FILM_DEFAULTS.revealDuration, 8, 48, 1],
+        zoomLinesDuration: [FILM_DEFAULTS.zoomLinesDuration, 8, 48, 1],
+      },
+      confirm: {
+        confRecenterDuration: [FILM_DEFAULTS.confRecenterDuration, 4, 30, 1],
+      },
     },
     { id: "remotion-film-timing", persist: true },
   );
@@ -108,7 +130,6 @@ export default function RemotionPlaygroundClient() {
   const cursor = useDialKit(
     "Film Cursor",
     {
-      cursorScale: [FILM_DEFAULTS.cursorScale, 1, 5, 0.01],
       ptrEase: {
         type: "select" as const,
         options: [
@@ -117,37 +138,41 @@ export default function RemotionPlaygroundClient() {
         ],
         default: FILM_DEFAULTS.ptrEase,
       },
+      cursorScale: [FILM_DEFAULTS.cursorScale, 1, 5, 0.01],
     },
     { id: "remotion-film-cursor", persist: true },
   );
 
+  const camEase = (timing.camEase as FilmParams["camEase"]) || "cam";
+  useFilmDialExtras(camEase);
+
   const filmParams: FilmParams = useMemo(
     () => ({
-      shotACx: camera.shotACx,
-      shotACy: camera.shotACy,
-      shotAZoom: camera.shotAZoom,
-      shotQtyCx: camera.shotQtyCx,
-      shotQtyCy: camera.shotQtyCy,
-      shotQtyZoom: camera.shotQtyZoom,
-      shotSavedCx: camera.shotSavedCx,
-      shotSavedCy: camera.shotSavedCy,
-      shotSavedZoom: camera.shotSavedZoom,
-      shotOrderCx: camera.shotOrderCx,
-      shotOrderCy: camera.shotOrderCy,
-      shotOrderZoom: camera.shotOrderZoom,
-      cardScale: camera.cardScale,
-      openMoveDuration: timing.openMoveDuration,
-      zoomOutDuration: timing.zoomOutDuration,
-      revealDuration: timing.revealDuration,
-      zoomLinesDuration: timing.zoomLinesDuration,
-      pillFillDuration: timing.pillFillDuration,
-      confRecenterDuration: timing.confRecenterDuration,
-      logoOutDuration: timing.logoOutDuration,
-      camEase: (timing.camEase as FilmParams["camEase"]) || "cam",
+      shotACx: camera.shotA.cx,
+      shotACy: camera.shotA.cy,
+      shotAZoom: camera.shotA.zoom,
+      shotQtyCx: camera.shotQty.cx,
+      shotQtyCy: camera.shotQty.cy,
+      shotQtyZoom: camera.shotQty.zoom,
+      shotSavedCx: camera.shotSaved.cx,
+      shotSavedCy: camera.shotSaved.cy,
+      shotSavedZoom: camera.shotSaved.zoom,
+      shotOrderCx: camera.shotOrder.cx,
+      shotOrderCy: camera.shotOrder.cy,
+      shotOrderZoom: camera.shotOrder.zoom,
+      cardScale: camera.cards.scale,
+      openMoveDuration: timing.openPush.openMoveDuration,
+      zoomOutDuration: timing.midFilm.zoomOutDuration,
+      revealDuration: timing.midFilm.revealDuration,
+      zoomLinesDuration: timing.midFilm.zoomLinesDuration,
+      pillFillDuration: timing.content.pillFillDuration,
+      confRecenterDuration: timing.confirm.confRecenterDuration,
+      logoOutDuration: timing.content.logoOutDuration,
+      camEase,
       ptrEase: (cursor.ptrEase as FilmParams["ptrEase"]) || "ptr",
       cursorScale: cursor.cursorScale,
     }),
-    [camera, timing, cursor],
+    [camera, timing, cursor, camEase],
   );
 
   const inputProps = useMemo(() => filmParams, [filmParams]);
@@ -156,8 +181,6 @@ export default function RemotionPlaygroundClient() {
     const root = document.documentElement;
     const prevTheme = root.getAttribute("data-theme");
     root.setAttribute("data-remotion-playground", "1");
-    // Force light tokens so dark-mode --color-text-primary (#EDEDEC) cannot
-    // wash out the light lab chrome.
     root.setAttribute("data-theme", "light");
     hideNonFilmDialFolders();
     const obs = new MutationObserver(() => hideNonFilmDialFolders());
@@ -222,7 +245,6 @@ export default function RemotionPlaygroundClient() {
         html[data-remotion-playground] .dialkit-shortcuts-dropdown {
           z-index: 10050 !important;
         }
-        /* Site chrome sits over this fixed shell and was washing out the title. */
         html[data-remotion-playground] header.intro-hide,
         html[data-remotion-playground] .site-nav {
           visibility: hidden !important;
@@ -231,7 +253,6 @@ export default function RemotionPlaygroundClient() {
         .rpg-player button {
           font-family: var(--font-sans) !important;
         }
-        /* Hard ink — site dark-theme tokens set --color-text-primary to #EDEDEC. */
         .rpg-shell,
         .rpg-shell h1,
         .rpg-shell .rpg-play {
@@ -251,9 +272,6 @@ export default function RemotionPlaygroundClient() {
           border: none !important;
           font-weight: 500 !important;
         }
-        /* DialKit popover sits fixed on the right (~300px). Keep the stage
-           in the clear band to its left at 1440. (padding lives here — not
-           inline — so it isn't overridden by the shell’s other padding.) */
         .rpg-shell {
           padding: var(--space-3);
           padding-right: 360px;
@@ -273,6 +291,70 @@ export default function RemotionPlaygroundClient() {
             padding-right: var(--space-3);
           }
         }
+
+        /* —— Hover / focus notes (Mekwek-inspired, hover not hold-H) —— */
+        html[data-remotion-playground] .dialkit-panel.rpg-dial-dimmed
+          .dialkit-folder-section
+          .dialkit-folder-inner
+          > *:not(.rpg-dial-active):not(:has(.rpg-dial-active)) {
+          opacity: 0.34;
+          transition: opacity 0.14s ease;
+        }
+        html[data-remotion-playground] .rpg-dial-row {
+          position: relative;
+          border-radius: 6px;
+          outline: 1px solid transparent;
+          outline-offset: 2px;
+          transition: outline-color 0.12s ease, background-color 0.12s ease;
+        }
+        html[data-remotion-playground] .rpg-dial-row.rpg-dial-active {
+          opacity: 1 !important;
+          outline-color: rgba(45, 104, 196, 0.55);
+          background: rgba(45, 104, 196, 0.08);
+          z-index: 1;
+        }
+        html[data-remotion-playground] .rpg-dial-note {
+          display: none;
+          margin: 4px 2px 6px;
+          padding: 6px 8px;
+          border-radius: 4px;
+          background: #1a1a1a;
+          color: #f5f5f3;
+          font-size: 11px;
+          line-height: 1.35;
+          font-weight: 500;
+          letter-spacing: 0.01em;
+        }
+        html[data-remotion-playground] .rpg-dial-row.rpg-dial-active .rpg-dial-note {
+          display: block;
+        }
+
+        /* —— Conditional folders (Cam Ease parent) —— */
+        html[data-remotion-playground] .rpg-dial-conditional {
+          overflow: hidden;
+          max-height: 280px;
+          opacity: 1;
+        }
+        html[data-rpg-cam-ease="cam"] .rpg-dial-conditional[data-rpg-when]:not([data-rpg-when="cam"]),
+        html[data-rpg-cam-ease="flow"] .rpg-dial-conditional[data-rpg-when]:not([data-rpg-when="flow"]),
+        html[data-rpg-cam-ease="move"] .rpg-dial-conditional[data-rpg-when]:not([data-rpg-when="move"]) {
+          max-height: 0 !important;
+          opacity: 0;
+          pointer-events: none;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
+        }
+        @media (prefers-reduced-motion: no-preference) {
+          html[data-remotion-playground] .rpg-dial-conditional {
+            transition: max-height 0.22s ease, opacity 0.18s ease, margin 0.18s ease;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          html[data-remotion-playground] .rpg-dial-conditional {
+            transition: none !important;
+          }
+        }
       `}</style>
 
       <div className="rpg-shell" data-theme="light" style={shellStyle}>
@@ -283,8 +365,9 @@ export default function RemotionPlaygroundClient() {
             </div>
             <h1 style={titleStyle}>JOOLA B2B film</h1>
             <p className="rpg-muted" style={dekStyle}>
-              DialKit tunes camera, timing, easing, and cursor. Copy a prompt for
-              the agent when a tweak should become permanent.
+              DialKit tunes camera, timing, easing, and cursor. Hover a control
+              for what it changes. Cam Ease reveals its matching move lengths.
+              Copy a prompt when a tweak should become permanent.
             </p>
           </div>
           <div style={headerActionsStyle}>
@@ -401,7 +484,7 @@ const titleStyle: CSSProperties = {
 
 const dekStyle: CSSProperties = {
   margin: "6px 0 0",
-  maxWidth: 520,
+  maxWidth: 560,
   fontSize: "var(--fs-sm)",
   lineHeight: "var(--lh-sm)",
   color: MUTED,
@@ -486,4 +569,3 @@ const playerWrapStyle: CSSProperties = {
   boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 12px 40px rgba(30,30,30,0.06)",
   border: "1px solid rgba(0,0,0,0.06)",
 };
-
