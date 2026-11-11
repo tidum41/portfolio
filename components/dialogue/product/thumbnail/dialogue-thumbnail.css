@@ -111,6 +111,25 @@
   position: relative;
   transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   transform: translateY(0);
+  outline: none;
+  outline-offset: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+.dlg-thumb .dlg-live__bar .dp-chart-stack__seg:hover,
+.dlg-thumb .dlg-live__bar .dp-chart-stack__seg:focus,
+.dlg-thumb .dlg-live__bar .dp-chart-stack__seg:focus-visible,
+.dlg-thumb .dlg-live__bar .dp-chart-stack__seg:active,
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg,
+.dlg-thumb .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-focal],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg:not([data-focal]) {
+  outline: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg + .dp-chart-stack__seg {
   box-shadow: none;
 }
 
@@ -139,19 +158,6 @@
 
 .dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-tone="soft"] {
   background: var(--dp-chart-soft);
-}
-
-/* Kill the shared 1px finding-edge inset outline from chart.css (not the demo rings). */
-.dlg-thumb .dp-chart-stack__seg:hover,
-.dlg-thumb .dp-chart-stack__seg[data-selected] {
-  box-shadow: none;
-}
-
-.dlg-thumb .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index]:not([data-focal]),
-.dlg-thumb .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index][data-focal],
-.dlg-thumb[data-beat="poster"] .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg,
-.dlg-thumb[data-beat="rest"] .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg {
-  box-shadow: none;
 }
 
 /* Hover: 1px lift only. */
