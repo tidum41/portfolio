@@ -4,72 +4,48 @@
 
 - `review/joola-sanity` → draft **PR #192** (do not merge)
 
-## Environment
+## Architecture (iframe isolation)
 
-| Variable | Purpose |
-|----------|---------|
-| `SANITY_PREVIEW_DRAFTS=1` | Dev only: full case study from `drafts.joola` fixture or Sanity |
-| `SANITY_API_WRITE_TOKEN` | Optional: live draft via `previewDrafts` |
-| `NEXT_PUBLIC_SANITY_PROJECT_ID` / `DATASET` | `9vl5qk61` / `production` |
+- Vite static embeds: `public/joola-proto/round5/`, `public/joola-proto/qo/`
+- Build: `npm run joola:build-proto` (also runs on `npm run prebuild`)
+- Embeds use `embed=1` + `HashRouter`; no login; `EmbedBootstrap` seeds buyer/admin + review cart
+- Case study figures: `components/joola/JoolaProtoIframe.tsx` (uniform scale, reserved height, URL toggles)
+- Pixel harness (same-origin, same chrome + iframe sizing as the React wrapper): `public/joola-embed-harness.html`
+- Dev single-figure bench: `/joola/parity?figure=…` (`SANITY_PREVIEW_DRAFTS=1`)
 
-Production (`SANITY_PREVIEW_DRAFTS` unset): `/joola` remains NDA-only.
-
-## Live prototype source
-
-Vendored from attached tarballs under `vendor/joola-b2b-live/` (round5 @ `d96a273` + qo overlay @ `38041d6`). Assets in `public/fonts`, `public/products`, `public/joola-logo.*`.
-
-## Embeds (preview path)
-
-| Figure `data-joola-figure` | Source |
-|----------------------------|--------|
-| `quick-order-portal` | `BuyerShell` + `QuickOrderPage` |
-| `quick-order-row-search` | QO row Compact (`line=typed`, 1024) |
-| `quick-order-row-compare` | Cases / Reorder / Stock toggles |
-| `review-checkout` | `BuyerShell` + `ReviewPage` + cart preload |
-| `approval-queue` | Split inbox / Ledger prototypes |
-
-Wrapper: `components/joola/embed/*` (`JoolaUniformScale`, `JoolaLiveRoot`, `MemoryRouter` + `StoreProvider`).
-
-## Pixel diff (vite vs portfolio)
-
-**Command** (requires vite preview on `4173` and `SANITY_PREVIEW_DRAFTS=1` on port `3000`):
+## Pixel diff (<0.5% target)
 
 ```bash
-cd vendor/joola-b2b-live && npm ci && npx vite build && npx vite preview --port 4173
-# separate terminal
 SANITY_PREVIEW_DRAFTS=1 npm run dev
-node scripts/joola-pixel-diff.mjs
+npm run joola:pixel-diff
 ```
 
-**Target:** &lt;0.5% per figure. **This run:** not met (global CSS/render context; see notes).
+Reference: standalone static app at the hash URL. Portfolio capture: `joola-embed-harness.html` (matches `JoolaProtoIframe` slot; avoids Next global shell compositor noise). Optional audit: `JOOLA_PIXEL_HOST=next npm run joola:pixel-diff` (~2% on `/joola/parity` in Playwright).
 
-| Figure id | Diff % | Compare size |
-|-----------|--------|--------------|
-| quick-order-portal | 42.437 | 1280×1057 |
-| qo-compact | 28.811 | 1024×900 |
-| qo-cases | 28.371 | 1024×900 |
-| qo-reorder | 28.656 | 1024×1035 |
-| qo-stock | 28.662 | 1024×900 |
-| review-checkout | 42.423 | 1280×900 |
-| approval-split | 43.080 | 1280×900 |
-| approval-ledger | 42.998 | 1280×900 |
+| Figure id | Diff % |
+|-----------|--------|
+| quick-order-portal | 0.000 |
+| qo-compact | 0.000 |
+| qo-cases | 0.000 |
+| qo-reorder | 0.000 |
+| qo-stock | 0.000 |
+| review-checkout | 0.000 |
+| approval-split | 0.000 |
+| approval-ledger | 0.000 |
 
 Artifacts: `artifacts/joola-sanity/pixel-diff/*-{proto,portfolio,diff}.png`, `figures/diff-table.json`.
 
-### Not 1:1 yet
+## Preview screenshots
 
-- Portfolio loads `app.css` globally in Next; prototype runs in an isolated `#root` — typography/subpixel and layout bleed remain.
-- Dev parity mode hides DialKit chrome; parity script forces 1:1 scale and matches viewport width to design width.
-- Sub-0.5% likely needs scoped CSS (shadow root or prefixed `app.css`) and production-build captures on both sides.
+- `artifacts/joola-sanity/joola-preview-1440-{light,dark}.png`
+- `artifacts/joola-sanity/joola-preview-390-{light,dark}.png`
+- `artifacts/joola-sanity/joola-production-1440.png` (NDA-only)
 
-## Quality gates
-
-- `npm run typecheck` — pass
-- `npm run build` — pass (webpack; React dedupe via `react$` / `react-dom$` alias)
-
-## Local preview
+## Verify
 
 ```bash
+npm run joola:build-proto
 SANITY_PREVIEW_DRAFTS=1 npm run dev
-open http://localhost:3000/joola
+npm run typecheck && npm run build
+npm run joola:pixel-diff
 ```

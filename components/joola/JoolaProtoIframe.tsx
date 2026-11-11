@@ -73,8 +73,9 @@ export default function JoolaProtoIframe({
               display: "block",
               width: designWidth,
               height: designHeight,
-              transform: `scale(${scale})`,
-              transformOrigin: "top left",
+              ...(scale < 0.999
+                ? { transform: `scale(${scale})`, transformOrigin: "top left" }
+                : {}),
             }}
           />
         </div>

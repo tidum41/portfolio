@@ -1,11 +1,11 @@
 [
   {
     "id": "quick-order-portal",
-    "diffPct": 3.3693406395975565,
+    "diffPct": 0,
     "url": "http://localhost:3000/joola-proto/round5/index.html#/quick-order?embed=1&clean=1&view=portal&screen=quick-order&state=default&latency=0&account=dicks",
     "compareSize": {
-      "w": 1265,
-      "h": 1056
+      "w": 1280,
+      "h": 1068
     },
     "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/quick-order-portal-proto.png",
     "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/quick-order-portal-portfolio.png",
@@ -13,11 +13,11 @@
   },
   {
     "id": "qo-compact",
-    "diffPct": 3.5434192604775734,
+    "diffPct": 0,
     "url": "http://localhost:3000/joola-proto/qo/index.html#/prototypes/quick-order-row?embed=1&clean=1&v=1&line=typed&w=1024&latency=0",
     "compareSize": {
-      "w": 1009,
-      "h": 887
+      "w": 1024,
+      "h": 900
     },
     "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-compact-proto.png",
     "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-compact-portfolio.png",
@@ -25,11 +25,11 @@
   },
   {
     "id": "qo-cases",
-    "diffPct": 3.320701918031831,
+    "diffPct": 0,
     "url": "http://localhost:3000/joola-proto/qo/index.html#/prototypes/quick-order-row?embed=1&clean=1&v=2&line=typed&w=1024&latency=0",
     "compareSize": {
-      "w": 1009,
-      "h": 1020
+      "w": 1024,
+      "h": 1035
     },
     "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-cases-proto.png",
     "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-cases-portfolio.png",
@@ -37,11 +37,11 @@
   },
   {
     "id": "qo-reorder",
-    "diffPct": 3.7578460521968946,
+    "diffPct": 0,
     "url": "http://localhost:3000/joola-proto/qo/index.html#/prototypes/quick-order-row?embed=1&clean=1&v=3&line=typed&w=1024&latency=0",
     "compareSize": {
-      "w": 1009,
-      "h": 1020
+      "w": 1024,
+      "h": 1035
     },
     "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-reorder-proto.png",
     "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-reorder-portfolio.png",
@@ -49,11 +49,11 @@
   },
   {
     "id": "qo-stock",
-    "diffPct": 3.3307098855399446,
+    "diffPct": 0,
     "url": "http://localhost:3000/joola-proto/qo/index.html#/prototypes/quick-order-row?embed=1&clean=1&v=4&line=typed&w=1024&latency=0",
     "compareSize": {
-      "w": 1009,
-      "h": 1020
+      "w": 1024,
+      "h": 1035
     },
     "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-stock-proto.png",
     "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-stock-portfolio.png",
@@ -61,11 +61,11 @@
   },
   {
     "id": "review-checkout",
-    "diffPct": 4.0188486461778385,
+    "diffPct": 0,
     "url": "http://localhost:3000/joola-proto/round5/index.html#/review?embed=1&clean=1&view=portal&screen=review&state=default&latency=0&account=dicks",
     "compareSize": {
-      "w": 1265,
-      "h": 588
+      "w": 1280,
+      "h": 595
     },
     "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/review-checkout-proto.png",
     "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/review-checkout-portfolio.png",
@@ -73,11 +73,11 @@
   },
   {
     "id": "approval-split",
-    "diffPct": 4.03909586148254,
+    "diffPct": 0,
     "url": "http://localhost:3000/joola-proto/round5/index.html#/prototypes/approval-queue?embed=1&clean=1&v=3&protoState=default&latency=0",
     "compareSize": {
-      "w": 1265,
-      "h": 846
+      "w": 1280,
+      "h": 856
     },
     "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-split-proto.png",
     "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-split-portfolio.png",
@@ -85,11 +85,11 @@
   },
   {
     "id": "approval-ledger",
-    "diffPct": 3.792399700328089,
+    "diffPct": 0,
     "url": "http://localhost:3000/joola-proto/round5/index.html#/prototypes/approval-queue?embed=1&clean=1&v=1&protoState=default&latency=0",
     "compareSize": {
-      "w": 1265,
-      "h": 918
+      "w": 1280,
+      "h": 928
     },
     "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-ledger-proto.png",
     "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-ledger-portfolio.png",

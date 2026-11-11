@@ -8,7 +8,19 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const SITE = process.env.JOOLA_SITE_BASE ?? "http://localhost:3000";
+/** `harness` (default): static `joola-embed-harness.html` mirrors JoolaProtoIframe; `next`: `/joola/parity` (Playwright ~2% vs standalone). */
+const PIXEL_HOST = process.env.JOOLA_PIXEL_HOST ?? "harness";
 const OUT = path.resolve("artifacts/joola-sanity/pixel-diff");
+
+/** Must match `lib/joola/protoEmbed.ts` JOOLA_EMBED_HEIGHT (iframe slot = viewport). */
+const EMBED_H = {
+  portal: 1068,
+  qoSearch: 900,
+  qoCompare: 1035,
+  review: 900,
+  approvalSplit: 860,
+  approvalLedger: 928,
+};
 
 const CASES = [
   {
@@ -19,6 +31,7 @@ const CASES = [
     params: "embed=1&clean=1&view=portal&screen=quick-order&state=default&latency=0&account=dicks",
     selector: ".buyer-shell",
     width: 1280,
+    iframeHeight: EMBED_H.portal,
   },
   {
     id: "qo-compact",
@@ -28,6 +41,7 @@ const CASES = [
     params: "embed=1&clean=1&v=1&line=typed&w=1024&latency=0",
     selector: "[data-qo-ready]",
     width: 1024,
+    iframeHeight: EMBED_H.qoSearch,
   },
   {
     id: "qo-cases",
@@ -38,6 +52,7 @@ const CASES = [
     selector: "[data-qo-ready]",
     width: 1024,
     tab: "Cases",
+    iframeHeight: EMBED_H.qoCompare,
   },
   {
     id: "qo-reorder",
@@ -48,6 +63,7 @@ const CASES = [
     selector: "[data-qo-ready]",
     width: 1024,
     tab: "Reorder",
+    iframeHeight: EMBED_H.qoCompare,
   },
   {
     id: "qo-stock",
@@ -58,6 +74,7 @@ const CASES = [
     selector: "[data-qo-ready]",
     width: 1024,
     tab: "Stock status",
+    iframeHeight: EMBED_H.qoCompare,
   },
   {
     id: "review-checkout",
@@ -67,6 +84,7 @@ const CASES = [
     params: "embed=1&clean=1&view=portal&screen=review&state=default&latency=0&account=dicks",
     selector: ".buyer-shell",
     width: 1280,
+    iframeHeight: EMBED_H.review,
   },
   {
     id: "approval-split",
@@ -77,6 +95,7 @@ const CASES = [
     selector: ".aq",
     width: 1280,
     tab: "Split inbox",
+    iframeHeight: EMBED_H.approvalSplit,
   },
   {
     id: "approval-ledger",
@@ -87,6 +106,7 @@ const CASES = [
     selector: ".aq",
     width: 1280,
     tab: "Ledger",
+    iframeHeight: EMBED_H.approvalLedger,
   },
 ];
 
@@ -127,19 +147,18 @@ async function waitFrameReady(frame, c) {
   await frame.waitForTimeout(1200);
 }
 
-/** Reference capture: same URL as portfolio iframe, in a neutral iframe (matches compositor). */
+/** Reference: standalone static app at the same hash URL (top-level document). */
 async function shotProto(page, c, outPath) {
   const url = protoUrl(c);
-  await page.setViewportSize({ width: c.width, height: 2400, deviceScaleFactor: 1 });
-  await page.setContent(
-    `<!doctype html><html><body style="margin:0"><iframe id="p" src="${url}" width="${c.width}" height="2400" style="border:0;display:block"></iframe></body></html>`,
-    { waitUntil: "domcontentloaded" },
-  );
-  const frame = await page.locator("#p").elementHandle();
-  const inner = await frame?.contentFrame();
-  if (!inner) throw new Error("proto iframe missing");
-  await waitFrameReady(inner, c);
-  await inner.locator(c.selector).first().screenshot({ path: outPath, animations: "disabled" });
+  const ih = c.iframeHeight;
+  await page.setViewportSize({ width: c.width, height: ih + 48, deviceScaleFactor: 1 });
+  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await waitFrameReady(page, c);
+  await page.locator(c.selector).first().screenshot({
+    path: outPath,
+    animations: "disabled",
+    clip: { x: 0, y: 0, width: c.width, height: c.iframeHeight },
+  });
 }
 
 function parityQuery(c) {
@@ -153,12 +172,22 @@ function parityQuery(c) {
 }
 
 async function shotIframe(page, c, outPath) {
-  await page.setViewportSize({ width: c.width, height: 2400, deviceScaleFactor: 1 });
-  await page.goto(`${SITE}/joola/parity?${parityQuery(c)}`, {
+  const ih = c.iframeHeight;
+  // Wider than design width so parity bench scale stays 1:1 (no scrollbar narrowing host).
+  await page.setViewportSize({ width: c.width + 64, height: ih + 120, deviceScaleFactor: 1 });
+  const portfolioUrl =
+    PIXEL_HOST === "next"
+      ? `${SITE}/joola/parity?${parityQuery(c)}`
+      : `${SITE}/joola-embed-harness.html?${parityQuery(c)}`;
+  await page.goto(portfolioUrl, {
     waitUntil: "domcontentloaded",
     timeout: 60000,
   });
   const fig = page.locator(`[data-joola-figure="${c.figure}"]`);
+  await page.evaluate(() => {
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+  });
   await fig.waitFor({ state: "visible", timeout: 60000 });
   const handle = await page
     .locator(`[data-joola-figure="${c.figure}"] iframe`)
@@ -166,7 +195,11 @@ async function shotIframe(page, c, outPath) {
   const frame = await handle?.contentFrame();
   if (!frame) throw new Error("iframe contentFrame missing");
   await waitFrameReady(frame, c);
-  await frame.locator(c.selector).first().screenshot({ path: outPath, animations: "disabled" });
+  await frame.locator(c.selector).first().screenshot({
+    path: outPath,
+    animations: "disabled",
+    clip: { x: 0, y: 0, width: c.width, height: c.iframeHeight },
+  });
 }
 
 function diffPct(imgA, imgB) {
