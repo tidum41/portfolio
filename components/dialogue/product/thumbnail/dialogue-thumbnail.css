@@ -94,15 +94,23 @@
 }
 
 /*
- * Prototyped hover / active / recede (Playground r2 / ChartStackedBar live CSS),
- * driven by data-hover / data-press because the demo cursor is not a real pointer.
- * No outline on hover or press. Recede fill is stone-300 via --dp-border-strong.
+ * Locked hover / select (2026-11-11): segments keep their own ramp color.
+ * Hover and press are border-color only, transparent to --dp-border (#E7E5E4),
+ * 0.15s cubic-bezier(0.4, 0, 0.2, 1), matching live quote cards. No fill,
+ * radius, drop-shadow, or dark mark-outline change. Select recedes the other
+ * segments to stone (--dp-border-strong, #D6D3D1). Legend swatches keep
+ * their own colors. data-hover / data-press drive the demo cursor.
  */
 .dlg-thumb .dlg-live__bar .dp-chart-stack__seg {
-  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: none;
 }
 
+/* Kill the shared 1px finding-edge inset outline from chart.css. */
+.dlg-thumb .dp-chart-stack__seg:hover,
+.dlg-thumb .dp-chart-stack__seg[data-selected],
 .dlg-thumb .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-focal],
 .dlg-thumb .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg:not([data-focal]),
 .dlg-thumb .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
@@ -115,30 +123,43 @@
   box-shadow: none;
 }
 
+/* Soft quote-card border on the hovered or pressed segment.
+   Inset so adjacent segments do not grow a seam. */
+.dlg-thumb .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: inset 0 0 0 1px var(--dp-border);
+}
+
+/* Recede unselected segments only. Swatches stay on the ramp. */
 .dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index]:not([data-focal]),
 .dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index][data-focal] {
   background: var(--dp-border-strong);
 }
 
-.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__swatch[data-index][data-focal],
-.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__swatch[data-index]:not([data-focal]) {
-  background: var(--dp-border-strong);
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-index][data-focal] {
+  background: var(--dp-chart-focal);
 }
 
-.dlg-thumb .dlg-live .dlg-live__bar[data-side][data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal] {
-  background: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-ink));
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-index]:not([data-focal]) {
+  background: var(--dp-chart-mid);
 }
 
-.dlg-thumb .dlg-live .dlg-live__bar[data-side][data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
-  background: color-mix(in srgb, var(--dp-chart-muted) 80%, var(--dp-ink));
+/* Legend row: same border-color hover as the live quote card. */
+.dlg-thumb .dp-chart-stack__lane {
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: var(--dp-radius-control);
+  margin: -1px;
+  transition: border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dlg-thumb .dlg-live .dlg-live__bar[data-side][data-press="friday"] .dp-chart-stack__seg[data-index][data-focal] {
-  background: color-mix(in srgb, var(--dp-chart-focal) 70%, var(--dp-ink));
-}
-
-.dlg-thumb .dlg-live .dlg-live__bar[data-side][data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
-  background: color-mix(in srgb, var(--dp-chart-muted) 65%, var(--dp-ink));
+.dlg-thumb .dlg-live__bar[data-hover="friday"] .dp-chart-stack__lane[data-focal],
+.dlg-thumb .dlg-live__bar[data-press="friday"] .dp-chart-stack__lane[data-focal],
+.dlg-thumb .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__lane:not([data-focal]),
+.dlg-thumb .dlg-live__bar[data-press="unsure"] .dp-chart-stack__lane:not([data-focal]) {
+  border-color: var(--dp-border);
 }
 
 .dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
@@ -245,7 +266,8 @@
 @media (prefers-reduced-motion: reduce) {
   .dlg-thumb__cursor,
   .dlg-thumb__swap,
-  .dlg-thumb .dlg-live__bar .dp-chart-stack__seg {
+  .dlg-thumb .dlg-live__bar .dp-chart-stack__seg,
+  .dlg-thumb .dp-chart-stack__lane {
     animation: none;
     transition: none;
   }
