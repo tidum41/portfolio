@@ -125,7 +125,7 @@ function PlayGlyph() {
   return <svg className="dlg-play-clip__icon" viewBox="0 0 16 16" aria-hidden><path d="M5 3.5v9l7-4.5z" fill="currentColor" /></svg>;
 }
 function PlusGlyph() {
-  return <svg className="dlg-thin__chip-plus" viewBox="0 0 16 16" aria-hidden><path d="M8 3.25v9.5M3.25 8h9.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>;
+  return <svg className="dlg-thin__chip-plus" viewBox="0 0 24 24" aria-hidden><path d="M5 12h14M12 5v14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
 }
 const clipLen = (time: string) => { const [a, z] = time.split(/[\u2013-]/).map(sec); return fmt(z - a); };
 
