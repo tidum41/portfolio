@@ -676,9 +676,9 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     }
   }, [openPopup, popupHabitEl]);
 
-  // Homepage sequence: projects (BruinLease, JOOLA, Dialogue, SViz) then
-  // All in One, then the Habit phone demo (`null` slot). HABIT_RANK sits
-  // just past todolist (5th project) so Habit lands after it.
+  // Homepage sequence: BruinLease, JOOLA, Dialogue, All in One, SViz, then
+  // the Habit phone demo (`null` slot). HABIT_RANK sits just past SViz
+  // (5th project) so Habit lands last.
   const HABIT_RANK = Math.min(5, projects.length);
   const gridSlots: (SanityProject | null)[] = [
     ...projects.slice(0, HABIT_RANK),
@@ -800,8 +800,8 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
 
   // Desktop masonry: two equal-width columns. Reading order is L-R then down
   // (rank 0,1,2…), which is also the mobile stack via `order`.
-  //   Left  (even): BruinLease 6:5, Dialogue 4:3, All in One 1362:1080
-  //   Right (odd):  JOOLA 4:3, SViz 1572:1080, Habit 4:3 frame
+  //   Left  (even): BruinLease 6:5, Dialogue 4:3, SViz 1572:1080
+  //   Right (odd):  JOOLA 4:3, All in One 1362:1080, Habit 4:3 frame
   const leftCol = gridSlots.map((p, rank) => ({ p, rank })).filter(({ rank }) => rank % 2 === 0);
   const rightCol = gridSlots.map((p, rank) => ({ p, rank })).filter(({ rank }) => rank % 2 === 1);
 
