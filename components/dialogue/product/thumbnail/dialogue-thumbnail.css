@@ -143,36 +143,27 @@
   box-shadow: none;
 }
 
-/* Beat .dlg-live recede: static thumbnail ramp fills (see thumbnailBarRamp.ts). */
-.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-tone="focal"] {
+/*
+ * Beat .dlg-live stone recede (Round 18): fills follow data-tone only, in every
+ * data-side / hover / press state. Extra specificity vs [data-side][data-focal].
+ */
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-index][data-tone="focal"],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-index][data-tone="focal"] {
   background: var(--dp-chart-focal);
 }
 
-.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-tone="mid"] {
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-index][data-tone="mid"],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-index][data-tone="mid"] {
   background: var(--dp-chart-mid);
 }
 
-.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-tone="soft"] {
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-index][data-tone="soft"],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-index][data-tone="soft"] {
   background: var(--dp-chart-soft);
 }
 
-.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-tone="neutral"] {
-  background: var(--dp-border-strong);
-}
-
-.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__swatch[data-tone="focal"] {
-  background: var(--dp-chart-focal);
-}
-
-.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__swatch[data-tone="mid"] {
-  background: var(--dp-chart-mid);
-}
-
-.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__swatch[data-tone="soft"] {
-  background: var(--dp-chart-soft);
-}
-
-.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__swatch[data-tone="neutral"] {
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-index][data-tone="neutral"],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-index][data-tone="neutral"] {
   background: var(--dp-border-strong);
 }
 
