@@ -15,12 +15,12 @@ import { SITE_URL } from "@/lib/site";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Sviz",
+  title: "sviz",
   description:
-    "Sviz case study — personal YouTube channel with 1M+ views on custom keyboards, reviews, and community.",
+    "sviz case study — personal YouTube channel with 1M+ views on custom keyboards, reviews, and community.",
   alternates: { canonical: `${SITE_URL}/sviz` },
   openGraph: {
-    title: "Sviz — Mudit Mahajan",
+    title: "sviz — Mudit Mahajan",
     description:
       "Personal YouTube with 1M+ views — digestible custom keyboard content and community building.",
     url: `${SITE_URL}/sviz`,
