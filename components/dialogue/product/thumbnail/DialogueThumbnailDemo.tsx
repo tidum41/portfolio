@@ -11,8 +11,10 @@ import { QUOTE_LIST, QUOTE_LIST_FRIDAY } from "@/lib/dialogue/product/sampleData
 import {
   DEFAULT_THUMBNAIL_VARIANT,
   THUMBNAIL_VARIANTS,
+  thumbnailBarStyleForVariant,
   type ThumbnailVariantId,
 } from "@/components/dialogue/product/thumbnail/variants";
+import { withThumbnailBarRamp } from "@/components/dialogue/product/thumbnail/thumbnailBarRamp";
 import "@/components/dialogue/product/dialogue-product.css";
 import "@/components/dialogue/product/thumbnail/dialogue-thumbnail.css";
 
@@ -20,6 +22,11 @@ import "@/components/dialogue/product/thumbnail/dialogue-thumbnail.css";
 const FINDING =
   "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday, whatever day they ordered.";
 const PANEL = 448;
+
+const THUMB_STACK = withThumbnailBarRamp([
+  { label: "Read it as this Friday", value: 225, display: "225 of 300", focal: true },
+  { label: "Unsure", value: 75, display: "75 of 300" },
+]);
 
 /** Same ease-in-out the /dialogue motion recorder uses. */
 const EASE_IO = (p: number) =>
@@ -103,6 +110,7 @@ export default function DialogueThumbnailDemo({
   showPreview?: boolean;
 }) {
   const timing = THUMBNAIL_VARIANTS[variant];
+  const barStyle = thumbnailBarStyleForVariant(variant);
   const rootRef = useRef<HTMLDivElement>(null);
   const [side, setSide] = useState<Side>("friday");
   const [hover, setHover] = useState<Side | null>(null);
@@ -282,6 +290,7 @@ export default function DialogueThumbnailDemo({
       ref={rootRef}
       className="dlg-thumb"
       data-variant={variant}
+      data-bar-style={barStyle}
       data-beat={beat}
       data-side={side}
       data-cursor={cursorOn ? "on" : undefined}
@@ -300,14 +309,7 @@ export default function DialogueThumbnailDemo({
                 data-press={press || undefined}
                 data-side={side}
               >
-                <ChartStackedBar
-                  lanes
-                  total={300}
-                  segments={[
-                    { label: "Read it as this Friday", value: 225, display: "225 of 300", focal: true },
-                    { label: "Unsure", value: 75, display: "75 of 300" },
-                  ]}
-                />
+                <ChartStackedBar lanes total={300} segments={THUMB_STACK} />
               </div>
               <div key={swapKey} className="dlg-thumb__swap">
                 <ThumbPeople side={side} />

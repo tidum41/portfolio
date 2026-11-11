@@ -39,7 +39,10 @@ function DialogueThumbnailDevPage() {
       <h1 style={{ margin: "0 0 16px", fontSize: 24, fontWeight: 500 }}>Thumbnail demo variants</h1>
       <p style={{ margin: "0 0 24px", maxWidth: 640, lineHeight: 1.5, color: "var(--color-text-secondary)" }}>
         Same story in each cut. The cursor opens the 75 unsure side, Mei&rsquo;s quote lands, then the 225 opens again.
-        Poster is the 225 with Ana&rsquo;s quote and the Preview badge.
+        Poster is the 225 with Ana&rsquo;s quote and the Preview badge.{" "}
+        {variant === "lift-explore" ? (
+          <strong>Lift marker (exploration): dev-only bar motion, not used on the homepage card.</strong>
+        ) : null}
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
         {IDS.map((id) => (

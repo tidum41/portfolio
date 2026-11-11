@@ -1,4 +1,4 @@
-export type ThumbnailVariantId = "product" | "story" | "tight";
+export type ThumbnailVariantId = "product" | "story" | "tight" | "lift-explore";
 
 export type ThumbnailTiming = {
   id: ThumbnailVariantId;
@@ -49,6 +49,21 @@ export const THUMBNAIL_VARIANTS: Record<ThumbnailVariantId, ThumbnailTiming> = {
     payoffMs: 1200,
     ease: "cubic-bezier(0.25, 0.8, 0.25, 1)",
   },
+  /** Dev-only: lift-and-marker bar exploration (not used on the homepage card). */
+  "lift-explore": {
+    id: "lift-explore",
+    label: "Lift marker (exploration)",
+    restMs: 250,
+    moveMs: 320,
+    hoverMs: 120,
+    pressMs: 140,
+    payoffMs: 1200,
+    ease: "cubic-bezier(0.25, 0.8, 0.25, 1)",
+  },
 };
 
 export const DEFAULT_THUMBNAIL_VARIANT: ThumbnailVariantId = "product";
+
+export function thumbnailBarStyleForVariant(variant: ThumbnailVariantId): "underline" | "lift-explore" {
+  return variant === "lift-explore" ? "lift-explore" : "underline";
+}

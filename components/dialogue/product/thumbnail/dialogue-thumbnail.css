@@ -62,7 +62,14 @@
 .dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__bar {
   border-radius: var(--dp-radius-bar);
   overflow: visible;
-  margin-bottom: 3px;
+}
+
+.dlg-thumb[data-bar-style="underline"] .dlg-live .dlg-live__bar .dp-chart-stack__bar {
+  margin-bottom: calc(var(--dp-radius-bar) * 2.5);
+}
+
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar .dp-chart-stack__bar {
+  margin-bottom: calc(var(--dp-radius-bar) * 2);
 }
 .dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg:first-child {
   border-radius: var(--dp-radius-bar) 0 0 var(--dp-radius-bar);
@@ -102,19 +109,22 @@
 }
 
 /*
- * Lift and marker (2026-11-11): ramp fills never change. Hover lifts the segment
- * 1px. Active keeps the lift and draws a 2px ink marker under the open segment;
- * its legend label goes ink medium. No bar outlines or rings. 0.15s
- * cubic-bezier(0.4, 0, 0.2, 1). data-hover / data-press / data-side drive the demo.
+ * Homepage card (data-bar-style=underline): fills are static ramp colors; bars never
+ * move. Open segment gets a 3px ink underline with a 2px gap. Exploration cut
+ * (data-bar-style=lift-explore) keeps 1px lift plus 2px underline for /dev only.
+ * Markers follow data-side / data-press only (never hidden when data-hover moves).
  */
 .dlg-thumb .dlg-live__bar .dp-chart-stack__seg {
   position: relative;
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateY(0);
+  transform: none;
   outline: none;
   outline-offset: 0;
   border: 0;
   box-shadow: none;
+}
+
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live__bar .dp-chart-stack__seg {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dlg-thumb .dlg-live__bar .dp-chart-stack__seg:hover,
@@ -133,60 +143,81 @@
   box-shadow: none;
 }
 
-/* Beat .dlg-live recede: every segment and swatch keeps ramp B in every state. */
-.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-focal],
-.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-tone="focal"] {
+/* Beat .dlg-live recede: static thumbnail ramp fills (see thumbnailBarRamp.ts). */
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-tone="focal"] {
   background: var(--dp-chart-focal);
 }
 
-.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-tone="mid"] {
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-tone="mid"] {
   background: var(--dp-chart-mid);
 }
 
-.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-tone="soft"] {
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-tone="soft"] {
   background: var(--dp-chart-soft);
 }
 
-.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-focal],
-.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-tone="focal"] {
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-tone="neutral"] {
+  background: var(--dp-border-strong);
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__swatch[data-tone="focal"] {
   background: var(--dp-chart-focal);
 }
 
-.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-tone="mid"] {
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__swatch[data-tone="mid"] {
   background: var(--dp-chart-mid);
 }
 
-.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-tone="soft"] {
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__swatch[data-tone="soft"] {
   background: var(--dp-chart-soft);
 }
 
-/* Hover: 1px lift only. */
-.dlg-thumb .dlg-live .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
-.dlg-thumb .dlg-live .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
-  transform: translateY(-1px);
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__swatch[data-tone="neutral"] {
+  background: var(--dp-border-strong);
 }
 
-/* Press and open: lift plus ink marker under the active segment (poster stays flat). */
-.dlg-thumb .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
-.dlg-thumb .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
-.dlg-thumb:not([data-beat="poster"]) .dlg-live .dlg-live__bar[data-side="friday"]:not([data-hover]) .dp-chart-stack__seg[data-index][data-focal],
-.dlg-thumb .dlg-live .dlg-live__bar[data-side="unsure"]:not([data-hover]) .dp-chart-stack__seg[data-index]:not([data-focal]) {
-  transform: translateY(-1px);
-}
-
-.dlg-thumb .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
-.dlg-thumb .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after,
-.dlg-thumb:not([data-beat="poster"]) .dlg-live .dlg-live__bar[data-side="friday"]:not([data-hover]) .dp-chart-stack__seg[data-index][data-focal]::after,
-.dlg-thumb .dlg-live .dlg-live__bar[data-side="unsure"]:not([data-hover]) .dp-chart-stack__seg[data-index]:not([data-focal])::after {
+/* ---- Main card: underline only (no bar motion) ---- */
+.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
+.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after,
+.dlg-thumb[data-bar-style="underline"]:not([data-beat="poster"]) .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
+.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -3px;
-  height: 2px;
+  bottom: calc(-1 * var(--dp-radius-bar) * 2.5);
+  height: calc(var(--dp-radius-bar) * 1.5);
+  border-radius: var(--dp-radius-bar);
+  background: color-mix(in srgb, var(--dp-ink) 85%, transparent);
+  pointer-events: none;
+}
+
+/* ---- Exploration: lift-and-marker (dev / case study only) ---- */
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  transform: translateY(-1px);
+}
+
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after,
+.dlg-thumb[data-bar-style="lift-explore"]:not([data-beat="poster"]) .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * (var(--dp-radius-bar) + var(--dp-radius-bar)));
+  height: var(--dp-radius-bar);
   border-radius: var(--dp-radius-bar);
   background: color-mix(in srgb, var(--dp-ink) 60%, transparent);
   pointer-events: none;
+}
+
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="lift-explore"]:not([data-beat="poster"]) .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  transform: translateY(-1px);
 }
 
 .dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
