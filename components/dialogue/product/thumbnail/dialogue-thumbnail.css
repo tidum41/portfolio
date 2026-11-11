@@ -168,10 +168,15 @@
 }
 
 /* ---- Main card: underline only (no bar motion) ---- */
+/*
+ * The underline follows the open side in every beat, poster included, and a
+ * press cuts it instantly: the pressed segment gains it and the open segment
+ * loses it in the same frame, so it never spans both segments.
+ */
+.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
+.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after,
 .dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
-.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after,
-.dlg-thumb[data-bar-style="underline"]:not([data-beat="poster"]) .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
-.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after {
+.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after {
   content: "";
   position: absolute;
   left: 0;
@@ -181,6 +186,12 @@
   border-radius: var(--dp-radius-bar);
   background: color-mix(in srgb, var(--dp-ink) 85%, transparent);
   pointer-events: none;
+}
+
+/* Press wins over the open side: suppress the other segment's underline. */
+.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index]:not([data-focal])::after,
+.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index][data-focal]::after {
+  content: none;
 }
 
 /* ---- Exploration: lift-and-marker (dev / case study only) ---- */
@@ -267,24 +278,14 @@
 }
 
 
+/*
+ * People swap lands whole at full opacity in the same frame as the side
+ * flip. A fade from 0 left a blank beat and a collapsed-looking card.
+ */
 .dlg-thumb__swap {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  animation: dlg-thumb-in 200ms cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.dlg-thumb[data-variant="story"] .dlg-thumb__swap {
-  animation-duration: 400ms;
-}
-
-.dlg-thumb[data-variant="tight"] .dlg-thumb__swap {
-  animation-duration: 180ms;
-}
-
-@keyframes dlg-thumb-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 .dlg-thumb .dp-clip-quote {
