@@ -26,6 +26,7 @@ import { afterIntroIdle } from "@/lib/introReady";
 import { allowIdlePrefetch } from "@/lib/networkHint";
 import type { SanityProject } from "@/lib/sanity/queries";
 import CardFocusGrid from "@/components/CardFocusGrid";
+import DialogueThumbnailCard from "@/components/DialogueThumbnailCard";
 
 /** Leaves the site (or opens a non-app URL) — blue northeast arrow only for these. */
 function isExternalHref(href?: string) {
@@ -624,6 +625,23 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               .filter((_, i) => i % 2 === 0)
               .map((p, k) => {
                 const rank = k * 2;
+                if (p._id === "project-dialogue") {
+                  return (
+                    <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} data-annotate={`${homeCardAnnotate(p.href, p._id)}/root`} style={{ gap: 8, order: rank }}>
+                      {hasEverBeenActive && (
+                        <DialogueThumbnailCard
+                          href={p.href}
+                          title={p.title}
+                          label={p.label}
+                          aspectRatio={p.aspectRatio}
+                          active={heavyMediaLive}
+                          playing={mediaPlaying}
+                          annotate={homeCardAnnotate(p.href, p._id)}
+                        />
+                      )}
+                    </EntranceItem>
+                  );
+                }
                 return p.mediaType === "video" && p.muxPlaybackId ? (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} data-annotate={`${homeCardAnnotate(p.href, p._id)}/slot`} style={{ order: rank }}>
                     {hasEverBeenActive && (
@@ -725,6 +743,23 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               .filter((_, i) => i % 2 === 1)
               .map((p, k) => {
                 const rank = k * 2 + 1;
+                if (p._id === "project-dialogue") {
+                  return (
+                    <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} data-annotate={`${homeCardAnnotate(p.href, p._id)}/root`} style={{ gap: 8, order: rank }}>
+                      {hasEverBeenActive && (
+                        <DialogueThumbnailCard
+                          href={p.href}
+                          title={p.title}
+                          label={p.label}
+                          aspectRatio={p.aspectRatio}
+                          active={heavyMediaLive}
+                          playing={mediaPlaying}
+                          annotate={homeCardAnnotate(p.href, p._id)}
+                        />
+                      )}
+                    </EntranceItem>
+                  );
+                }
                 return p.mediaType === "video" && p.muxPlaybackId ? (
                   <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} data-annotate={`${homeCardAnnotate(p.href, p._id)}/slot`} style={{ order: rank }}>
                     {hasEverBeenActive && (
