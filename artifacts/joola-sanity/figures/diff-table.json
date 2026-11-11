@@ -1,0 +1,37 @@
+[
+  {
+    "figure": "quick-order-hero",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/figures/quick-order-hero-portfolio.png",
+    "prototype": "n/a (repo tidum41/joola-b2b-casestudy not available)",
+    "diffPct": "n/a",
+    "note": "viewport 750x520 target; captured element box 750x530"
+  },
+  {
+    "figure": "decision-1-line",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/figures/decision-1-line-portfolio.png",
+    "prototype": "n/a (repo tidum41/joola-b2b-casestudy not available)",
+    "diffPct": "n/a",
+    "note": "viewport 750x280 target; captured element box 750x424"
+  },
+  {
+    "figure": "decision-2-compare",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/figures/decision-2-compare-portfolio.png",
+    "prototype": "n/a (repo tidum41/joola-b2b-casestudy not available)",
+    "diffPct": "n/a",
+    "note": "viewport 750x320 target; captured element box 750x438"
+  },
+  {
+    "figure": "decision-3-credit",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/figures/decision-3-credit-portfolio.png",
+    "prototype": "n/a (repo tidum41/joola-b2b-casestudy not available)",
+    "diffPct": "n/a",
+    "note": "viewport 750x280 target; captured element box 750x377"
+  },
+  {
+    "figure": "decision-4-approvals",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/figures/decision-4-approvals-portfolio.png",
+    "prototype": "n/a (repo tidum41/joola-b2b-casestudy not available)",
+    "diffPct": "n/a",
+    "note": "viewport 750x400 target; captured element box 1360x526"
+  }
+]

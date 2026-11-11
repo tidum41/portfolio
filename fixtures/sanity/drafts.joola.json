@@ -1,0 +1,75 @@
+{
+  "_createdAt": "2026-11-11T18:55:05Z",
+  "_id": "drafts.joola",
+  "_rev": "t1hnxHUiLJEyCZZMloNUuz",
+  "_type": "caseStudy",
+  "_updatedAt": "2026-11-11T18:55:05Z",
+  "d1Body": "[PLACEHOLDER: one short paragraph and one quick-order screen. Mention search by name, category or SKU and CSV upload for big orders.]",
+  "d1Heading": "[PLACEHOLDER: decision 1, search-first quick order. The first screen is a search box; NetSuite buries quick order inside the cart.]",
+  "d1Label": "Decision",
+  "d2Body": "[PLACEHOLDER: one short paragraph and a quantity-stepper screen. Mention the Use last reorder candidate and the stock line candidate here if Mudit wants them. One account price per distributor, no quantity price breaks.]",
+  "d2Heading": "[PLACEHOLDER: decision 2, quantities step by case pack so each line matches what the warehouse ships]",
+  "d2Label": "Decision",
+  "d3Body": "[PLACEHOLDER: one short paragraph and a checkout screen. Mention the ship date staying pending until a rep confirms it as a candidate for this section or its own.]",
+  "d3Heading": "[PLACEHOLDER: decision 3, checkout opens on Net 30 and shows credit in use]",
+  "d3Label": "Decision",
+  "d4Body": "[PLACEHOLDER: one short paragraph and a rep-side approval screen. Mention store-owned saved orders as another candidate decision. Rep and admin screens are Mudit's internship work.]",
+  "d4Heading": "[PLACEHOLDER: decision 4, split inbox approvals for over-limit orders, with the credit math beside the list]",
+  "d4Label": "Decision",
+  "heroTagline": "JOOLA, Case Study, Internship 2026",
+  "heroTitle": "B2B ordering for JOOLA",
+  "pageType": "product-design",
+  "painPoints": [
+    "[PLACEHOLDER: pain point from sales interviews and the NetSuite process review, one sentence]",
+    "[PLACEHOLDER: pain point 2, one sentence, only facts from the brief]"
+  ],
+  "problemBody": "The current loop for ordering requires back and forth emailing, spreadsheet order forms, and causes all parties involved to focus on aspects that can be designed for.",
+  "problemHeading": "Distributors need self-service ordering for wholesale orders and one-off orders, that reflect their business pricing.",
+  "problemImageCaption": "[PLACEHOLDER: caption for the before-state image: NetSuite entry plus email and spreadsheet order forms]",
+  "problemLabel": "Problem",
+  "researchBody": "[PLACEHOLDER: short research summary. Audit of NetSuite SuiteCommerce, Elastic Suite, RepSpark, BigCommerce B2B Edition, Shopify B2B and Faire, one finding per row, from research/erp-audit.md. Add Mudit's picks from the muse.ai report. No time-saving claims.]",
+  "researchHeading": "[PLACEHOLDER: research heading, e.g. what sales interviews, the NetSuite process review and an audit of other B2B portals showed]",
+  "researchLabel": "Research",
+  "slug": "joola",
+  "solutionBody": "[PLACEHOLDER: two sentences on the buyer portal, with the hero quick-order screen or interactive embed below, plus a one-line note that names and numbers are mocked. Optional closing line about the demo to JOOLA's Head of Digital and Creative Director and the roadmap, only after Mudit approves.]",
+  "solutionHeading": "[PLACEHOLDER: one-line solution heading, shown up front]",
+  "solutionLabel": "Solution",
+  "title": "B2B ordering for JOOLA",
+  "tocItems": [
+    {
+      "_key": "9e2e3852",
+      "id": "problem",
+      "label": "Problem"
+    },
+    {
+      "_key": "2333f0f3",
+      "id": "solution",
+      "label": "Solution"
+    },
+    {
+      "_key": "4c6c047f",
+      "id": "research",
+      "label": "Research"
+    },
+    {
+      "_key": "93e59fe2",
+      "id": "decision-1",
+      "label": "Search first"
+    },
+    {
+      "_key": "0626f757",
+      "id": "decision-2",
+      "label": "Case pack steps"
+    },
+    {
+      "_key": "adc8f016",
+      "id": "decision-3",
+      "label": "Net 30 credit in use"
+    },
+    {
+      "_key": "a8e3a554",
+      "id": "decision-4",
+      "label": "Split inbox approvals"
+    }
+  ]
+}

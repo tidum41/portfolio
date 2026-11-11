@@ -1,0 +1,12 @@
+{
+  "base": "http://localhost:3000",
+  "shots": [
+    "/agent/repos/portfolio/artifacts/joola-sanity/joola-preview-1440-light.png",
+    "/agent/repos/portfolio/artifacts/joola-sanity/joola-preview-1440-dark.png",
+    "/agent/repos/portfolio/artifacts/joola-sanity/joola-preview-390-light.png",
+    "/agent/repos/portfolio/artifacts/joola-sanity/joola-preview-390-dark.png",
+    "/agent/repos/portfolio/artifacts/joola-sanity/joola-production-1440.png",
+    "/agent/repos/portfolio/artifacts/joola-sanity/joola-production-390.png"
+  ],
+  "at": "2026-11-11T19:54:21.712Z"
+}
