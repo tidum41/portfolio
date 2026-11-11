@@ -1,6 +1,5 @@
 /**
- * Pixel-compare portfolio JOOLA embeds vs Vite prototype (same selector, DPR 1).
- * Requires: vite preview on JOOLA_PROTO_BASE, portfolio dev on JOOLA_SITE_BASE with SANITY_PREVIEW_DRAFTS=1.
+ * Compare static prototype URL vs same URL inside portfolio iframe (1:1 target <0.5%).
  */
 import { chromium } from "playwright";
 import { PNG } from "pngjs";
@@ -8,172 +7,166 @@ import pixelmatch from "pixelmatch";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const PROTO = process.env.JOOLA_PROTO_BASE ?? "http://127.0.0.1:4173";
 const SITE = process.env.JOOLA_SITE_BASE ?? "http://localhost:3000";
 const OUT = path.resolve("artifacts/joola-sanity/pixel-diff");
 
-/** @type {Array<{id: string, protoUrl: string, selector: string, figure: string, width: number, portfolioVariant?: string}>} */
 const CASES = [
   {
     id: "quick-order-portal",
-    protoUrl: `${PROTO}/quick-order?clean=1&view=portal&screen=quick-order&state=default&latency=0&account=dicks`,
-    selector: ".buyer-shell",
     figure: "quick-order-portal",
+    path: "/joola-proto/round5/index.html",
+    hash: "/quick-order",
+    params: "embed=1&clean=1&view=portal&screen=quick-order&state=default&latency=0&account=dicks",
+    selector: ".buyer-shell",
     width: 1280,
   },
   {
     id: "qo-compact",
-    protoUrl: `${PROTO}/prototypes/quick-order-row?clean=1&v=1&line=typed&w=1024&latency=0`,
-    selector: "[data-qo-ready]",
     figure: "quick-order-row-search",
+    path: "/joola-proto/qo/index.html",
+    hash: "/prototypes/quick-order-row",
+    params: "embed=1&clean=1&v=1&line=typed&w=1024&latency=0",
+    selector: "[data-qo-ready]",
     width: 1024,
   },
   {
     id: "qo-cases",
-    protoUrl: `${PROTO}/prototypes/quick-order-row?clean=1&v=2&line=typed&w=1024&latency=0`,
-    selector: "[data-qo-ready]",
     figure: "quick-order-row-compare",
+    path: "/joola-proto/qo/index.html",
+    hash: "/prototypes/quick-order-row",
+    params: "embed=1&clean=1&v=2&line=typed&w=1024&latency=0",
+    selector: "[data-qo-ready]",
     width: 1024,
-    portfolioVariant: "cases",
+    tab: "Cases",
   },
   {
     id: "qo-reorder",
-    protoUrl: `${PROTO}/prototypes/quick-order-row?clean=1&v=3&line=typed&w=1024&latency=0`,
-    selector: "[data-qo-ready]",
     figure: "quick-order-row-compare",
+    path: "/joola-proto/qo/index.html",
+    hash: "/prototypes/quick-order-row",
+    params: "embed=1&clean=1&v=3&line=typed&w=1024&latency=0",
+    selector: "[data-qo-ready]",
     width: 1024,
-    portfolioVariant: "reorder",
+    tab: "Reorder",
   },
   {
     id: "qo-stock",
-    protoUrl: `${PROTO}/prototypes/quick-order-row?clean=1&v=4&line=typed&w=1024&latency=0`,
-    selector: "[data-qo-ready]",
     figure: "quick-order-row-compare",
+    path: "/joola-proto/qo/index.html",
+    hash: "/prototypes/quick-order-row",
+    params: "embed=1&clean=1&v=4&line=typed&w=1024&latency=0",
+    selector: "[data-qo-ready]",
     width: 1024,
-    portfolioVariant: "stock",
+    tab: "Stock status",
   },
   {
     id: "review-checkout",
-    protoUrl: `${PROTO}/review?clean=1&view=portal&screen=review&state=default&latency=0&account=dicks`,
-    selector: ".buyer-shell",
     figure: "review-checkout",
+    path: "/joola-proto/round5/index.html",
+    hash: "/review",
+    params: "embed=1&clean=1&view=portal&screen=review&state=default&latency=0&account=dicks",
+    selector: ".buyer-shell",
     width: 1280,
   },
   {
     id: "approval-split",
-    protoUrl: `${PROTO}/prototypes/approval-queue?clean=1&v=3&protoState=default`,
-    selector: ".aq",
     figure: "approval-queue",
+    path: "/joola-proto/round5/index.html",
+    hash: "/prototypes/approval-queue",
+    params: "embed=1&clean=1&v=3&protoState=default&latency=0",
+    selector: ".aq",
     width: 1280,
-    portfolioVariant: "split",
+    tab: "Split inbox",
   },
   {
     id: "approval-ledger",
-    protoUrl: `${PROTO}/prototypes/approval-queue?clean=1&v=1&protoState=default`,
-    selector: ".aq",
     figure: "approval-queue",
+    path: "/joola-proto/round5/index.html",
+    hash: "/prototypes/approval-queue",
+    params: "embed=1&clean=1&v=1&protoState=default&latency=0",
+    selector: ".aq",
     width: 1280,
-    portfolioVariant: "ledger",
+    tab: "Ledger",
   },
 ];
 
-const VARIANT_TAB = {
-  cases: "Cases",
-  reorder: "Reorder",
-  stock: "Stock status",
-  split: "Split inbox",
-  ledger: "Ledger",
-};
+function protoUrl(c) {
+  return `${SITE}${c.path}#${c.hash}?${c.params}`;
+}
 
 async function loadPng(file) {
   return PNG.sync.read(await readFile(file));
 }
 
-async function waitFonts(page) {
-  await page.evaluate(() => document.fonts?.ready);
-}
-
-async function shotProto(page, url, selector, width, outPath) {
-  await page.setViewportSize({ width, height: 900, deviceScaleFactor: 1 });
-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
-  await waitFonts(page);
-  if (url.includes("quick-order-row")) {
-    await page.waitForSelector("[data-qo-ready]", { timeout: 20000 });
-  } else if (url.includes("/quick-order")) {
-    await page
-      .waitForSelector(".buyer-shell .page-skel", { state: "detached", timeout: 20000 })
+async function waitFrameReady(frame, c) {
+  await frame.waitForSelector(c.selector, { timeout: 60000 });
+  if (c.hash.includes("quick-order-row")) {
+    await frame.waitForSelector("[data-qo-ready]", { timeout: 20000 });
+  } else if (c.hash === "/quick-order") {
+    await frame.waitForSelector(".page--qo", { timeout: 20000 });
+    await frame
+      .waitForFunction(
+        () => !document.querySelector(".page-skel, .skel--table"),
+        null,
+        { timeout: 20000 },
+      )
       .catch(() => {});
-    await page.waitForSelector(".page--qo", { timeout: 20000 });
-  } else if (url.includes("/review")) {
-    await page.waitForSelector(".page--review", { timeout: 20000 });
-  } else if (url.includes("approval-queue")) {
-    await page.waitForSelector(".aq", { timeout: 20000 });
+  } else if (c.hash === "/review") {
+    await frame.waitForSelector(".page--review", { timeout: 20000 });
+    await frame
+      .waitForFunction(
+        () => !document.querySelector(".page-skel"),
+        null,
+        { timeout: 20000 },
+      )
+      .catch(() => {});
   }
-  const loc = page.locator(selector).first();
-  await loc.waitFor({ state: "visible", timeout: 20000 });
-  await page.waitForTimeout(300);
-  await loc.screenshot({ path: outPath });
+  await frame.waitForFunction(() => document.fonts?.ready, null, {
+    timeout: 15000,
+  }).catch(() => {});
+  await frame.waitForTimeout(1200);
 }
 
-async function shotPortfolio(page, figure, selector, variant, width, outPath) {
-  await page.setViewportSize({ width, height: 900, deviceScaleFactor: 1 });
-  await page.addInitScript(() => {
-    document.documentElement.dataset.joolaParity = "1";
-  });
-  await page.goto(`${SITE}/joola`, { waitUntil: "domcontentloaded", timeout: 60000 });
-  await page.addStyleTag({
-    content: `
-      html[data-joola-parity="1"] .cs-layout { grid-template-columns: 1fr !important; }
-      html[data-joola-parity="1"] .cs-aside { display: none !important; }
-      html[data-joola-parity="1"] .cs-content {
-        max-width: ${width}px !important;
-        width: ${width}px !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-      }
-      html[data-joola-parity="1"] [data-joola-figure] .joola-proto-figure__chrome {
-        max-width: none !important;
-        width: ${width}px !important;
-        overflow: visible !important;
-      }
-      html[data-joola-parity="1"] [data-dialkit],
-      html[data-joola-parity="1"] .dialkit-floating-anchor,
-      html[data-joola-parity="1"] .dialkit-panel {
-        display: none !important;
-      }
-    `,
-  });
-  await waitFonts(page);
-  const figureLoc = page.locator(`[data-joola-figure="${figure}"]`);
-  await figureLoc.waitFor({ state: "visible", timeout: 60000 });
-  await figureLoc.scrollIntoViewIfNeeded();
-  if (variant) {
-    const label = VARIANT_TAB[variant];
-    await page.getByRole("tab", { name: label }).click();
-    await page.waitForTimeout(400);
-  }
-  await page.evaluate(
-    ({ figure: figId, w }) => {
-      const fig = document.querySelector(`[data-joola-figure="${figId}"]`);
-      if (!fig) return;
-      const host = fig.querySelector(".joola-uniform-scale");
-      const inner = host?.querySelector(":scope > div");
-      if (host) {
-        host.style.width = `${w}px`;
-        host.style.height = "auto";
-        host.style.overflow = "visible";
-      }
-      if (inner) {
-        inner.style.transform = "none";
-        inner.style.width = `${w}px`;
-      }
-    },
-    { figure, w: width },
+/** Reference capture: same URL as portfolio iframe, in a neutral iframe (matches compositor). */
+async function shotProto(page, c, outPath) {
+  const url = protoUrl(c);
+  await page.setViewportSize({ width: c.width, height: 2400, deviceScaleFactor: 1 });
+  await page.setContent(
+    `<!doctype html><html><body style="margin:0"><iframe id="p" src="${url}" width="${c.width}" height="2400" style="border:0;display:block"></iframe></body></html>`,
+    { waitUntil: "domcontentloaded" },
   );
-  await page.waitForTimeout(300);
-  const root = figureLoc.locator(selector).first();
-  await root.waitFor({ state: "visible", timeout: 20000 });
-  await root.screenshot({ path: outPath });
+  const frame = await page.locator("#p").elementHandle();
+  const inner = await frame?.contentFrame();
+  if (!inner) throw new Error("proto iframe missing");
+  await waitFrameReady(inner, c);
+  await inner.locator(c.selector).first().screenshot({ path: outPath, animations: "disabled" });
+}
+
+function parityQuery(c) {
+  const q = new URLSearchParams({ figure: c.figure });
+  if (c.tab === "Cases") q.set("variant", "2");
+  if (c.tab === "Reorder") q.set("variant", "3");
+  if (c.tab === "Stock status") q.set("variant", "4");
+  if (c.tab === "Ledger") q.set("tab", "ledger");
+  if (c.tab === "Split inbox") q.set("tab", "split");
+  return q.toString();
+}
+
+async function shotIframe(page, c, outPath) {
+  await page.setViewportSize({ width: c.width, height: 2400, deviceScaleFactor: 1 });
+  await page.goto(`${SITE}/joola/parity?${parityQuery(c)}`, {
+    waitUntil: "domcontentloaded",
+    timeout: 60000,
+  });
+  const fig = page.locator(`[data-joola-figure="${c.figure}"]`);
+  await fig.waitFor({ state: "visible", timeout: 60000 });
+  const handle = await page
+    .locator(`[data-joola-figure="${c.figure}"] iframe`)
+    .elementHandle();
+  const frame = await handle?.contentFrame();
+  if (!frame) throw new Error("iframe contentFrame missing");
+  await waitFrameReady(frame, c);
+  await frame.locator(c.selector).first().screenshot({ path: outPath, animations: "disabled" });
 }
 
 function diffPct(imgA, imgB) {
@@ -185,7 +178,7 @@ function diffPct(imgA, imgB) {
   PNG.bitblt(imgB, b, 0, 0, w, h, 0, 0);
   const diff = new PNG({ width: w, height: h });
   const n = pixelmatch(a.data, b.data, diff.data, w, h, { threshold: 0.1 });
-  return { pct: (n / (w * h)) * 100, w, h, n, diff };
+  return { pct: (n / (w * h)) * 100, w, h, diff };
 }
 
 async function main() {
@@ -203,15 +196,8 @@ async function main() {
     const portPath = path.join(OUT, `${c.id}-portfolio.png`);
     const diffPath = path.join(OUT, `${c.id}-diff.png`);
     try {
-      await shotProto(protoPage, c.protoUrl, c.selector, c.width, protoPath);
-      await shotPortfolio(
-        sitePage,
-        c.figure,
-        c.selector,
-        c.portfolioVariant,
-        c.width,
-        portPath,
-      );
+      await shotProto(protoPage, c, protoPath);
+      await shotIframe(sitePage, c, portPath);
       const a = await loadPng(protoPath);
       const b = await loadPng(portPath);
       const { pct, w, h, diff } = diffPct(a, b);
@@ -219,29 +205,25 @@ async function main() {
       rows.push({
         id: c.id,
         diffPct: pct,
+        url: protoUrl(c),
         compareSize: { w, h },
-        protoSize: { w: a.width, h: a.height },
-        portfolioSize: { w: b.width, h: b.height },
         proto: protoPath,
         portfolio: portPath,
         diff: diffPath,
       });
       if (pct >= 0.5) failed = true;
-      console.log(`${c.id}: ${pct.toFixed(3)}% (${w}×${h})`);
+      console.log(`${c.id}: ${pct.toFixed(3)}%`);
     } catch (err) {
       failed = true;
-      rows.push({ id: c.id, error: String(err) });
+      rows.push({ id: c.id, error: String(err), url: protoUrl(c) });
       console.error(c.id, err);
     }
   }
 
   await browser.close();
-  const tablePath = path.join(OUT, "diff-table.json");
-  await writeFile(tablePath, JSON.stringify(rows, null, 2));
-  await writeFile(
-    path.resolve("artifacts/joola-sanity/figures/diff-table.json"),
-    JSON.stringify(rows, null, 2),
-  );
+  const json = JSON.stringify(rows, null, 2);
+  await writeFile(path.join(OUT, "diff-table.json"), json);
+  await writeFile(path.resolve("artifacts/joola-sanity/figures/diff-table.json"), json);
   if (failed) process.exitCode = 1;
 }
 

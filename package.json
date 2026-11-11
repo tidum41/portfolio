@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "joola:build-proto": "node scripts/build-joola-proto.mjs",
     "joola:pixel-diff": "node scripts/joola-pixel-diff.mjs",
+    "prebuild": "npm run joola:build-proto",
     "studio": "sanity dev",
     "seed:sviz": "node scripts/seed-sviz.mjs",
     "bench:nav": "node scripts/bench-nav-jank.cjs",
@@ -37,10 +39,7 @@
     "posthog-js": "^1.402.3",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-router": "^7.18.5",
-    "react-router-dom": "^7.18.5",
     "sanity": "^6.3.0",
-    "sonner": "^2.0.8",
     "styled-components": "^6.4.3"
   },
   "devDependencies": {

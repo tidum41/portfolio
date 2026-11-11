@@ -1,0 +1,63 @@
+export type JoolaProtoApp = "round5" | "qo";
+
+export function joolaProtoHashUrl(
+  app: JoolaProtoApp,
+  pathname: string,
+  params: Record<string, string>,
+): string {
+  const search = new URLSearchParams({ embed: "1", ...params });
+  const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  return `/joola-proto/${app}/index.html#${path}?${search.toString()}`;
+}
+
+export const JOOLA_FIGURE_URLS = {
+  "quick-order-portal": joolaProtoHashUrl("round5", "/quick-order", {
+    clean: "1",
+    view: "portal",
+    screen: "quick-order",
+    state: "default",
+    latency: "0",
+    account: "dicks",
+  }),
+  "review-checkout": joolaProtoHashUrl("round5", "/review", {
+    clean: "1",
+    view: "portal",
+    screen: "review",
+    state: "default",
+    latency: "0",
+    account: "dicks",
+  }),
+} as const;
+
+export type QoVariant = "1" | "2" | "3" | "4";
+
+export function qoRowUrl(v: QoVariant): string {
+  return joolaProtoHashUrl("qo", "/prototypes/quick-order-row", {
+    clean: "1",
+    v,
+    line: "typed",
+    w: "1024",
+    latency: "0",
+  });
+}
+
+export type ApprovalVariant = "1" | "3";
+
+export function approvalUrl(v: ApprovalVariant): string {
+  return joolaProtoHashUrl("round5", "/prototypes/approval-queue", {
+    clean: "1",
+    v,
+    protoState: "default",
+    latency: "0",
+  });
+}
+
+/** Native layout heights at design width (measured from static embed; updated after build). */
+export const JOOLA_EMBED_HEIGHT: Record<string, number> = {
+  "quick-order-portal": 1068,
+  "quick-order-row-search": 900,
+  "quick-order-row-compare": 1035,
+  "review-checkout": 900,
+  "approval-queue-split": 860,
+  "approval-queue-ledger": 928,
+};

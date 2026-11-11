@@ -24,8 +24,13 @@ const RENDER = {
 
 function Stage() {
   const [params, setParams] = useSearchParams();
+  const embed = params.get("embed") === "1";
   const variant = parseVariant(params.get("v"));
   const Active = RENDER[variant];
+
+  useEffect(() => {
+    if (embed) document.documentElement.classList.add("is-embed");
+  }, [embed]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -54,7 +59,7 @@ function Stage() {
       <div className="qo-stage__canvas">
         <Active key={variant} />
       </div>
-      <QuickOrderDial />
+      {embed ? null : <QuickOrderDial />}
     </div>
   );
 }

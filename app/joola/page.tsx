@@ -13,7 +13,7 @@ import { SITE_URL } from "@/lib/site";
 import type { CaseStudyData, TocItem } from "@/lib/sanity/queries";
 import Image from "next/image";
 
-import JoolaCaseStudyClient from "@/components/joola/JoolaCaseStudyClient";
+import JoolaCaseStudyContent from "@/components/joola/JoolaCaseStudyContent";
 
 const description = "B2B ordering for JOOLA. Product design internship, summer 2026.";
 
@@ -128,7 +128,7 @@ export default async function JoolaCaseStudyPage() {
             </div>
           </CaseStudyOpen>
 
-          <JoolaCaseStudyClient cs={cs} />
+          <JoolaCaseStudyContent cs={cs} />
 
           <CaseStudyRequest />
 

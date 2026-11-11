@@ -1,18 +1,32 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useState, type ReactNode } from "react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import CaseStudyBody from "@/components/CaseStudyBody";
 import type { CaseStudyData } from "@/lib/sanity/queries";
 import JoolaSanityText from "./JoolaSanityText";
 import JoolaBeforeAfter from "./JoolaBeforeAfter";
-import JoolaLiveQuickOrderPortal from "./embed/JoolaLiveQuickOrderPortal";
-import JoolaLiveQuickOrderRowCompare, {
-  JoolaLiveQuickOrderRowSearch,
-} from "./embed/JoolaLiveQuickOrderRow";
-import JoolaLiveReviewCheckout from "./embed/JoolaLiveReviewCheckout";
-import JoolaLiveApprovalCompare from "./embed/JoolaLiveApproval";
+import JoolaProtoIframe from "./JoolaProtoIframe";
+import JoolaFigureSeg from "./JoolaFigureSeg";
+import {
+  JOOLA_EMBED_HEIGHT,
+  JOOLA_FIGURE_URLS,
+  approvalUrl,
+  qoRowUrl,
+  type QoVariant,
+} from "@/lib/joola/protoEmbed";
 import "./joola-case-study.css";
 
 const COLOR_WRONG = "#C62828";
+const QO_W = 1024;
+const PORTAL_W = 1280;
+
+const QO_HEIGHTS: Record<QoVariant, number> = {
+  "1": JOOLA_EMBED_HEIGHT["quick-order-row-search"],
+  "2": JOOLA_EMBED_HEIGHT["quick-order-row-compare"],
+  "3": JOOLA_EMBED_HEIGHT["quick-order-row-compare"],
+  "4": JOOLA_EMBED_HEIGHT["quick-order-row-compare"],
+};
 
 function Section({
   id,
@@ -115,6 +129,8 @@ function MockDisclaimer() {
 
 export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
   const painPoints = cs.painPoints ?? [];
+  const [qoVariant, setQoVariant] = useState<QoVariant>("2");
+  const [approvalView, setApprovalView] = useState<"split" | "ledger">("split");
 
   return (
     <article style={{ minWidth: 0 }}>
@@ -152,7 +168,13 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.solutionBody} />
         </Body>
-        <JoolaLiveQuickOrderPortal caption="Quick order in the portal shell, search-first for buyers who already know the SKUs." />
+        <JoolaProtoIframe
+          figureId="quick-order-portal"
+          src={JOOLA_FIGURE_URLS["quick-order-portal"]}
+          designWidth={PORTAL_W}
+          designHeight={JOOLA_EMBED_HEIGHT["quick-order-portal"]}
+          caption="Quick order in the portal shell, search-first for buyers who already know the SKUs."
+        />
       </Section>
 
       <Section id="research">
@@ -173,7 +195,13 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.d1Body} />
         </Body>
-        <JoolaLiveQuickOrderRowSearch caption="Search by name, category, or SKU, with CSV upload for large orders." />
+        <JoolaProtoIframe
+          figureId="quick-order-row-search"
+          src={qoRowUrl("1")}
+          designWidth={QO_W}
+          designHeight={JOOLA_EMBED_HEIGHT["quick-order-row-search"]}
+          caption="Search by name, category, or SKU, with CSV upload for large orders."
+        />
       </Section>
 
       <Section id="decision-2">
@@ -184,7 +212,22 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.d2Body} />
         </Body>
-        <JoolaLiveQuickOrderRowCompare caption="Case pack steps, reorder, and stock status on the same line component." />
+        <JoolaProtoIframe
+          key={qoVariant}
+          figureId="quick-order-row-compare"
+          src={qoRowUrl(qoVariant)}
+          designWidth={QO_W}
+          designHeight={QO_HEIGHTS[qoVariant]}
+          caption="Case pack steps, reorder, and stock status on the same line component."
+          footer={
+            <JoolaFigureSeg
+              label="Quick order line view"
+              value={qoVariant}
+              options={[{ value: "2", label: "Cases" }, { value: "3", label: "Reorder" }, { value: "4", label: "Stock status" }]}
+              onChange={setQoVariant}
+            />
+          }
+        />
       </Section>
 
       <Section id="decision-3">
@@ -195,7 +238,13 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.d3Body} />
         </Body>
-        <JoolaLiveReviewCheckout caption="Checkout opens on Net 30 and shows credit in use before the buyer places the order." />
+        <JoolaProtoIframe
+          figureId="review-checkout"
+          src={JOOLA_FIGURE_URLS["review-checkout"]}
+          designWidth={PORTAL_W}
+          designHeight={JOOLA_EMBED_HEIGHT["review-checkout"]}
+          caption="Checkout opens on Net 30 and shows credit in use before the buyer places the order."
+        />
       </Section>
 
       <Section id="decision-4">
@@ -206,7 +255,29 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.d4Body} />
         </Body>
-        <JoolaLiveApprovalCompare caption="Over-limit orders in a split inbox, with credit math beside the ledger table." />
+        <JoolaProtoIframe
+          key={approvalView}
+          figureId="approval-queue"
+          src={approvalView === "split" ? approvalUrl("3") : approvalUrl("1")}
+          designWidth={PORTAL_W}
+          designHeight={
+            approvalView === "split"
+              ? JOOLA_EMBED_HEIGHT["approval-queue-split"]
+              : JOOLA_EMBED_HEIGHT["approval-queue-ledger"]
+          }
+          caption="Over-limit orders in a split inbox, with credit math beside the ledger table."
+          footer={
+            <JoolaFigureSeg
+              label="Approval queue view"
+              value={approvalView}
+              options={[
+                { value: "split", label: "Split inbox" },
+                { value: "ledger", label: "Ledger" },
+              ]}
+              onChange={setApprovalView}
+            />
+          }
+        />
       </Section>
     </article>
   );

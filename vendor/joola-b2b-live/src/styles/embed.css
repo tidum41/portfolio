@@ -1,0 +1,45 @@
+html.is-embed,
+html.is-embed body {
+  margin: 0;
+  overflow: hidden;
+  height: auto;
+  min-height: 0;
+  background: #fff;
+}
+
+html.is-embed #root {
+  height: auto;
+  min-height: 0;
+}
+
+html.is-embed .proto-picker,
+html.is-embed .qo-stage__kit,
+html.is-embed .proto-state-dial,
+html.is-embed .playground-dial,
+html.is-embed .guides-root {
+  display: none !important;
+}
+
+html.is-embed .shell,
+html.is-embed .shell__sidebar,
+html.is-embed .app.shell,
+html.is-embed .buyer-shell,
+html.is-embed .shell__main,
+html.is-embed .aq {
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+html.is-embed .qo-proto .qo-stage,
+html.is-embed .qo-proto .qo-frame,
+html.is-embed .qo-proto.proto-root,
+html.is-embed [data-qo-ready] {
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+html.is-embed body:has(.qo-proto) {
+  min-height: 0 !important;
+  height: auto !important;
+  background: #fff;
+}
