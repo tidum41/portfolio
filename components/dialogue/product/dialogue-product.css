@@ -4210,7 +4210,18 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-stage .dp-clip-quote { transition: background-color 520ms cubic-bezier(0.4, 0, 0.2, 1), border-color 520ms cubic-bezier(0.4, 0, 0.2, 1); }
 
 /* Levels A/B takes: the pair's one cherry focal is the kept mark beside the figure, so the recordings carry no cherry. */
-.dlg-stage[data-neutral], .dlg-match__panel[data-neutral], .dlg-edge__panel[data-neutral] { --dp-brand: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); --dp-chart-focal: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); }
+.dlg-stage[data-neutral], .dlg-match__panel[data-neutral], .dlg-edge__panel[data-neutral] {
+  --dp-brand: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white));
+  --dp-chart-focal: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white));
+  /* Keep Round 11 neutral panels monochrome after ramp B: mid/soft would otherwise stay pink. */
+  --dp-chart-mid: var(--dp-muted-light);
+  --dp-chart-soft: var(--dp-faint);
+  --dp-chart-muted: var(--dp-muted-light);
+  --dp-chart-muted-alt: var(--dp-muted);
+  --dp-chart-secondary: var(--dp-muted-light);
+  --dp-chart-secondary-soft: var(--dp-faint);
+  --dp-chart-series-alt-fill: var(--dp-border-strong);
+}
 
 /* Round 9, updated 10 Nov 2026 for ramp B: the 225 is the focal segment (cherry). The 75
    and other ranks 2-3 use mid. Ranks 4+ use soft. Swatches follow data-tone so they match
