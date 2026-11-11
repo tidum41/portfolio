@@ -20,6 +20,14 @@ html.is-embed .guides-root {
   display: none !important;
 }
 
+html.is-embed .page--review {
+  padding-bottom: 0;
+}
+
+html.is-embed .review-grid {
+  margin-bottom: 0;
+}
+
 html.is-embed .shell,
 html.is-embed .shell__sidebar,
 html.is-embed .app.shell,

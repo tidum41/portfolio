@@ -58,7 +58,7 @@ export const JOOLA_EMBED_HEIGHT: Record<string, number> = {
   "quick-order-row-search": 900,
   /** Max across Cases / Reorder / Stock variants (no layout jump on toggle). */
   "quick-order-row-compare": 1035,
-  "review-checkout": 530,
+  "review-checkout": 560,
   "approval-queue-split": 824,
   "approval-queue-ledger": 896,
 };

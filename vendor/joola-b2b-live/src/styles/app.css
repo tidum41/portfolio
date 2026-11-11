@@ -1665,6 +1665,13 @@ a.btn {
     var(--wash) 100%
   );
 }
+.credit-order-amt {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 .cart-notice {
   margin-top: 12px;
   font-size: 12px;

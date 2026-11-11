@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import JoolaParityBench from "@/components/joola/JoolaParityBench";
-import { joolaSanityPreviewActive } from "@/lib/sanity/caseStudyDraft";
+import { joolaPreviewModeActive } from "@/lib/sanity/caseStudyDraft";
 
 const ALLOWED = new Set([
   "quick-order-portal",
@@ -13,10 +13,10 @@ const ALLOWED = new Set([
 export default async function JoolaParityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ figure?: string; variant?: string; tab?: string }>;
+  searchParams: Promise<{ figure?: string; variant?: string; tab?: string; sanity_preview?: string }>;
 }) {
-  if (!joolaSanityPreviewActive()) notFound();
   const params = await searchParams;
+  if (!(await joolaPreviewModeActive(params.sanity_preview))) notFound();
   const figure = params.figure;
   if (!figure || !ALLOWED.has(figure)) notFound();
   return (

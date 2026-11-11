@@ -1,4 +1,5 @@
 import { createClient } from "@sanity/client";
+import { headers } from "next/headers";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { CaseStudyData } from "./queries";
@@ -9,10 +10,16 @@ const DRAFT_ID = "drafts.joola";
 
 /** Local-only: render full JOOLA case study from Sanity draft (or fixture). */
 export function joolaSanityPreviewActive(): boolean {
-  return (
-    process.env.NODE_ENV !== "production" &&
-    process.env.SANITY_PREVIEW_DRAFTS === "1"
-  );
+  return process.env.NODE_ENV !== "production" && process.env.SANITY_PREVIEW_DRAFTS === "1";
+}
+
+/** Preview route: env, capture header, or `?sanity_preview=1` (no dev-server restart). */
+export async function joolaPreviewModeActive(queryFlag?: string): Promise<boolean> {
+  if (process.env.NODE_ENV === "production") return false;
+  if (process.env.SANITY_PREVIEW_DRAFTS === "1") return true;
+  if (queryFlag === "1") return true;
+  const h = await headers();
+  return h.get("x-joola-sanity-preview") === "1";
 }
 
 const DRAFT_FIELDS = `{
@@ -72,8 +79,10 @@ async function loadDraftFromSanity(): Promise<CaseStudyData | null> {
 }
 
 /** Draft doc for JOOLA preview. Fixture when `SANITY_PREVIEW_DRAFTS=1` and no write token. */
-export async function getJoolaCaseStudyDraft(): Promise<CaseStudyData | null> {
-  if (!joolaSanityPreviewActive()) return null;
+export async function getJoolaCaseStudyDraft(
+  queryFlag?: string,
+): Promise<CaseStudyData | null> {
+  if (!(await joolaPreviewModeActive(queryFlag))) return null;
 
   try {
     const fromApi = await loadDraftFromSanity();

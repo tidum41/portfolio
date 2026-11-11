@@ -58,11 +58,14 @@ function CreditMeterInner({
       </div>
 
       <div className="credit-order-ctrl">
-        <label htmlFor={rangeId} className="tnum">
-          This order · {money(orderTotal)}
-          <span className="credit-over-slot">
-            {over ? ` · over by ${money(orderTotal - remaining)}` : "\u00a0"}
-          </span>
+        <label htmlFor={rangeId} className="credit-order-ctrl__label">
+          <span className="credit-order-ctrl__key">This order</span>
+          <span className="credit-order-ctrl__val tnum">{money(orderTotal)}</span>
+          {over ? (
+            <span className="credit-over-slot tnum">
+              over by {money(orderTotal - remaining)}
+            </span>
+          ) : null}
         </label>
         <input
           id={rangeId}

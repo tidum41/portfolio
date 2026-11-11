@@ -143,7 +143,7 @@ export function ReviewPage() {
             >
               {shipTos.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.site} · {s.detail}
+                  {s.site}, {s.detail}
                 </option>
               ))}
             </select>
@@ -169,6 +169,9 @@ export function ReviewPage() {
               data-credit-bar
               style={{ ["--credit-order-end" as string]: `${orderEndPct}%` }}
             />
+            <p className="credit-order-amt tnum">
+              This order {money(cartTotal)}
+            </p>
             {over ? (
               <p className="cart-notice">
                 This order is over your remaining Net 30 credit. Your JOOLA rep

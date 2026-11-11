@@ -17,7 +17,7 @@ const EMBED_H = {
   portal: 1000,
   qoSearch: 900,
   qoCompare: 1035,
-  review: 530,
+  review: 560,
   approvalSplit: 824,
   approvalLedger: 896,
 };

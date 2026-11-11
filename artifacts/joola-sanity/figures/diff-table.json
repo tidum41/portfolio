@@ -65,7 +65,7 @@
     "url": "http://localhost:3000/joola-proto/round5/index.html#/review?embed=1&clean=1&view=portal&screen=review&state=default&latency=0&account=dicks",
     "compareSize": {
       "w": 1280,
-      "h": 526
+      "h": 551
     },
     "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/review-checkout-proto.png",
     "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/review-checkout-portfolio.png",

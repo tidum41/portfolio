@@ -6,7 +6,7 @@ import CaseStudyRequest from "@/components/CaseStudyRequest";
 import CaseStudyTOC from "@/components/CaseStudyTOC";
 import {
   getJoolaCaseStudyDraft,
-  joolaSanityPreviewActive,
+  joolaPreviewModeActive,
 } from "@/lib/sanity/caseStudyDraft";
 import { JOOLA_TITLE } from "@/lib/caseStudies/joola";
 import { SITE_URL } from "@/lib/site";
@@ -65,9 +65,14 @@ function tocFrom(cs: CaseStudyData): { id: string; label: string }[] {
   return items.map((t) => ({ id: t.id, label: t.label }));
 }
 
-export default async function JoolaCaseStudyPage() {
-  const previewOn = joolaSanityPreviewActive();
-  const draft = previewOn ? await getJoolaCaseStudyDraft() : null;
+export default async function JoolaCaseStudyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sanity_preview?: string }>;
+}) {
+  const sp = await searchParams;
+  const previewOn = await joolaPreviewModeActive(sp.sanity_preview);
+  const draft = previewOn ? await getJoolaCaseStudyDraft(sp.sanity_preview) : null;
 
   if (!previewOn || !draft) {
     return <ProductCaseStudy />;
@@ -113,7 +118,10 @@ export default async function JoolaCaseStudyPage() {
               },
             ]}
           >
-            <div className="cs-hero-media-frame joola-hero-embed">
+            <div
+              className="cs-hero-media-frame joola-hero-embed"
+              data-joola-hero-live
+            >
               <JoolaPreviewHero />
             </div>
           </CaseStudyOpen>
