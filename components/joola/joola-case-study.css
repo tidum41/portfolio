@@ -49,8 +49,30 @@
   outline-offset: 2px;
 }
 
-.joola-variant-slot {
+.joola-proto-figure {
+  margin: 24px 0 8px;
+  min-width: 0;
+}
+
+.joola-proto-figure__chrome {
+  border-radius: 8px;
+  border: 1px solid var(--color-border-subtle);
+  background: #fff;
+  overflow: hidden;
+}
+
+.joola-proto-figure__footer {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.joola-uniform-scale {
   width: 100%;
+}
+
+.joola-live-embed {
+  background: #fff;
 }
 
 .joola-stage--wide-embed .joola-stage__chrome {

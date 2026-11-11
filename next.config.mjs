@@ -20,6 +20,18 @@ const dialkitAlias =
     ? { dialkit: "./lib/dialkit-prod.tsx" }
     : undefined;
 
+const reactDedupeWebpack = {
+  react$: path.join(__dirname, "node_modules/react/index.js"),
+  "react-dom$": path.join(__dirname, "node_modules/react-dom/index.js"),
+};
+
+const reactDedupeTurbopack = {
+  react: "./node_modules/react",
+  "react-dom": "./node_modules/react-dom",
+  "react/jsx-runtime": "./node_modules/react/jsx-runtime.js",
+  "react/jsx-dev-runtime": "./node_modules/react/jsx-dev-runtime.js",
+};
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Pin the Turbopack/project root to this package so a parent-directory
@@ -28,9 +40,16 @@ const nextConfig = {
   // "Can't resolve '@/components/PhoneEmbed'" against a stale page.tsx.
   turbopack: {
     root: __dirname,
-    ...(dialkitAlias ? { resolveAlias: dialkitAlias } : {}),
+    resolveAlias: {
+      ...reactDedupeTurbopack,
+      ...(dialkitAlias ?? {}),
+    },
   },
   webpack: (config, { dev }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      ...reactDedupeWebpack,
+    };
     if (!dev) {
       config.resolve.alias = {
         ...config.resolve.alias,

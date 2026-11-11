@@ -1,0 +1,154 @@
+[
+  {
+    "id": "quick-order-portal",
+    "diffPct": 42.43680522705771,
+    "compareSize": {
+      "w": 1280,
+      "h": 1057
+    },
+    "protoSize": {
+      "w": 1280,
+      "h": 1068
+    },
+    "portfolioSize": {
+      "w": 1281,
+      "h": 1057
+    },
+    "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/quick-order-portal-proto.png",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/quick-order-portal-portfolio.png",
+    "diff": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/quick-order-portal-diff.png"
+  },
+  {
+    "id": "qo-compact",
+    "diffPct": 28.811414930555557,
+    "compareSize": {
+      "w": 1024,
+      "h": 900
+    },
+    "protoSize": {
+      "w": 1024,
+      "h": 900
+    },
+    "portfolioSize": {
+      "w": 1025,
+      "h": 901
+    },
+    "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-compact-proto.png",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-compact-portfolio.png",
+    "diff": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-compact-diff.png"
+  },
+  {
+    "id": "qo-cases",
+    "diffPct": 28.37087673611111,
+    "compareSize": {
+      "w": 1024,
+      "h": 900
+    },
+    "protoSize": {
+      "w": 1024,
+      "h": 900
+    },
+    "portfolioSize": {
+      "w": 1025,
+      "h": 901
+    },
+    "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-cases-proto.png",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-cases-portfolio.png",
+    "diff": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-cases-diff.png"
+  },
+  {
+    "id": "qo-reorder",
+    "diffPct": 28.655551781400966,
+    "compareSize": {
+      "w": 1024,
+      "h": 1035
+    },
+    "protoSize": {
+      "w": 1024,
+      "h": 1035
+    },
+    "portfolioSize": {
+      "w": 1025,
+      "h": 1050
+    },
+    "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-reorder-proto.png",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-reorder-portfolio.png",
+    "diff": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-reorder-diff.png"
+  },
+  {
+    "id": "qo-stock",
+    "diffPct": 28.661458333333336,
+    "compareSize": {
+      "w": 1024,
+      "h": 900
+    },
+    "protoSize": {
+      "w": 1024,
+      "h": 900
+    },
+    "portfolioSize": {
+      "w": 1025,
+      "h": 901
+    },
+    "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-stock-proto.png",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-stock-portfolio.png",
+    "diff": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-stock-diff.png"
+  },
+  {
+    "id": "review-checkout",
+    "diffPct": 42.42256944444445,
+    "compareSize": {
+      "w": 1280,
+      "h": 900
+    },
+    "protoSize": {
+      "w": 1280,
+      "h": 900
+    },
+    "portfolioSize": {
+      "w": 1281,
+      "h": 901
+    },
+    "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/review-checkout-proto.png",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/review-checkout-portfolio.png",
+    "diff": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/review-checkout-diff.png"
+  },
+  {
+    "id": "approval-split",
+    "diffPct": 43.08020833333333,
+    "compareSize": {
+      "w": 1280,
+      "h": 900
+    },
+    "protoSize": {
+      "w": 1280,
+      "h": 900
+    },
+    "portfolioSize": {
+      "w": 1281,
+      "h": 901
+    },
+    "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-split-proto.png",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-split-portfolio.png",
+    "diff": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-split-diff.png"
+  },
+  {
+    "id": "approval-ledger",
+    "diffPct": 42.99774305555555,
+    "compareSize": {
+      "w": 1280,
+      "h": 900
+    },
+    "protoSize": {
+      "w": 1280,
+      "h": 900
+    },
+    "portfolioSize": {
+      "w": 1281,
+      "h": 901
+    },
+    "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-ledger-proto.png",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-ledger-portfolio.png",
+    "diff": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-ledger-diff.png"
+  }
+]

@@ -1,90 +1,75 @@
 # JOOLA Sanity preview — verification report
 
-## Branch and commit
+## Branch
 
-- Branch: `review/joola-sanity`
-- Commit: (see git log)
-
-## Draft PR
-
-Opened as **draft** from `review/joola-sanity` → `main` (see GitHub link in agent summary).
+- `review/joola-sanity` → draft **PR #192** (do not merge)
 
 ## Environment
 
 | Variable | Purpose |
 |----------|---------|
-| `SANITY_PREVIEW_DRAFTS=1` | Local dev only: render full case study from draft |
-| `SANITY_API_WRITE_TOKEN` | Optional with preview: live `drafts.joola` via `previewDrafts` perspective |
-| `NEXT_PUBLIC_SANITY_PROJECT_ID` | `9vl5qk61` (default in repo) |
-| `NEXT_PUBLIC_SANITY_DATASET` | `production` |
+| `SANITY_PREVIEW_DRAFTS=1` | Dev only: full case study from `drafts.joola` fixture or Sanity |
+| `SANITY_API_WRITE_TOKEN` | Optional: live draft via `previewDrafts` |
+| `NEXT_PUBLIC_SANITY_PROJECT_ID` / `DATASET` | `9vl5qk61` / `production` |
 
-Without `SANITY_API_WRITE_TOKEN`, preview uses committed fixture `fixtures/sanity/drafts.joola.json`.
+Production (`SANITY_PREVIEW_DRAFTS` unset): `/joola` remains NDA-only.
 
-Production build (`SANITY_PREVIEW_DRAFTS` unset): `/joola` unchanged (hero + metadata + NDA request only).
+## Live prototype source
 
-## Local commands for Mudit
+Vendored from attached tarballs under `vendor/joola-b2b-live/` (round5 @ `d96a273` + qo overlay @ `38041d6`). Assets in `public/fonts`, `public/products`, `public/joola-logo.*`.
+
+## Embeds (preview path)
+
+| Figure `data-joola-figure` | Source |
+|----------------------------|--------|
+| `quick-order-portal` | `BuyerShell` + `QuickOrderPage` |
+| `quick-order-row-search` | QO row Compact (`line=typed`, 1024) |
+| `quick-order-row-compare` | Cases / Reorder / Stock toggles |
+| `review-checkout` | `BuyerShell` + `ReviewPage` + cart preload |
+| `approval-queue` | Split inbox / Ledger prototypes |
+
+Wrapper: `components/joola/embed/*` (`JoolaUniformScale`, `JoolaLiveRoot`, `MemoryRouter` + `StoreProvider`).
+
+## Pixel diff (vite vs portfolio)
+
+**Command** (requires vite preview on `4173` and `SANITY_PREVIEW_DRAFTS=1` on port `3000`):
 
 ```bash
-# Production-like (default)
-npm run dev
-open http://localhost:3000/joola
-
-# Sanity draft preview (fixture or token)
+cd vendor/joola-b2b-live && npm ci && npx vite build && npx vite preview --port 4173
+# separate terminal
 SANITY_PREVIEW_DRAFTS=1 npm run dev
-open http://localhost:3000/joola
-
-# Optional: live draft from Sanity (Editor token in .env.local)
-# SANITY_API_WRITE_TOKEN=... 
-# SANITY_PREVIEW_DRAFTS=1 npm run dev
-
-npm run build
-npm run typecheck
+node scripts/joola-pixel-diff.mjs
 ```
 
-## Component map
+**Target:** &lt;0.5% per figure. **This run:** not met (global CSS/render context; see notes).
 
-| Section | Component |
-|---------|-----------|
-| Problem | `JoolaBeforeAfter` + pain points from draft |
-| Solution | `JoolaQuickOrderHero` (portal shell + search-first quick order line) |
-| Research | Copy only (draft placeholders visible) |
-| Decision 1 | `JoolaQuickOrderLine` |
-| Decision 2 | `JoolaQuickOrderCompare` (Compact / Cases / Reorder / Stock status) |
-| Decision 3 | `JoolaCreditMeter` (Net 30 + credit in use) |
-| Decision 4 | `JoolaApprovalCompare` (Split inbox vs Ledger) |
+| Figure id | Diff % | Compare size |
+|-----------|--------|--------------|
+| quick-order-portal | 42.437 | 1280×1057 |
+| qo-compact | 28.811 | 1024×900 |
+| qo-cases | 28.371 | 1024×900 |
+| qo-reorder | 28.656 | 1024×1035 |
+| qo-stock | 28.662 | 1024×900 |
+| review-checkout | 42.423 | 1280×900 |
+| approval-split | 43.080 | 1280×900 |
+| approval-ledger | 42.998 | 1280×900 |
 
-Core port from PR #181 (`components/joola/*`, `lib/caseStudies/joolaLedger.ts`). Volume pricing UI removed per brief (single `buyerPrice` per SKU).
+Artifacts: `artifacts/joola-sanity/pixel-diff/*-{proto,portfolio,diff}.png`, `figures/diff-table.json`.
 
-## Pixel diff vs prototype
+### Not 1:1 yet
 
-Prototype repo `https://github.com/tidum41/joola-b2b-casestudy` was **not accessible** in this environment (404 / gh clone failed). No vite side-by-side or pixelmatch baseline was possible.
+- Portfolio loads `app.css` globally in Next; prototype runs in an isolated `#root` — typography/subpixel and layout bleed remain.
+- Dev parity mode hides DialKit chrome; parity script forces 1:1 scale and matches viewport width to design width.
+- Sub-0.5% likely needs scoped CSS (shadow root or prefixed `app.css`) and production-build captures on both sides.
 
-| Figure | Diff % | Notes |
-|--------|--------|-------|
-| quick-order-hero | n/a | Portfolio capture only — see `figures/quick-order-hero-portfolio.png` |
-| decision-1-line | n/a | idem |
-| decision-2-compare | n/a | idem |
-| decision-3-credit | n/a | idem |
-| decision-4-approvals | n/a | Wide rep shell; portfolio scaled in figure chrome |
+## Quality gates
 
-Mudit can run full diff locally after cloning prototype branches named in `design/briefs/joola-sanity-page.md`.
+- `npm run typecheck` — pass
+- `npm run build` — pass (webpack; React dedupe via `react$` / `react-dom$` alias)
 
-## Screenshots (this run)
+## Local preview
 
-- `joola-preview-1440-light.png`, `joola-preview-1440-dark.png`
-- `joola-preview-390-light.png`, `joola-preview-390-dark.png`
-- `joola-production-1440.png` (NDA-only, no `#decision-*` sections)
-- `figures/*-portfolio.png`
-
-## Checks
-
-- `npm run build`: pass
-- `npm run typecheck`: pass (pre-existing `PhoneEmbed` asset module errors on main unchanged)
-- Console on preview with toggle clicks: no errors
-- Typography: case-study chrome uses site Helvetica Neue; product UI uses scoped FK Grotesk inside `.joola-portal`
-
-## Could not match 1:1
-
-- No access to prototype Vite app for pixel parity or exact branch copies (`cursor/round5-states-hierarchy-6235`, `cursor/qo-line-playground`).
-- Rep approval wide layout uses portfolio bleed (`joola-stage--wide`) rather than uniform scale wrapper tuned against vite width.
-- Split inbox view is implemented from the rep queue patterns in-repo, not a direct file copy from prototype `/prototypes/approval-queue`.
+```bash
+SANITY_PREVIEW_DRAFTS=1 npm run dev
+open http://localhost:3000/joola
+```

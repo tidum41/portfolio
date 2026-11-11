@@ -36,6 +36,13 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "vendor/joola-b2b-live/scripts/**",
+    "vendor/joola-b2b-live/src/main.tsx",
+    "vendor/joola-b2b-live/src/App.tsx",
+    "vendor/joola-b2b-live/src/prototypes/quick-order-row/QuickOrderRowHarness.tsx",
+    "vendor/joola-b2b-live/src/prototypes/approval-queue/ApprovalQueueHarness.tsx",
+    "vendor/joola-b2b-live/src/components/PlaygroundDial.tsx",
+    "vendor/joola-b2b-live/src/prototypes/quick-order-row/QuickOrderDial.tsx"
   ]
 }

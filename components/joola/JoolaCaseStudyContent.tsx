@@ -4,11 +4,12 @@ import CaseStudyBody from "@/components/CaseStudyBody";
 import type { CaseStudyData } from "@/lib/sanity/queries";
 import JoolaSanityText from "./JoolaSanityText";
 import JoolaBeforeAfter from "./JoolaBeforeAfter";
-import JoolaQuickOrderHero from "./JoolaQuickOrderHero";
-import JoolaQuickOrderCompare from "./JoolaQuickOrderCompare";
-import JoolaCreditMeter from "./JoolaCreditMeter";
-import JoolaApprovalCompare from "./JoolaApprovalCompare";
-import JoolaQuickOrderLine from "./JoolaQuickOrderLine";
+import JoolaLiveQuickOrderPortal from "./embed/JoolaLiveQuickOrderPortal";
+import JoolaLiveQuickOrderRowCompare, {
+  JoolaLiveQuickOrderRowSearch,
+} from "./embed/JoolaLiveQuickOrderRow";
+import JoolaLiveReviewCheckout from "./embed/JoolaLiveReviewCheckout";
+import JoolaLiveApprovalCompare from "./embed/JoolaLiveApproval";
 import "./joola-case-study.css";
 
 const COLOR_WRONG = "#C62828";
@@ -151,7 +152,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.solutionBody} />
         </Body>
-        <JoolaQuickOrderHero caption="Quick order in the portal shell, search-first for buyers who already know the SKUs." />
+        <JoolaLiveQuickOrderPortal caption="Quick order in the portal shell, search-first for buyers who already know the SKUs." />
       </Section>
 
       <Section id="research">
@@ -172,7 +173,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.d1Body} />
         </Body>
-        <JoolaQuickOrderLine caption="Search by name, category, or SKU, with CSV upload for large orders." />
+        <JoolaLiveQuickOrderRowSearch caption="Search by name, category, or SKU, with CSV upload for large orders." />
       </Section>
 
       <Section id="decision-2">
@@ -183,7 +184,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.d2Body} />
         </Body>
-        <JoolaQuickOrderCompare caption="Case pack steps, reorder, and stock status on the same line component." />
+        <JoolaLiveQuickOrderRowCompare caption="Case pack steps, reorder, and stock status on the same line component." />
       </Section>
 
       <Section id="decision-3">
@@ -194,7 +195,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.d3Body} />
         </Body>
-        <JoolaCreditMeter caption="Checkout opens on Net 30 and shows credit in use before the buyer places the order." />
+        <JoolaLiveReviewCheckout caption="Checkout opens on Net 30 and shows credit in use before the buyer places the order." />
       </Section>
 
       <Section id="decision-4">
@@ -205,7 +206,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.d4Body} />
         </Body>
-        <JoolaApprovalCompare caption="Over-limit orders in a split inbox, with credit math beside the ledger table." />
+        <JoolaLiveApprovalCompare caption="Over-limit orders in a split inbox, with credit math beside the ledger table." />
       </Section>
     </article>
   );

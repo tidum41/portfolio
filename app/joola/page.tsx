@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import ProductCaseStudy from "@/components/ProductCaseStudy";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
@@ -14,9 +13,7 @@ import { SITE_URL } from "@/lib/site";
 import type { CaseStudyData, TocItem } from "@/lib/sanity/queries";
 import Image from "next/image";
 
-const JoolaCaseStudyContent = dynamic(
-  () => import("@/components/joola/JoolaCaseStudyContent"),
-);
+import JoolaCaseStudyClient from "@/components/joola/JoolaCaseStudyClient";
 
 const description = "B2B ordering for JOOLA. Product design internship, summer 2026.";
 
@@ -131,7 +128,7 @@ export default async function JoolaCaseStudyPage() {
             </div>
           </CaseStudyOpen>
 
-          <JoolaCaseStudyContent cs={cs} />
+          <JoolaCaseStudyClient cs={cs} />
 
           <CaseStudyRequest />
 
