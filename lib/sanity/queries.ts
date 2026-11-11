@@ -188,11 +188,15 @@ const JOOLA_B2B_PROJECT: SanityProject = {
   featured: true,
 };
 
-/** Local Dialogue card. The case study lives at /dialogue. Media is the live thumbnail demo. */
-const DIALOGUE_PROJECT: SanityProject = {
-  _id: "project-dialogue",
-  title: "Dialogue AI",
-  label: "Case study, Contract 2026",
+export const DIALOGUE_PROJECT_ID = "project-dialogue";
+
+/** Local Dialogue card. Title and label match the live homepage card on
+ *  www.muditm.com (origin/main). Media is the live thumbnail demo; the
+ *  case study lives at /dialogue on this branch. */
+export const DIALOGUE_PROJECT: SanityProject = {
+  _id: DIALOGUE_PROJECT_ID,
+  title: "Generative answers for UX research",
+  label: "Contract 2026",
   href: "/dialogue",
   mediaType: "image",
   aspectRatio: "4 / 3",
@@ -218,7 +222,7 @@ async function loadProjects(): Promise<SanityProject[]> {
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v11-dialogue-card"], {
+  unstable_cache(loadProjects, ["projects-v12-dialogue-card-copy"], {
     revalidate: 86400,
     tags: ["sanity", "projects"],
   }),

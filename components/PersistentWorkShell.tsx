@@ -627,7 +627,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                 const rank = k * 2;
                 if (p._id === "project-dialogue") {
                   return (
-                    <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} data-annotate={`${homeCardAnnotate(p.href, p._id)}/root`} style={{ gap: 8, order: rank }}>
+                    <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} data-annotate={`${homeCardAnnotate(p.href, p._id)}/root`} style={{ gap: 6, order: rank }}>
                       {hasEverBeenActive && (
                         <DialogueThumbnailCard
                           href={p.href}
@@ -745,7 +745,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                 const rank = k * 2 + 1;
                 if (p._id === "project-dialogue") {
                   return (
-                    <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} data-annotate={`${homeCardAnnotate(p.href, p._id)}/root`} style={{ gap: 8, order: rank }}>
+                    <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} data-annotate={`${homeCardAnnotate(p.href, p._id)}/root`} style={{ gap: 6, order: rank }}>
                       {hasEverBeenActive && (
                         <DialogueThumbnailCard
                           href={p.href}

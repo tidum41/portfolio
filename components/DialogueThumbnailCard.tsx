@@ -106,12 +106,12 @@ export default function DialogueThumbnailCard({
   };
 
   return (
-    <ProjectCardLift style={{ gap: 8 }}>
+    <ProjectCardLift style={{ gap: 6 }}>
       <Link
         href={href}
         prefetch
         style={CARD_LINK_STYLE}
-        data-cursor-label="Case Study Coming Soon!"
+        data-cursor-label="Case Study Coming Soon"
         onMouseEnter={warm}
         onFocus={warm}
         onPointerDown={warm}

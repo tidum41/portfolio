@@ -4,6 +4,7 @@ import { Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DialogueThumbnailDemo from "@/components/dialogue/product/thumbnail/DialogueThumbnailDemo";
 import DialogueThumbnailCard from "@/components/DialogueThumbnailCard";
+import { DIALOGUE_PROJECT } from "@/lib/sanity/queries";
 import {
   THUMBNAIL_VARIANTS,
   type ThumbnailVariantId,
@@ -96,8 +97,8 @@ function DialogueThumbnailDevPage() {
         </div>
         <div data-card-frame={variant}>
           <DialogueThumbnailCard
-            title="Dialogue AI"
-            label="Case study, Contract 2026"
+            title={DIALOGUE_PROJECT.title}
+            label={DIALOGUE_PROJECT.label}
             variant={variant}
             active
             playing={!reduced}
