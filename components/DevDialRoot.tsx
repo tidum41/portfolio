@@ -22,6 +22,9 @@ export default function DevDialRoot() {
   const pathname = usePathname();
   const top = useSyncExternalStore(subscribe, isTopWindow, () => true);
   if (!top) return null;
+  // This playground has its own in-page variant controls. Global
+  // Nav/Cursor DialKit panels do not drive the thumbnail demo.
+  if (pathname.startsWith("/dev/dialogue-thumbnail")) return null;
   // Comparison labs have their own controls. An open DialKit panel
   // would cover the thing being compared.
   const openDials =

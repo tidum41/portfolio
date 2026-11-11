@@ -40,13 +40,20 @@
   border-radius: var(--dp-radius);
   background: var(--dp-surface);
   box-shadow: var(--shadow-chat);
-  padding: 16px;
+  /* Paper project card answer panel is 16px; tighten the bottom so the
+     quote's own 12px pad does not stack into a heavier band than the top. */
+  padding: 16px 16px 12px;
 }
 
 .dlg-thumb__panel.dlg-live .dp-chart-viz-card__inner,
 .dlg-thumb .dlg-live .dp-chart-viz-card__inner {
   padding: 0;
-  gap: 16px;
+  /* Paper body gap is 12px; title keeps a 16px step to the bar. */
+  gap: 12px;
+}
+
+.dlg-thumb .dp-chart-title {
+  margin: 0 0 4px;
 }
 
 
@@ -123,8 +130,8 @@
   box-shadow: none;
 }
 
-/* Soft quote-card border on the hovered or pressed segment.
-   Inset so adjacent segments do not grow a seam. */
+/* Soft quote-card border on the hovered or pressed segment only.
+   Inset so adjacent segments do not grow a seam. No legend-row box. */
 .dlg-thumb .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
 .dlg-thumb .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
 .dlg-thumb .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
@@ -132,34 +139,14 @@
   box-shadow: inset 0 0 0 1px var(--dp-border);
 }
 
-/* Recede unselected segments only. Swatches stay on the ramp. */
+/* Recede unselected segments and their swatches together. The selected
+   segment and its swatch keep their ramp color. Receded counts use ink,
+   not cherry. */
 .dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index]:not([data-focal]),
-.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index][data-focal] {
+.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__swatch[data-index]:not([data-focal]),
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__swatch[data-index][data-focal] {
   background: var(--dp-border-strong);
-}
-
-.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-index][data-focal] {
-  background: var(--dp-chart-focal);
-}
-
-.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-index]:not([data-focal]) {
-  background: var(--dp-chart-mid);
-}
-
-/* Legend row: same border-color hover as the live quote card. */
-.dlg-thumb .dp-chart-stack__lane {
-  box-sizing: border-box;
-  border: 1px solid transparent;
-  border-radius: var(--dp-radius-control);
-  margin: -1px;
-  transition: border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.dlg-thumb .dlg-live__bar[data-hover="friday"] .dp-chart-stack__lane[data-focal],
-.dlg-thumb .dlg-live__bar[data-press="friday"] .dp-chart-stack__lane[data-focal],
-.dlg-thumb .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__lane:not([data-focal]),
-.dlg-thumb .dlg-live__bar[data-press="unsure"] .dp-chart-stack__lane:not([data-focal]) {
-  border-color: var(--dp-border);
 }
 
 .dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
@@ -167,7 +154,48 @@
   color: var(--dp-ink);
 }
 
-/* Selected pill matches hero C: warm fill, chip radius and 36px height come from .dlg-live. */
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-value {
+  color: var(--dp-ink);
+}
+
+/* Project card must not swap legend counts for percents on hover. */
+.dlg-thumb .dp-chart-stack:hover .dp-chart-stack__lane-share,
+.dlg-thumb .dlg-live__bar:hover .dp-chart-stack__lane-share,
+.dlg-thumb .dp-chart-stack__lane-share {
+  opacity: 0;
+}
+
+.dlg-thumb .dp-chart-stack:hover .dp-chart-stack__lane-count,
+.dlg-thumb .dlg-live__bar:hover .dp-chart-stack__lane-count {
+  opacity: 1;
+}
+
+/*
+ * Paper project card people chips (Ana / Dev / More on Explorations /
+ * Project card, approved): 12/16, padding 2px 8px, pill radius, hug width.
+ * Not the 36px product source-pill specimen.
+ */
+.dlg-thumb .dp-source-pill {
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+  width: fit-content;
+  box-sizing: border-box;
+  align-items: center;
+  padding: 2px 8px;
+  gap: 6px;
+  border-radius: var(--dp-radius-pill);
+  font-size: var(--ds-text-xs);
+  line-height: var(--ds-text-xs-leading);
+  font-weight: 500;
+}
+
+.dlg-thumb .dp-source-pill__name,
+.dlg-thumb .dp-source-pill__time {
+  font-size: var(--ds-text-xs);
+  line-height: var(--ds-text-xs-leading);
+}
+
 .dlg-thumb .dp-source-pill--selected {
   background: var(--dp-warm);
   border-color: var(--dp-border);
@@ -183,7 +211,7 @@
 .dlg-thumb__swap {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   animation: dlg-thumb-in 200ms cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
@@ -212,13 +240,13 @@
   line-height: 16px;
 }
 
-/* Exact #dlg-cursor motion chrome from dialogue-product.css, sized as the case-study demos (28px). */
+/* Exact #dlg-cursor motion chrome from dialogue-product.css, the case-study cursor asset, scaled to 24px (about 86% of the 28px demo size). */
 .dlg-thumb__cursor {
   position: absolute;
   left: 0;
   top: 0;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   transform: translate(var(--cursor-x, 0px), var(--cursor-y, 0px));
   pointer-events: none;
   z-index: 4;
@@ -266,8 +294,7 @@
 @media (prefers-reduced-motion: reduce) {
   .dlg-thumb__cursor,
   .dlg-thumb__swap,
-  .dlg-thumb .dlg-live__bar .dp-chart-stack__seg,
-  .dlg-thumb .dp-chart-stack__lane {
+  .dlg-thumb .dlg-live__bar .dp-chart-stack__seg {
     animation: none;
     transition: none;
   }
