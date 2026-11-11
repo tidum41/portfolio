@@ -101,61 +101,79 @@
 }
 
 /*
- * Locked hover / select (2026-11-11): segments keep their own ramp color.
- * Hover and press are border-color only, transparent to --dp-border (#E7E5E4),
- * 0.15s cubic-bezier(0.4, 0, 0.2, 1), matching live quote cards. No fill,
- * radius, drop-shadow, or dark mark-outline change. Select recedes the other
- * segments to stone (--dp-border-strong, #D6D3D1). Legend swatches keep
- * their own colors. data-hover / data-press drive the demo cursor.
+ * Option 1, inner ring and legend weight (2026-11-11): every segment keeps its
+ * ramp fill in every state. Hover is a 2px inset ring on the hovered segment
+ * only (#E7E5E4 / --dp-border). Active is a 2px inset ring in ink at 40% on
+ * the open segment plus its legend label at ink weight 500. No legend-row box.
+ * 0.15s cubic-bezier(0.4, 0, 0.2, 1). data-hover / data-press / data-side
+ * drive the demo cursor.
  */
 .dlg-thumb .dlg-live__bar .dp-chart-stack__seg {
-  transition:
-    background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: none;
 }
 
-/* Kill the shared 1px finding-edge inset outline from chart.css. */
+/* Beat .dlg-live recede: every segment and swatch keeps ramp B in every state. */
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-focal],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-tone="focal"] {
+  background: var(--dp-chart-focal);
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-tone="mid"] {
+  background: var(--dp-chart-mid);
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-tone="soft"] {
+  background: var(--dp-chart-soft);
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-focal],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-tone="focal"] {
+  background: var(--dp-chart-focal);
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-tone="mid"] {
+  background: var(--dp-chart-mid);
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-tone="soft"] {
+  background: var(--dp-chart-soft);
+}
+
+/* Kill the shared 1px finding-edge inset outline from chart.css (not the demo rings). */
 .dlg-thumb .dp-chart-stack__seg:hover,
-.dlg-thumb .dp-chart-stack__seg[data-selected],
-.dlg-thumb .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-focal],
-.dlg-thumb .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg:not([data-focal]),
-.dlg-thumb .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
-.dlg-thumb .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
-.dlg-thumb .dlg-live .dlg-live__bar:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-focal],
-.dlg-thumb .dlg-live .dlg-live__bar:has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg:not([data-focal]),
-.dlg-thumb .dlg-live__bar[data-hover] .dp-chart-stack__seg,
-.dlg-thumb .dlg-live__bar[data-press] .dp-chart-stack__seg,
-.dlg-thumb .dlg-live__bar[data-side] .dp-chart-stack__seg {
+.dlg-thumb .dp-chart-stack__seg[data-selected] {
   box-shadow: none;
 }
 
-/* Soft quote-card border on the hovered or pressed segment only.
-   Inset so adjacent segments do not grow a seam. No legend-row box. */
-.dlg-thumb .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
-.dlg-thumb .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
-.dlg-thumb .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
-.dlg-thumb .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
-  box-shadow: inset 0 0 0 1px var(--dp-border);
+.dlg-thumb .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-beat="poster"] .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg,
+.dlg-thumb[data-beat="rest"] .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg {
+  box-shadow: none;
 }
 
-/* Recede unselected segments and their swatches together. The selected
-   segment and its swatch keep their ramp color. Receded counts use ink,
-   not cherry. */
-.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index]:not([data-focal]),
-.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__swatch[data-index]:not([data-focal]),
-.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index][data-focal],
-.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__swatch[data-index][data-focal] {
-  background: var(--dp-border-strong);
+/* Hover: 2px inset ring on the hovered segment only; fill unchanged. */
+.dlg-thumb .dlg-live .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb .dlg-live .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: inset 0 0 0 2px var(--dp-border);
+}
+
+/* Press and open: ink ring on the active segment; poster beat stays ringless at rest. */
+.dlg-thumb .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--dp-ink) 40%, transparent);
+}
+
+.dlg-thumb:not([data-beat="poster"]) .dlg-live .dlg-live__bar[data-side="friday"]:not([data-hover]) .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side="unsure"]:not([data-hover]) .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--dp-ink) 40%, transparent);
 }
 
 .dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
 .dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-label {
   color: var(--dp-ink);
-}
-
-.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-value {
-  color: var(--dp-ink);
+  font-weight: 500;
 }
 
 /* Project card must not swap legend counts for percents on hover. */
