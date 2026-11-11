@@ -7,7 +7,7 @@ export type ThumbnailTiming = {
   restMs: number;
   /** Cursor travel to the next segment. */
   moveMs: number;
-  /** Outline on the target before the press. */
+  /** Hover effect on the target before the press. */
   hoverMs: number;
   /** Press squeeze. */
   pressMs: number;

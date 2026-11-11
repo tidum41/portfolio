@@ -6,6 +6,7 @@ import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import SourcePill from "@/components/dialogue/product/SourcePill";
 import { WaveformIcon } from "@/components/dialogue/product/icons";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
+import DlgDemoCursor from "@/components/DlgDemoCursor";
 import { QUOTE_LIST, QUOTE_LIST_FRIDAY } from "@/lib/dialogue/product/sampleData";
 import {
   DEFAULT_THUMBNAIL_VARIANT,
@@ -15,14 +16,37 @@ import {
 import "@/components/dialogue/product/dialogue-product.css";
 import "@/components/dialogue/product/thumbnail/dialogue-thumbnail.css";
 
-const FINDING = "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday.";
+/** Canonical finding, MOCK-DATA.md §4d / live split card. */
+const FINDING =
+  "225 of 300 shoppers read \u2018Arrives by Friday\u2019 as this Friday, whatever day they ordered.";
 const PANEL = 448;
+
+/** Same ease-in-out the /dialogue motion recorder uses. */
+const EASE_IO = (p: number) =>
+  p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2;
+const CURSOR_BOW = 0.08;
+const CURSOR_LEAD_MS = 200;
+const CURSOR_LEAD_X = 70;
+const CURSOR_OUT_MS = 300;
+const CURSOR_HOT_X = 3;
+const CURSOR_HOT_Y = 2;
 
 type Side = "friday" | "unsure";
 type Quote = { participant: string; time: string; quote: string };
 
-const FRIDAY_QUOTES = QUOTE_LIST_FRIDAY;
-const UNSURE_QUOTES = QUOTE_LIST;
+/** 225 lead: Dev, QUOTE_LIST_FRIDAY / MOCK-DATA.md §4c. Ana stays as the second pill. */
+const FRIDAY_QUOTES: Quote[] = [QUOTE_LIST_FRIDAY[1], QUOTE_LIST_FRIDAY[0]];
+
+/**
+ * 75 lead: Owen's existing-mock line from MOCK-DATA.md §4c, not the shortened
+ * sampleData QUOTE_LIST wording. Mei remains the second pill.
+ */
+const OWEN_QUOTE: Quote = {
+  participant: "Owen",
+  time: "07:12\u201307:30",
+  quote: "I'd assume Friday after I order, so I checked the date.",
+};
+const UNSURE_QUOTES: Quote[] = [OWEN_QUOTE, QUOTE_LIST[0]];
 
 function startOf(time: string) {
   return time.split(/[\u2013-]/)[0];
@@ -66,20 +90,6 @@ function ThumbPeople({ side }: { side: Side }) {
         <ThumbQuote q={lead} />
       </div>
     </>
-  );
-}
-
-function CursorArrow() {
-  return (
-    <svg viewBox="0 0 16 20" width="16" height="20" aria-hidden>
-      <path
-        d="M1.2 1.1v16.2l4.2-4.3 2.4 5.7 2.3-1-2.5-5.6h6.3z"
-        fill="var(--dp-bg)"
-        stroke="var(--dp-ink)"
-        strokeWidth="1.2"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 
@@ -135,6 +145,8 @@ export default function DialogueThumbnailDemo({
     if (!root) return;
     let cancelled = false;
     const waits: number[] = [];
+    const rafs: number[] = [];
+    const pos = { x: 0, y: 0 };
 
     const wait = (ms: number) =>
       new Promise<void>((resolve) => {
@@ -142,30 +154,60 @@ export default function DialogueThumbnailDemo({
         waits.push(id);
       });
 
+    const setCursor = (x: number, y: number) => {
+      pos.x = x;
+      pos.y = y;
+      root.style.setProperty("--cursor-x", `${x - CURSOR_HOT_X}px`);
+      root.style.setProperty("--cursor-y", `${y - CURSOR_HOT_Y}px`);
+    };
+
     const targetPoint = (which: Side) => {
-      const el = root.querySelector<HTMLElement>(".dp-chart-stack__bar");
+      const sel =
+        which === "friday"
+          ? '.dp-chart-stack__seg[data-focal]'
+          : '.dp-chart-stack__seg:not([data-focal])';
+      const el = root.querySelector<HTMLElement>(sel);
       const box = root.getBoundingClientRect();
-      if (!el || box.width === 0 || box.height === 0) return { x: which === "unsure" ? 72 : 40, y: 38 };
+      if (!el || box.width === 0 || box.height === 0) {
+        return { x: which === "unsure" ? 320 : 160, y: 90 };
+      }
       const r = el.getBoundingClientRect();
-      const friday = 225 / 300;
-      const along = which === "friday" ? friday * 0.62 : friday + (1 - friday) * 0.55;
       return {
-        x: ((r.left + r.width * along - box.left) / box.width) * 100,
-        y: ((r.top + r.height * 0.55 - box.top) / box.height) * 100,
+        x: r.left + r.width * 0.5 - box.left,
+        y: r.top + r.height * 0.1 - box.top,
       };
     };
 
-    const setCursor = (x: number, y: number) => {
-      root.style.setProperty("--cursor-x", String(x));
-      root.style.setProperty("--cursor-y", String(y));
+    const moveTo = (which: Side, ms: number) =>
+      new Promise<void>((resolve) => {
+        const from = { ...pos };
+        const started = performance.now();
+        const step = (now: number) => {
+          if (cancelled) return;
+          const to = targetPoint(which);
+          const p = Math.min(1, (now - started) / ms);
+          const e = EASE_IO(p);
+          const dx = to.x - from.x;
+          const dy = to.y - from.y;
+          const b = Math.sin(Math.PI * e) * CURSOR_BOW;
+          setCursor(from.x + dx * e - dy * b, from.y + dy * e + dx * b);
+          if (p < 1) rafs.push(requestAnimationFrame(step));
+        };
+        rafs.push(requestAnimationFrame(step));
+        const id = window.setTimeout(resolve, ms);
+        waits.push(id);
+      });
+
+    const fadeInNear = async (which: Side) => {
+      const to = targetPoint(which);
+      setCursor(to.x + CURSOR_LEAD_X, to.y);
+      setCursorOn(true);
+      await wait(CURSOR_LEAD_MS);
     };
 
-    const moveTo = async (which: Side, ms: number) => {
-      const to = targetPoint(which);
-      root.style.setProperty("--move-ms", `${ms}ms`);
-      root.style.setProperty("--move-ease", timing.ease);
-      setCursor(to.x, to.y);
-      await wait(ms);
+    const fadeOut = async () => {
+      setCursorOn(false);
+      await wait(CURSOR_OUT_MS);
     };
 
     const openSide = (which: Side) => {
@@ -174,7 +216,6 @@ export default function DialogueThumbnailDemo({
     };
 
     const loop = async () => {
-      setCursor(40, 28);
       while (!cancelled) {
         setBeat("poster");
         setSide("friday");
@@ -184,8 +225,9 @@ export default function DialogueThumbnailDemo({
         setCursorOn(false);
         await wait(timing.restMs);
         if (cancelled) return;
-        setCursorOn(true);
         setBeat("move-unsure");
+        await fadeInNear("unsure");
+        if (cancelled) return;
         await moveTo("unsure", timing.moveMs);
         if (cancelled) return;
         setBeat("hover-unsure");
@@ -222,6 +264,8 @@ export default function DialogueThumbnailDemo({
         openSide("friday");
         setBeat("poster");
         await wait(timing.payoffMs);
+        if (cancelled) return;
+        await fadeOut();
       }
     };
 
@@ -229,6 +273,7 @@ export default function DialogueThumbnailDemo({
     return () => {
       cancelled = true;
       waits.forEach(clearTimeout);
+      rafs.forEach(cancelAnimationFrame);
     };
   }, [playing, timing]);
 
@@ -239,14 +284,22 @@ export default function DialogueThumbnailDemo({
       data-variant={variant}
       data-beat={beat}
       data-side={side}
-      style={{ ["--thumb-scale" as string]: String(scale), ["--cursor-press" as string]: pressing ? "0.92" : "1" }}
+      data-cursor={cursorOn ? "on" : undefined}
+      style={{ ["--thumb-scale" as string]: String(scale) }}
     >
       {showPreview ? <span className="dlg-thumb__preview">Preview</span> : null}
       <div className="dlg-thumb__stage">
         <div className="dlg-thumb__scale">
-          <div className={`dialogue-product-root dlg-thumb__panel dp-chat-panel-typography ${dialogueProductFontClassName}`}>
+          <div
+            className={`dialogue-product-root dlg-live dlg-thumb__panel dp-chat-panel-typography ${dialogueProductFontClassName}`}
+          >
             <ChartVizCard title={FINDING}>
-              <div className="dlg-thumb__bar" data-hover={hover || undefined} data-press={press || undefined} data-side={side}>
+              <div
+                className="dlg-live__bar dlg-thumb__bar"
+                data-hover={hover || undefined}
+                data-press={press || undefined}
+                data-side={side}
+              >
                 <ChartStackedBar
                   lanes
                   total={300}
@@ -263,8 +316,13 @@ export default function DialogueThumbnailDemo({
           </div>
         </div>
       </div>
-      <div className="dlg-thumb__cursor" data-on={cursorOn ? "" : undefined} aria-hidden>
-        <CursorArrow />
+      <div
+        className="dlg-thumb__cursor dlg-cursor"
+        data-on={cursorOn ? "" : undefined}
+        data-down={pressing ? "" : undefined}
+        aria-hidden
+      >
+        <DlgDemoCursor />
       </div>
     </div>
   );
