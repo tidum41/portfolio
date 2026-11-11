@@ -15,7 +15,9 @@ export function joolaSanityPreviewActive(): boolean {
 
 /** Preview route: env, capture header, or `?sanity_preview=1` (no dev-server restart). */
 export async function joolaPreviewModeActive(queryFlag?: string): Promise<boolean> {
-  if (process.env.NODE_ENV === "production") return false;
+  const allowPreviewRoute =
+    process.env.NODE_ENV !== "production" || process.env.VERCEL_ENV === "preview";
+  if (!allowPreviewRoute) return false;
   if (process.env.SANITY_PREVIEW_DRAFTS === "1") return true;
   if (queryFlag === "1") return true;
   const h = await headers();
