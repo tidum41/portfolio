@@ -61,7 +61,8 @@
    .dlg-live calc(var(--ds-radius-xs) * 2) = 4px override for this demo only. */
 .dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__bar {
   border-radius: var(--dp-radius-bar);
-  overflow: hidden;
+  overflow: visible;
+  margin-bottom: 3px;
 }
 .dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg:first-child {
   border-radius: var(--dp-radius-bar) 0 0 var(--dp-radius-bar);
@@ -101,15 +102,15 @@
 }
 
 /*
- * Option 1, inner ring and legend weight (2026-11-11): every segment keeps its
- * ramp fill in every state. Hover is a 2px inset ring on the hovered segment
- * only (#E7E5E4 / --dp-border). Active is a 2px inset ring in ink at 40% on
- * the open segment plus its legend label at ink weight 500. No legend-row box.
- * 0.15s cubic-bezier(0.4, 0, 0.2, 1). data-hover / data-press / data-side
- * drive the demo cursor.
+ * Lift and marker (2026-11-11): ramp fills never change. Hover lifts the segment
+ * 1px. Active keeps the lift and draws a 2px ink marker under the open segment;
+ * its legend label goes ink medium. No bar outlines or rings. 0.15s
+ * cubic-bezier(0.4, 0, 0.2, 1). data-hover / data-press / data-side drive the demo.
  */
 .dlg-thumb .dlg-live__bar .dp-chart-stack__seg {
-  transition: box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0);
   box-shadow: none;
 }
 
@@ -153,21 +154,33 @@
   box-shadow: none;
 }
 
-/* Hover: 2px inset ring on the hovered segment only; fill unchanged. */
+/* Hover: 1px lift only. */
 .dlg-thumb .dlg-live .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
 .dlg-thumb .dlg-live .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
-  box-shadow: inset 0 0 0 2px var(--dp-border);
+  transform: translateY(-1px);
 }
 
-/* Press and open: ink ring on the active segment; poster beat stays ringless at rest. */
+/* Press and open: lift plus ink marker under the active segment (poster stays flat). */
 .dlg-thumb .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
-.dlg-thumb .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--dp-ink) 40%, transparent);
-}
-
+.dlg-thumb .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
 .dlg-thumb:not([data-beat="poster"]) .dlg-live .dlg-live__bar[data-side="friday"]:not([data-hover]) .dp-chart-stack__seg[data-index][data-focal],
 .dlg-thumb .dlg-live .dlg-live__bar[data-side="unsure"]:not([data-hover]) .dp-chart-stack__seg[data-index]:not([data-focal]) {
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--dp-ink) 40%, transparent);
+  transform: translateY(-1px);
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
+.dlg-thumb .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after,
+.dlg-thumb:not([data-beat="poster"]) .dlg-live .dlg-live__bar[data-side="friday"]:not([data-hover]) .dp-chart-stack__seg[data-index][data-focal]::after,
+.dlg-thumb .dlg-live .dlg-live__bar[data-side="unsure"]:not([data-hover]) .dp-chart-stack__seg[data-index]:not([data-focal])::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 2px;
+  border-radius: var(--dp-radius-bar);
+  background: color-mix(in srgb, var(--dp-ink) 60%, transparent);
+  pointer-events: none;
 }
 
 .dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,

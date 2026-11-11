@@ -283,3 +283,4 @@ Defaults: specific headings and copy, section order details, figure choices and 
 - 2026-11-10 (Mudit): demos and charts use the prototyped bar hover and active effects; no outline on hover or press in demos.
 - 2026-11-11 (Mudit, project card): a receded bar segment takes its legend swatch to stone with it, and the receded count uses ink, not cherry; legend rows have no hover box; hovering counts on the project card must not swap them for percents (that swap stays in the case-study prototype).
 - Nov 11 2026 Mudit (delegated pick): card bar states use the inner ring. Segments keep their ramp colors in every state; hover is a 2px #E7E5E4 inset ring, active is a 2px ink-40% inset ring plus the legend row in ink medium; nothing recedes. Supersedes the recede-to-stone line.
+- Nov 11 2026 Mudit: card bar states are lift-and-marker; supersedes the inner-ring line.
