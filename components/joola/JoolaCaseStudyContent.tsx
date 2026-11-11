@@ -7,7 +7,7 @@ import type { CaseStudyData } from "@/lib/sanity/queries";
 import JoolaSanityText from "./JoolaSanityText";
 import JoolaBeforeAfter from "./JoolaBeforeAfter";
 import JoolaProtoIframe from "./JoolaProtoIframe";
-import JoolaFigureSeg from "./JoolaFigureSeg";
+import JoolaVariantEmbed from "./JoolaVariantEmbed";
 import {
   JOOLA_EMBED_HEIGHT,
   JOOLA_FIGURE_URLS,
@@ -211,27 +211,33 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.d2Body} />
         </Body>
-        <JoolaProtoIframe
-          key={qoVariant}
+        <JoolaVariantEmbed
+          label="Quick order line view"
+          value={qoVariant}
+          options={[
+            { value: "2", label: "Cases" },
+            { value: "3", label: "Reorder" },
+            { value: "4", label: "Stock status" },
+          ]}
+          onChange={setQoVariant}
+          buildSrc={qoRowUrl}
           figureId="quick-order-row-compare"
-          src={qoRowUrl(qoVariant)}
           designWidth={QO_W}
-          designHeight={qoSlotH}
+          heights={{
+            "2": qoSlotH,
+            "3": qoSlotH,
+            "4": qoSlotH,
+          }}
           onEmbedHeight={bumpQoH}
           caption="Case pack steps, reorder, and stock status on the same line component."
-          footer={
-            <JoolaFigureSeg
-              label="Quick order line view"
-              value={qoVariant}
-              options={[{ value: "2", label: "Cases" }, { value: "3", label: "Reorder" }, { value: "4", label: "Stock status" }]}
-              onChange={setQoVariant}
-            />
-          }
         />
       </Section>
 
       <Section id="decision-3">
-        <SectionLabel>{cs.d3Label}</SectionLabel>
+        <SectionLabel>
+          {cs.d3Label}
+          <span className="joola-draft-tag">Needs review</span>
+        </SectionLabel>
         <H2>
           <JoolaSanityText text={cs.d3Heading} />
         </H2>
@@ -255,25 +261,23 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.d4Body} />
         </Body>
-        <JoolaProtoIframe
-          key={approvalView}
+        <JoolaVariantEmbed
+          label="Approval queue view"
+          value={approvalView}
+          options={[
+            { value: "split", label: "Split inbox" },
+            { value: "ledger", label: "Ledger" },
+          ]}
+          onChange={setApprovalView}
+          buildSrc={(v) => approvalUrl(v === "split" ? "3" : "1")}
           figureId="approval-queue"
-          src={approvalView === "split" ? approvalUrl("3") : approvalUrl("1")}
           designWidth={PORTAL_W}
-          designHeight={approvalSlotH}
+          heights={{
+            split: approvalSlotH,
+            ledger: approvalSlotH,
+          }}
           onEmbedHeight={bumpApprovalH}
           caption="Over-limit orders in a split inbox, with credit math beside the ledger table."
-          footer={
-            <JoolaFigureSeg
-              label="Approval queue view"
-              value={approvalView}
-              options={[
-                { value: "split", label: "Split inbox" },
-                { value: "ledger", label: "Ledger" },
-              ]}
-              onChange={setApprovalView}
-            />
-          }
         />
       </Section>
     </article>

@@ -14,6 +14,7 @@ const OUT = path.resolve("artifacts/joola-sanity/pixel-diff");
 
 /** Must match `lib/joola/protoEmbed.ts` JOOLA_EMBED_HEIGHT (iframe slot = viewport). */
 const EMBED_H = {
+  heroPresets: 720,
   portal: 1000,
   qoSearch: 900,
   qoCompare: 1035,
@@ -23,6 +24,16 @@ const EMBED_H = {
 };
 
 const CASES = [
+  {
+    id: "qo-hero-presets",
+    figure: "quick-order-hero",
+    path: "/joola-proto/qo/index.html",
+    hash: "/prototypes/quick-order-row",
+    params: "embed=1&clean=1&v=5&line=typed&w=1280&latency=0",
+    selector: "[data-qo-ready]",
+    width: 1280,
+    iframeHeight: EMBED_H.heroPresets,
+  },
   {
     id: "quick-order-portal",
     figure: "quick-order-portal",

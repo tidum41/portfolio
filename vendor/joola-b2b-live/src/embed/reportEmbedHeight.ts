@@ -13,6 +13,7 @@ export function attachEmbedHeightReporter() {
   if (!document.documentElement.classList.contains("is-embed")) return () => {};
 
   let last = 0;
+  let readyPosted = false;
   const post = (h: number) => {
     const height = Math.ceil(h);
     if (height === last) return;
@@ -21,6 +22,10 @@ export function attachEmbedHeightReporter() {
       { type: "joola-embed-size", height },
       window.location.origin,
     );
+    if (!readyPosted && height > 0) {
+      readyPosted = true;
+      window.parent.postMessage({ type: "joola-embed-ready" }, window.location.origin);
+    }
   };
 
   const measure = () => {

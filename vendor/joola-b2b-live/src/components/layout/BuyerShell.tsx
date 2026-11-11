@@ -44,6 +44,7 @@ export function BuyerShell({ children }: { children?: ReactNode }) {
       <div className="shell__main">
         <header className="shell__topbar">
           <Link to="/cart" className="cart-pill" aria-label="Open cart">
+            <NavIcon name="cart" />
             <span>Cart</span>
             <span className="cart-pill__count">{units}</span>
             <span className="cart-pill__total tnum">{money(cartTotal)}</span>

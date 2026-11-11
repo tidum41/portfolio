@@ -43,7 +43,12 @@ export const VARIANTS = [
   { id: "2", label: "Cases" },
   { id: "3", label: "Reorder" },
   { id: "4", label: "Stock status" },
+  { id: "5", label: "Presets" },
 ] as const;
+
+export function packNamedInTitle(name: string) {
+  return /\(\d+\s*-\s*Pack\)/i.test(name);
+}
 
 export function parseVariant(value: string | null) {
   const found = VARIANTS.find((item) => item.id === value);

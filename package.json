@@ -15,7 +15,8 @@
     "seed:sviz": "node scripts/seed-sviz.mjs",
     "bench:nav": "node scripts/bench-nav-jank.cjs",
     "check:site-mobile": "node scripts/check-site-mobile.mjs",
-    "check:intro-panel": "node scripts/check-intro-panel.mjs"
+    "check:intro-panel": "node scripts/check-intro-panel.mjs",
+    "test:joola:unit": "npx tsx --test tests/joola/*.test.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -1,16 +1,16 @@
 "use client";
 
 import JoolaProtoIframe from "./JoolaProtoIframe";
-import { JOOLA_EMBED_HEIGHT, JOOLA_FIGURE_URLS } from "@/lib/joola/protoEmbed";
+import { JOOLA_EMBED_HEIGHT, qoHeroPresetsUrl } from "@/lib/joola/protoEmbed";
 
-/** Case-study hero: live quick-order portal (Dick's) in preview mode. */
+/** Case-study hero: QO presets row (pack chips), capped at five lines in the prototype. */
 export default function JoolaPreviewHero() {
   return (
     <JoolaProtoIframe
       figureId="quick-order-hero"
-      src={JOOLA_FIGURE_URLS["quick-order-portal"]}
+      src={qoHeroPresetsUrl()}
       designWidth={1280}
-      designHeight={JOOLA_EMBED_HEIGHT["quick-order-portal"]}
+      designHeight={JOOLA_EMBED_HEIGHT["quick-order-hero"]}
     />
   );
 }

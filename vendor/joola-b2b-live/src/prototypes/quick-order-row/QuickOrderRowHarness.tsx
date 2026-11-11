@@ -13,6 +13,7 @@ import { AvailabilityVariant } from "./variants/Availability";
 import { CasesVariant } from "./variants/Cases";
 import { CompactVariant } from "./variants/Compact";
 import { ReorderVariant } from "./variants/Reorder";
+import { PresetsVariant } from "./variants/Presets";
 import "../proto-scaffold.css";
 import "./quick-order-row.css";
 
@@ -21,6 +22,7 @@ const RENDER = {
   "2": CasesVariant,
   "3": ReorderVariant,
   "4": AvailabilityVariant,
+  "5": PresetsVariant,
 } as const;
 
 function Stage() {

@@ -1,5 +1,17 @@
 [
   {
+    "id": "qo-hero-presets",
+    "diffPct": 0,
+    "url": "http://localhost:3000/joola-proto/qo/index.html#/prototypes/quick-order-row?embed=1&clean=1&v=5&line=typed&w=1280&latency=0",
+    "compareSize": {
+      "w": 1280,
+      "h": 720
+    },
+    "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-hero-presets-proto.png",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-hero-presets-portfolio.png",
+    "diff": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-hero-presets-diff.png"
+  },
+  {
     "id": "quick-order-portal",
     "diffPct": 0,
     "url": "http://localhost:3000/joola-proto/round5/index.html#/quick-order?embed=1&clean=1&view=portal&screen=quick-order&state=default&latency=0&account=dicks",

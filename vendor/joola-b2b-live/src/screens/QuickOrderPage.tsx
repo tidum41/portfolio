@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   FULFILLMENT,
@@ -30,18 +31,26 @@ export function QuickOrderPage() {
     [Object.keys(products).join(",")],
   );
 
+  const [params] = useSearchParams();
+  const maxRows = useMemo(() => {
+    const n = Number(params.get("maxRows"));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }, [params]);
+
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = Object.values(products);
-    if (!q) return list;
-    return list.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.fullName.toLowerCase().includes(q) ||
-        p.sku.includes(q) ||
-        p.category.toLowerCase().includes(q),
-    );
-  }, [products, query]);
+    let list = Object.values(products);
+    if (q) {
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.fullName.toLowerCase().includes(q) ||
+          p.sku.includes(q) ||
+          p.category.toLowerCase().includes(q),
+      );
+    }
+    return maxRows ? list.slice(0, maxRows) : list;
+  }, [products, query, maxRows]);
 
   const pending = useMemo(() => {
     const ready = matches.filter((p) => (qtys[p.id] ?? 0) >= p.moq);

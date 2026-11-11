@@ -29,7 +29,7 @@ export const JOOLA_FIGURE_URLS = {
   }),
 } as const;
 
-export type QoVariant = "1" | "2" | "3" | "4";
+export type QoVariant = "1" | "2" | "3" | "4" | "5";
 
 export function qoRowUrl(v: QoVariant): string {
   return joolaProtoHashUrl("qo", "/prototypes/quick-order-row", {
@@ -53,7 +53,19 @@ export function approvalUrl(v: ApprovalVariant): string {
 }
 
 /** Native layout heights at design width (measured from static embed; updated after build). */
+/** Hero: QO presets row playground (5 lines, pack chips). */
+export function qoHeroPresetsUrl(): string {
+  return joolaProtoHashUrl("qo", "/prototypes/quick-order-row", {
+    clean: "1",
+    v: "5",
+    line: "typed",
+    w: "1280",
+    latency: "0",
+  });
+}
+
 export const JOOLA_EMBED_HEIGHT: Record<string, number> = {
+  "quick-order-hero": 720,
   "quick-order-portal": 1000,
   "quick-order-row-search": 900,
   /** Max across Cases / Reorder / Stock variants (no layout jump on toggle). */

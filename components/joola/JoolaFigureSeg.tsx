@@ -1,11 +1,11 @@
 "use client";
 
-import { useId, useRef, type KeyboardEvent } from "react";
+import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 
 export type SegOption<T extends string> = { value: T; label: string };
 
 /**
- * Keyboard-accessible segmented control for figure comparisons.
+ * Apple-style segmented control for figure comparisons.
  */
 export default function JoolaFigureSeg<T extends string>({
   label,
@@ -20,15 +20,28 @@ export default function JoolaFigureSeg<T extends string>({
 }) {
   const groupId = useId();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
 
-  function onKeyDown(e: KeyboardEvent, index: number) {
-    let next = index;
+  const index = options.findIndex((o) => o.value === value);
+
+  useLayoutEffect(() => {
+    const btn = refs.current[index];
+    const track = trackRef.current;
+    if (!btn || !track) return;
+    const t = track.getBoundingClientRect();
+    const b = btn.getBoundingClientRect();
+    setIndicator({ left: b.left - t.left, width: b.width });
+  }, [index, options, value]);
+
+  function onKeyDown(e: KeyboardEvent, i: number) {
+    let next = i;
     if (e.key === "ArrowRight" || e.key === "ArrowDown") {
       e.preventDefault();
-      next = (index + 1) % options.length;
+      next = (i + 1) % options.length;
     } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
       e.preventDefault();
-      next = (index - 1 + options.length) % options.length;
+      next = (i - 1 + options.length) % options.length;
     } else if (e.key === "Home") {
       e.preventDefault();
       next = 0;
@@ -49,7 +62,13 @@ export default function JoolaFigureSeg<T extends string>({
       role="tablist"
       aria-label={label}
       id={groupId}
+      ref={trackRef}
     >
+      <span
+        className="joola-figure-seg__indicator"
+        aria-hidden
+        style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }}
+      />
       {options.map((opt, i) => {
         const selected = opt.value === value;
         return (

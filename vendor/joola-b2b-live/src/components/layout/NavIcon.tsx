@@ -14,7 +14,8 @@ export type NavIconName =
   | "orders"
   | "invoices"
   | "messages"
-  | "external";
+  | "external"
+  | "cart";
 
 const PATHS: Record<NavIconName, ReactNode> = {
   order: (
@@ -92,6 +93,13 @@ const PATHS: Record<NavIconName, ReactNode> = {
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
       <polyline points="15 3 21 3 21 9" />
       <line x1="10" y1="14" x2="21" y2="3" />
+    </>
+  ),
+  cart: (
+    <>
+      <circle cx="9" cy="20" r="1.5" />
+      <circle cx="18" cy="20" r="1.5" />
+      <path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 7H7" />
     </>
   ),
 };

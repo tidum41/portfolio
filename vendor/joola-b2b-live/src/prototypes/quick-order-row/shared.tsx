@@ -13,6 +13,7 @@ import {
   commitQty,
   money,
   moneyLine,
+  packNamedInTitle,
   stepCases,
   stepQty,
   unitWord,
@@ -37,6 +38,22 @@ function PlusIcon() {
     <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
       <rect x="2" y="5.25" width="8" height="1.5" rx="0.5" fill="currentColor" />
       <rect x="5.25" y="2" width="1.5" height="8" rx="0.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function CartIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="9" cy="20" r="1.5" fill="currentColor" />
+      <circle cx="18" cy="20" r="1.5" fill="currentColor" />
+      <path
+        d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 7H7"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -162,20 +179,23 @@ export function ProductBlock({
   after,
   notice,
   noticeId,
+  hideCaseMeta,
 }: {
   sku: Sku;
   detail?: ReactNode;
   after?: ReactNode;
   notice?: string;
   noticeId?: string;
+  hideCaseMeta?: boolean;
 }) {
+  const hideCase = hideCaseMeta ?? packNamedInTitle(sku.fullName);
   return (
     <div className="qo-product">
       <div className="qo-name" data-qo-fit="">
         {sku.fullName}
       </div>
       {detail}
-      <div className="qo-case">Case of {sku.pack}</div>
+      {hideCase ? null : <div className="qo-case">Case of {sku.pack}</div>}
       {after}
       {notice ? (
         <p id={noticeId} className={cx("qo-meta", noticeClass(notice))} data-qo-fit="">
@@ -368,9 +388,11 @@ export function CaseField({
           <PlusIcon />
         </button>
       </div>
-      <p className="qo-units tnum">
-        {qty} {unitWord(qty)}
-      </p>
+      {packNamedInTitle(sku.fullName) ? null : (
+        <p className="qo-units tnum">
+          {qty} {unitWord(qty)}
+        </p>
+      )}
     </div>
   );
 }
@@ -406,10 +428,12 @@ export function PrototypePage({ table }: { table: ReactNode }) {
           </aside>
           <div className="proto-shell__main">
             <div className="proto-shell__top">
-              <span className="qo-cart tnum">
-                Cart · {play.cart.lines} · {money(play.cart.total)} · Dick&apos;s
-                Sporting Goods
-              </span>
+              <a className="cart-pill cart-pill--static" href="#cart" aria-label="Cart">
+                <CartIcon />
+                <span>Cart</span>
+                <span className="cart-pill__count">{play.cart.units}</span>
+                <span className="cart-pill__total tnum">{money(play.cart.total)}</span>
+              </a>
             </div>
             <h1>Quick order</h1>
             <p className="proto-shell__lede">
