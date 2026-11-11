@@ -54,10 +54,11 @@ export function approvalUrl(v: ApprovalVariant): string {
 
 /** Native layout heights at design width (measured from static embed; updated after build). */
 export const JOOLA_EMBED_HEIGHT: Record<string, number> = {
-  "quick-order-portal": 1068,
+  "quick-order-portal": 1000,
   "quick-order-row-search": 900,
+  /** Max across Cases / Reorder / Stock variants (no layout jump on toggle). */
   "quick-order-row-compare": 1035,
-  "review-checkout": 900,
-  "approval-queue-split": 860,
-  "approval-queue-ledger": 928,
+  "review-checkout": 530,
+  "approval-queue-split": 824,
+  "approval-queue-ledger": 896,
 };

@@ -24,6 +24,8 @@ Reference: standalone static app at the hash URL. Portfolio capture: `joola-embe
 
 | Figure id | Diff % |
 |-----------|--------|
+Preview polish: live hero iframe, postMessage heights, in-embed disclaimer hidden, no NDA block in preview. Capture sets `data-theme` for true light/dark shots.
+
 | quick-order-portal | 0.000 |
 | qo-compact | 0.000 |
 | qo-cases | 0.000 |

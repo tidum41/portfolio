@@ -3,7 +3,8 @@
  * Route: /prototypes/quick-order-row
  * Nothing here is imported by production screens.
  */
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
+import { attachEmbedHeightReporter } from "../../embed/reportEmbedHeight";
 import { useSearchParams } from "react-router-dom";
 import { QuickOrderState } from "./context";
 import { QuickOrderDial } from "./QuickOrderDial";
@@ -28,8 +29,14 @@ function Stage() {
   const variant = parseVariant(params.get("v"));
   const Active = RENDER[variant];
 
-  useEffect(() => {
-    if (embed) document.documentElement.classList.add("is-embed");
+  useLayoutEffect(() => {
+    if (!embed) return;
+    document.documentElement.classList.add("is-embed");
+    const stop = attachEmbedHeightReporter();
+    return () => {
+      stop();
+      document.documentElement.classList.remove("is-embed");
+    };
   }, [embed]);
 
   useEffect(() => {

@@ -4,6 +4,7 @@ import { setDevConfig, type ScreenKey } from "../api/mock";
 import { setPaused } from "../api/clock";
 import { DEFAULT_CART } from "../data/ledger";
 import { useStore } from "../state/Store";
+import { attachEmbedHeightReporter } from "./reportEmbedHeight";
 
 /** Portfolio iframe mode: seed session + mock config; no login or playground chrome. */
 export function EmbedBootstrap() {
@@ -13,7 +14,11 @@ export function EmbedBootstrap() {
 
   useLayoutEffect(() => {
     document.documentElement.classList.add("is-embed");
-    return () => document.documentElement.classList.remove("is-embed");
+    const stop = attachEmbedHeightReporter();
+    return () => {
+      stop();
+      document.documentElement.classList.remove("is-embed");
+    };
   }, []);
 
   useEffect(() => {

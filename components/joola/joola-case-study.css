@@ -49,6 +49,14 @@
   outline-offset: 2px;
 }
 
+.joola-hero-embed .joola-proto-figure {
+  margin: 0;
+}
+
+.joola-hero-embed .joola-proto-figure__chrome {
+  border-radius: var(--radius-card, 8px);
+}
+
 .joola-proto-figure {
   margin: 24px 0 8px;
   min-width: 0;

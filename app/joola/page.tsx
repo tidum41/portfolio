@@ -8,12 +8,11 @@ import {
   getJoolaCaseStudyDraft,
   joolaSanityPreviewActive,
 } from "@/lib/sanity/caseStudyDraft";
-import { JOOLA_HERO_SRC, JOOLA_TITLE } from "@/lib/caseStudies/joola";
+import { JOOLA_TITLE } from "@/lib/caseStudies/joola";
 import { SITE_URL } from "@/lib/site";
 import type { CaseStudyData, TocItem } from "@/lib/sanity/queries";
-import Image from "next/image";
-
 import JoolaCaseStudyContent from "@/components/joola/JoolaCaseStudyContent";
+import JoolaPreviewHero from "@/components/joola/JoolaPreviewHero";
 
 const description = "B2B ordering for JOOLA. Product design internship, summer 2026.";
 
@@ -114,23 +113,12 @@ export default async function JoolaCaseStudyPage() {
               },
             ]}
           >
-            <div className="cs-hero-media-frame">
-              <Image
-                src={JOOLA_HERO_SRC}
-                alt="Quick order screen from the JOOLA wholesale prototype, with a saved order, Net 30 credit, and ship date pending."
-                width={2400}
-                height={1600}
-                priority
-                fetchPriority="high"
-                sizes="(max-width: 767px) calc(100vw - 48px), 750px"
-                style={{ width: "100%", height: "auto", display: "block" }}
-              />
+            <div className="cs-hero-media-frame joola-hero-embed">
+              <JoolaPreviewHero />
             </div>
           </CaseStudyOpen>
 
           <JoolaCaseStudyContent cs={cs} />
-
-          <CaseStudyRequest />
 
           <CaseStudyPager href="/joola" />
         </div>

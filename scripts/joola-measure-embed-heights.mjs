@@ -44,20 +44,16 @@ const CASES = [
 const browser = await chromium.launch();
 for (const c of CASES) {
   const page = await browser.newPage();
-  await page.setViewportSize({ width: c.width, height: 2400, deviceScaleFactor: 1 });
-  await page.goto(c.url, { waitUntil: "networkidle" });
-  await page.waitForSelector(c.selector);
-  if (c.url.includes("/review")) {
-    await page.waitForSelector(".page--review", { timeout: 20000 });
-  }
-  if (c.url.includes("quick-order") && !c.url.includes("quick-order-row")) {
-    await page.waitForSelector(".page--qo", { timeout: 20000 });
-  }
-  if (c.url.includes("quick-order-row")) {
-    await page.waitForSelector("[data-qo-ready]", { timeout: 20000 });
-  }
-  await page.waitForTimeout(600);
-  const h = await page.locator(c.selector).evaluate((el) =>
+  const ih = c.iframeHeight ?? 1100;
+  await page.setViewportSize({ width: c.width + 16, height: ih + 80, deviceScaleFactor: 1 });
+  await page.setContent(
+    `<!doctype html><body style="margin:0"><iframe id=f src="${c.url}" width="${c.width}" height="${ih}" style="border:0"></iframe></body></html>`,
+    { waitUntil: "domcontentloaded" },
+  );
+  const frame = page.frameLocator("#f");
+  await frame.locator(c.selector).waitFor({ timeout: 60000 });
+  await page.waitForTimeout(1500);
+  const h = await frame.locator(c.selector).evaluate((el) =>
     Math.ceil(el.getBoundingClientRect().height),
   );
   console.log(c.id, h);

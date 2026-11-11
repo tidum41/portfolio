@@ -14,12 +14,12 @@ const OUT = path.resolve("artifacts/joola-sanity/pixel-diff");
 
 /** Must match `lib/joola/protoEmbed.ts` JOOLA_EMBED_HEIGHT (iframe slot = viewport). */
 const EMBED_H = {
-  portal: 1068,
+  portal: 1000,
   qoSearch: 900,
   qoCompare: 1035,
-  review: 900,
-  approvalSplit: 860,
-  approvalLedger: 928,
+  review: 530,
+  approvalSplit: 824,
+  approvalLedger: 896,
 };
 
 const CASES = [
@@ -157,7 +157,6 @@ async function shotProto(page, c, outPath) {
   await page.locator(c.selector).first().screenshot({
     path: outPath,
     animations: "disabled",
-    clip: { x: 0, y: 0, width: c.width, height: c.iframeHeight },
   });
 }
 
@@ -198,7 +197,6 @@ async function shotIframe(page, c, outPath) {
   await frame.locator(c.selector).first().screenshot({
     path: outPath,
     animations: "disabled",
-    clip: { x: 0, y: 0, width: c.width, height: c.iframeHeight },
   });
 }
 

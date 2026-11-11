@@ -10,14 +10,15 @@ const OUT = path.resolve("artifacts/joola-sanity");
 const BASE = process.env.JOOLA_CAPTURE_BASE ?? "http://localhost:3000";
 
 async function shot(page, name, width, height, theme) {
-  if (theme === "dark") {
-    await page.emulateMedia({ colorScheme: "dark" });
-  } else {
-    await page.emulateMedia({ colorScheme: "light" });
-  }
+  await page.emulateMedia({ colorScheme: theme === "dark" ? "dark" : "light" });
   await page.setViewportSize({ width, height });
   await page.goto(`${BASE}/joola`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(600);
+  await page.evaluate((t) => {
+    document.documentElement.setAttribute("data-theme", t);
+    document.documentElement.style.colorScheme = t;
+  }, theme);
+  await page.waitForSelector("[data-joola-iframe]", { timeout: 60000 }).catch(() => {});
+  await page.waitForTimeout(2000);
   const file = path.join(OUT, `${name}.png`);
   await page.screenshot({ path: file, fullPage: true });
   return file;

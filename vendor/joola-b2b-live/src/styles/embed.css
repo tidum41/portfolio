@@ -30,6 +30,11 @@ html.is-embed .aq {
   height: auto !important;
 }
 
+html.is-embed .disclaimer-strip,
+html.is-embed .aq-disclaimer {
+  display: none !important;
+}
+
 html.is-embed .qo-proto .qo-stage,
 html.is-embed .qo-proto .qo-frame,
 html.is-embed .qo-proto.proto-root,

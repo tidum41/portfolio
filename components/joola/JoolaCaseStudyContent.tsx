@@ -21,13 +21,6 @@ const COLOR_WRONG = "#C62828";
 const QO_W = 1024;
 const PORTAL_W = 1280;
 
-const QO_HEIGHTS: Record<QoVariant, number> = {
-  "1": JOOLA_EMBED_HEIGHT["quick-order-row-search"],
-  "2": JOOLA_EMBED_HEIGHT["quick-order-row-compare"],
-  "3": JOOLA_EMBED_HEIGHT["quick-order-row-compare"],
-  "4": JOOLA_EMBED_HEIGHT["quick-order-row-compare"],
-};
-
 function Section({
   id,
   children,
@@ -131,6 +124,12 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
   const painPoints = cs.painPoints ?? [];
   const [qoVariant, setQoVariant] = useState<QoVariant>("2");
   const [approvalView, setApprovalView] = useState<"split" | "ledger">("split");
+  const [qoSlotH, setQoSlotH] = useState(JOOLA_EMBED_HEIGHT["quick-order-row-compare"]);
+  const [approvalSlotH, setApprovalSlotH] = useState(
+    Math.max(JOOLA_EMBED_HEIGHT["approval-queue-split"], JOOLA_EMBED_HEIGHT["approval-queue-ledger"]),
+  );
+  const bumpQoH = (h: number) => setQoSlotH((prev) => Math.max(prev, h));
+  const bumpApprovalH = (h: number) => setApprovalSlotH((prev) => Math.max(prev, h));
 
   return (
     <article style={{ minWidth: 0 }}>
@@ -217,7 +216,8 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
           figureId="quick-order-row-compare"
           src={qoRowUrl(qoVariant)}
           designWidth={QO_W}
-          designHeight={QO_HEIGHTS[qoVariant]}
+          designHeight={qoSlotH}
+          onEmbedHeight={bumpQoH}
           caption="Case pack steps, reorder, and stock status on the same line component."
           footer={
             <JoolaFigureSeg
@@ -260,11 +260,8 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
           figureId="approval-queue"
           src={approvalView === "split" ? approvalUrl("3") : approvalUrl("1")}
           designWidth={PORTAL_W}
-          designHeight={
-            approvalView === "split"
-              ? JOOLA_EMBED_HEIGHT["approval-queue-split"]
-              : JOOLA_EMBED_HEIGHT["approval-queue-ledger"]
-          }
+          designHeight={approvalSlotH}
+          onEmbedHeight={bumpApprovalH}
           caption="Over-limit orders in a split inbox, with credit math beside the ledger table."
           footer={
             <JoolaFigureSeg
