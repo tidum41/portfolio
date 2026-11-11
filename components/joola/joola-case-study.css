@@ -26,9 +26,6 @@
   max-width: 40rem;
 }
 
-.joola-proto-figure__footer--center {
-  justify-content: center;
-}
 
 .joola-figure-seg {
   position: relative;
@@ -100,6 +97,7 @@
 }
 
 .joola-variant-stack__layer {
+  position: relative;
   top: 0;
   left: 0;
 }
@@ -107,6 +105,8 @@
 .joola-embed-skeleton {
   position: absolute;
   inset: 0;
+  z-index: 2;
+  pointer-events: none;
   padding: 20px 24px;
   background: #f6f6f7;
   box-sizing: border-box;
@@ -221,6 +221,10 @@
   margin-top: 12px;
   display: flex;
   justify-content: flex-end;
+}
+
+.joola-proto-figure__footer.joola-proto-figure__footer--center {
+  justify-content: center;
 }
 
 .joola-uniform-scale {

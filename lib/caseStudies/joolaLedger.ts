@@ -41,7 +41,7 @@ export const JOOLA_PRODUCTS: Record<string, JoolaProduct> = {
     fullName: "Perseus Pro V",
     category: "Paddles",
     msrp: 299.95,
-    image: `${IMG}/perseus.jpg`,
+    image: `${IMG}/perseus.webp`,
     moq: 1,
     presets: [...PRESETS.Paddles],
     tiers: [
@@ -58,7 +58,7 @@ export const JOOLA_PRODUCTS: Record<string, JoolaProduct> = {
     fullName: "Hyperion Pro IV 14mm",
     category: "Paddles",
     msrp: 229.95,
-    image: `${IMG}/hyperion.jpg`,
+    image: `${IMG}/hyperion.webp`,
     moq: 1,
     presets: [...PRESETS.Paddles],
     tiers: [
@@ -75,7 +75,7 @@ export const JOOLA_PRODUCTS: Record<string, JoolaProduct> = {
     fullName: "Scorpeus Pro V",
     category: "Paddles",
     msrp: 299.95,
-    image: `${IMG}/scorpeus.jpg`,
+    image: `${IMG}/scorpeus.webp`,
     moq: 1,
     presets: [...PRESETS.Paddles],
     tiers: [
@@ -92,7 +92,7 @@ export const JOOLA_PRODUCTS: Record<string, JoolaProduct> = {
     fullName: "HC-40 Balls (3-Pack)",
     category: "Balls",
     msrp: 9.95,
-    image: `${IMG}/hc40.jpg`,
+    image: `${IMG}/hc40.webp`,
     moq: 12,
     presets: [...PRESETS.Balls],
     tiers: [
@@ -108,7 +108,7 @@ export const JOOLA_PRODUCTS: Record<string, JoolaProduct> = {
     fullName: "Tour Elite Bag",
     category: "Bags",
     msrp: 109.95,
-    image: `${IMG}/bag.jpg`,
+    image: `${IMG}/tourbag.webp`,
     moq: 1,
     presets: [...PRESETS.Bags],
     tiers: [

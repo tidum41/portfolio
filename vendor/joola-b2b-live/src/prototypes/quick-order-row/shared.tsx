@@ -5,7 +5,8 @@ import {
   type ReactNode,
 } from "react";
 import { Button, SearchField } from "../../components/ui/primitives";
-import { usePlay } from "./context";
+import { NavIcon } from "../../components/layout/NavIcon";
+import { usePlay, type PlayRow } from "./context";
 import {
   caseCount,
   caseWord,
@@ -38,22 +39,6 @@ function PlusIcon() {
     <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
       <rect x="2" y="5.25" width="8" height="1.5" rx="0.5" fill="currentColor" />
       <rect x="5.25" y="2" width="1.5" height="8" rx="0.5" fill="currentColor" />
-    </svg>
-  );
-}
-
-function CartIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="9" cy="20" r="1.5" fill="currentColor" />
-      <circle cx="18" cy="20" r="1.5" fill="currentColor" />
-      <path
-        d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 7H7"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
     </svg>
   );
 }
@@ -397,16 +382,29 @@ export function CaseField({
   );
 }
 
-export function PrototypePage({ table }: { table: ReactNode }) {
+export function PrototypePage({
+  table,
+  rowsForSummary,
+}: {
+  table: ReactNode;
+  /** When the table shows a subset of `play.rows`, pass that slice for the footer. */
+  rowsForSummary?: PlayRow[];
+}) {
   const play = usePlay();
-  const waiting = play.readyCount === 0;
+  const scope = rowsForSummary ?? play.rows;
+  const readyRows = scope.filter(
+    (row) => play.mode === "edit" && row.qty > 0,
+  );
+  const readyCount = readyRows.length;
+  const readyUnits = readyRows.reduce((sum, row) => sum + row.qty, 0);
+  const waiting = readyCount === 0;
   let footer = "Set quantities to enable Add to cart";
   if (play.mode === "loading") footer = "Prices are loading";
   else if (play.mode === "oos") footer = "These lines are out of stock";
   else if (!waiting) {
     const lineBit =
-      play.readyCount === 1 ? "Adds 1 line" : `Adds ${play.readyCount} lines`;
-    const unitBit = play.readyUnits === 1 ? "1 unit" : `${play.readyUnits} units`;
+      readyCount === 1 ? "Adds 1 line" : `Adds ${readyCount} lines`;
+    const unitBit = readyUnits === 1 ? "1 unit" : `${readyUnits} units`;
     footer = `${lineBit}, ${unitBit}`;
   }
 
@@ -429,7 +427,7 @@ export function PrototypePage({ table }: { table: ReactNode }) {
           <div className="proto-shell__main">
             <div className="proto-shell__top">
               <a className="cart-pill cart-pill--static" href="#cart" aria-label="Cart">
-                <CartIcon />
+                <NavIcon name="cart" />
                 <span>Cart</span>
                 <span className="cart-pill__count">{play.cart.units}</span>
                 <span className="cart-pill__total tnum">{money(play.cart.total)}</span>

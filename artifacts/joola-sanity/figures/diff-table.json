@@ -1,15 +1,15 @@
 [
   {
-    "id": "qo-hero-presets",
+    "id": "qo-hero-compact",
     "diffPct": 0,
-    "url": "http://localhost:3000/joola-proto/qo/index.html#/prototypes/quick-order-row?embed=1&clean=1&v=5&line=typed&w=1280&latency=0",
+    "url": "http://localhost:3000/joola-proto/qo/index.html#/prototypes/quick-order-row?embed=1&clean=1&v=1&line=typed&w=1280&rows=5&latency=0",
     "compareSize": {
       "w": 1280,
-      "h": 720
+      "h": 700
     },
-    "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-hero-presets-proto.png",
-    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-hero-presets-portfolio.png",
-    "diff": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-hero-presets-diff.png"
+    "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-hero-compact-proto.png",
+    "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-hero-compact-portfolio.png",
+    "diff": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/qo-hero-compact-diff.png"
   },
   {
     "id": "quick-order-portal",

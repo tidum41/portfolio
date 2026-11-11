@@ -10,6 +10,53 @@ const OUT = path.resolve("artifacts/joola-sanity");
 const BASE = process.env.JOOLA_CAPTURE_BASE ?? "http://localhost:3000";
 const PREVIEW_URL = `${BASE}/joola?sanity_preview=1`;
 
+async function scrollEntirePageAndWait(page) {
+  await page.evaluate(async () => {
+    const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+    const step = Math.max(200, Math.floor(window.innerHeight * 0.75));
+    let y = 0;
+    const max = document.documentElement.scrollHeight;
+    while (y < max) {
+      window.scrollTo(0, y);
+      await delay(250);
+      y += step;
+    }
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    await delay(3000);
+  });
+}
+
+async function assertNoVisibleSkeletons(page) {
+  const visible = await page.evaluate(() => {
+    const nodes = [...document.querySelectorAll("[data-joola-skeleton]")];
+    return nodes.filter((el) => {
+      const style = getComputedStyle(el);
+      if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") {
+        return false;
+      }
+      const rect = el.getBoundingClientRect();
+      return rect.width > 2 && rect.height > 2;
+    }).map((el) => el.getAttribute("data-joola-skeleton"));
+  });
+  if (visible.length > 0) {
+    throw new Error(
+      `Skeleton UI still visible after full-page scroll + 3s: ${visible.join(", ")}`,
+    );
+  }
+}
+
+async function assertSegmentedFootersCentered(page) {
+  const bad = await page.evaluate(() => {
+    const footers = [...document.querySelectorAll(".joola-proto-figure__footer--center")];
+    return footers
+      .filter((el) => getComputedStyle(el).justifyContent !== "center")
+      .map((el) => el.closest("[data-joola-figure]")?.getAttribute("data-joola-figure") ?? "?");
+  });
+  if (bad.length > 0) {
+    throw new Error(`Segmented footer not centered for figures: ${bad.join(", ")}`);
+  }
+}
+
 async function assertPreviewPage(page, theme) {
   const dom = await page.evaluate(() => ({
     heroIframe: Boolean(
@@ -26,6 +73,21 @@ async function assertPreviewPage(page, theme) {
 
   if (!dom.heroIframe || dom.heroPng) {
     throw new Error("Preview hero must be live iframe, not hero-ruth PNG");
+  }
+  const heroFooter = await page
+    .locator('[data-joola-figure="quick-order-hero"] iframe')
+    .contentFrame()
+    .getByText(/Adds 5 lines/)
+    .count();
+  if (heroFooter < 1) {
+    throw new Error("Hero footer must summarize five visible rows (Adds 5 lines)");
+  }
+  const heroFrame = page
+    .locator('[data-joola-figure="quick-order-hero"] iframe')
+    .contentFrame();
+  const presetChips = await heroFrame.locator(".qty-stepper__presets button").count();
+  if (presetChips > 0) {
+    throw new Error("Hero quick-order must use compact stepper only (no preset chips)");
   }
   for (const needle of ["Buy 24+", "Engage Pickleball", "Engage account"]) {
     if (dom.text.includes(needle)) {
@@ -52,7 +114,9 @@ async function shot(context, name, width, height, theme) {
   await page.waitForSelector(".joola-hero-embed [data-joola-iframe]", {
     timeout: 120000,
   });
-  await page.waitForTimeout(2500);
+  await scrollEntirePageAndWait(page);
+  await assertNoVisibleSkeletons(page);
+  await assertSegmentedFootersCentered(page);
   await assertPreviewPage(page, theme);
   const file = path.join(OUT, `${name}.png`);
   await page.screenshot({ path: file, fullPage: true });

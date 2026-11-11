@@ -11,6 +11,7 @@ import {
   selectVariant,
   type EmbedVariantSnapshot,
 } from "./embedVariantState";
+import { iframeDocLooksReady } from "./iframeReady";
 
 export function useEmbedVariants<T extends string>({
   variants,
@@ -34,41 +35,61 @@ export function useEmbedVariants<T extends string>({
     setState((prev) => preloadVariants(prev, variants));
   }, [variants.join(",")]);
 
-  const armTimeout = useCallback((variant: string) => {
-    if (timers.current[variant]) clearTimeout(timers.current[variant]);
-    timers.current[variant] = setTimeout(() => {
-      setState((prev) => markVariantTimedOut(prev, Date.now()));
-    }, EMBED_READY_TIMEOUT_MS);
+  const clearTimer = useCallback((variant: string) => {
+    if (timers.current[variant]) {
+      clearTimeout(timers.current[variant]);
+      delete timers.current[variant];
+    }
   }, []);
 
-  const onIframeLoad = useCallback(
+  const armTimeout = useCallback((variant: string) => {
+    clearTimer(variant);
+    timers.current[variant] = setTimeout(() => {
+      setState((prev) => markVariantTimedOut(prev, variant, Date.now()));
+    }, EMBED_READY_TIMEOUT_MS);
+  }, [clearTimer]);
+
+  const markReady = useCallback(
     (variant: string) => {
+      setState((prev) => markVariantReady(prev, variant));
+      clearTimer(variant);
+    },
+    [clearTimer],
+  );
+
+  const onIframeLoad = useCallback(
+    (variant: string, iframe: HTMLIFrameElement | null) => {
+      if (!iframe) return;
       armTimeout(variant);
+      try {
+        if (iframeDocLooksReady(iframe.contentDocument)) {
+          markReady(variant);
+          return;
+        }
+      } catch {
+        /* cross-origin guard */
+      }
       requestAnimationFrame(() => {
-        setState((prev) => markVariantReady(prev, variant));
-        if (timers.current[variant]) {
-          clearTimeout(timers.current[variant]);
-          delete timers.current[variant];
+        try {
+          if (iframeDocLooksReady(iframe.contentDocument)) markReady(variant);
+        } catch {
+          /* ignore */
         }
       });
     },
-    [armTimeout],
+    [armTimeout, markReady],
   );
 
-  const onEmbedMessage = useCallback((variant: string, data: unknown) => {
-    if (
-      typeof data === "object" &&
-      data &&
-      "type" in data &&
-      (data as { type: string }).type === "joola-embed-ready"
-    ) {
-      setState((prev) => markVariantReady(prev, variant));
-      if (timers.current[variant]) {
-        clearTimeout(timers.current[variant]);
-        delete timers.current[variant];
+  const onEmbedMessage = useCallback(
+    (variant: string, data: unknown) => {
+      if (typeof data !== "object" || !data || !("type" in data)) return;
+      const type = (data as { type: string }).type;
+      if (type === "joola-embed-ready" || type === "joola-embed-size") {
+        markReady(variant);
       }
-    }
-  }, []);
+    },
+    [markReady],
+  );
 
   const retry = useCallback(() => {
     setState((prev) => retryVariant(prev));

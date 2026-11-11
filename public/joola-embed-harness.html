@@ -30,7 +30,7 @@
     </figure>
     <script>
       const H = {
-        heroPresets: 720,
+        heroCompact: 680,
         portal: 1000,
         qoSearch: 900,
         qoCompare: 1035,
@@ -51,12 +51,13 @@
       const configs = {
         "quick-order-hero": {
           w: 1280,
-          h: H.heroPresets,
+          h: H.heroCompact,
           src: hashUrl("qo", "/prototypes/quick-order-row", {
             clean: "1",
-            v: "5",
+            v: "1",
             line: "typed",
             w: "1280",
+            rows: "5",
             latency: "0",
           }),
           fid: "quick-order-hero",

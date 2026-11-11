@@ -59,6 +59,7 @@ export function PresetsVariant() {
   const visible = rows.slice(0, 5);
   return (
     <PrototypePage
+      rowsForSummary={visible}
       table={
         <div className="qo-table">
           <div className="qo-table__head" aria-hidden>

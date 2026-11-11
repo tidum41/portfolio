@@ -51,6 +51,7 @@ export function CompactVariant() {
   const { rows } = usePlay();
   return (
     <PrototypePage
+      rowsForSummary={rows}
       table={
         <FieldTable qtyLabel="Qty">
           {rows.map((row) => (

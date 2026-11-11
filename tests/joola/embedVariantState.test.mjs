@@ -27,7 +27,7 @@ describe("embedVariantState", () => {
 
   it("times out and retries", () => {
     let state = createEmbedVariantState(["split", "ledger"], "split");
-    state = markVariantTimedOut(state, Date.now());
+    state = markVariantTimedOut(state, "split", Date.now());
     assert.equal(state.byVariant.split, "error");
     assert.equal(shouldShowSkeleton(state, "split"), true);
     state = retryVariant(state);

@@ -20,10 +20,29 @@ async function chromeLuminance(page, selector) {
   });
 }
 
+async function scrollEntirePageAndWait(page) {
+  await page.evaluate(async () => {
+    const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+    const step = Math.max(200, Math.floor(window.innerHeight * 0.75));
+    let y = 0;
+    const max = document.documentElement.scrollHeight;
+    while (y < max) {
+      window.scrollTo(0, y);
+      await delay(250);
+      y += step;
+    }
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    await delay(3000);
+  });
+}
+
 describe("joola embed toggles", () => {
   it("never leaves variant chrome empty while switching", async () => {
     const browser = await chromium.launch();
-    const page = await browser.newPage();
+    const context = await browser.newContext({
+      extraHTTPHeaders: { "x-joola-sanity-preview": "1" },
+    });
+    const page = await context.newPage();
     await page.goto(URL, { waitUntil: "networkidle", timeout: 120000 });
 
     const toggles = [
@@ -33,6 +52,11 @@ describe("joola embed toggles", () => {
 
     for (const block of toggles) {
       await page.locator(block.section).scrollIntoViewIfNeeded();
+      const justify = await page.$eval(
+        `${block.section} .joola-proto-figure__footer`,
+        (el) => getComputedStyle(el).justifyContent,
+      );
+      assert.equal(justify, "center", `Footer should be centered in ${block.section}`);
       for (const tab of block.tabs) {
         await page.getByRole("tab", { name: tab }).click();
         await page.waitForTimeout(400);
@@ -41,6 +65,11 @@ describe("joola embed toggles", () => {
       }
     }
 
+    await scrollEntirePageAndWait(page);
+    const skeletonCount = await page.locator("[data-joola-skeleton]:visible").count();
+    assert.equal(skeletonCount, 0, "No skeleton should remain after full-page scroll + 3s");
+
+    await context.close();
     await browser.close();
   });
 });

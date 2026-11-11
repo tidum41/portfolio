@@ -138,21 +138,28 @@ export function QuickOrderState({ children }: { children: ReactNode }) {
     });
   }, [mode, qtys]);
 
+  const rowLimit = useMemo(() => {
+    const n = Number(params.get("rows"));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }, [params]);
+
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return CATALOG.filter((sku) => {
+    let list = CATALOG.filter((sku) => {
       if (!q) return true;
       return (
         sku.fullName.toLowerCase().includes(q) ||
         sku.sku.includes(q) ||
         sku.category.toLowerCase().includes(q)
       );
-    }).map((sku) => ({
+    });
+    if (rowLimit && !q) list = list.slice(0, rowLimit);
+    return list.map((sku) => ({
       sku,
       qty: qtys[sku.id] ?? 0,
       notice: notices[sku.id] ?? "",
     }));
-  }, [query, qtys, notices]);
+  }, [query, qtys, notices, rowLimit]);
 
   const value: PlayValue = {
     line,

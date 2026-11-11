@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import JoolaEmbedSkeleton from "./JoolaEmbedSkeleton";
 import JoolaFigureSeg, { type SegOption } from "./JoolaFigureSeg";
 import { shouldShowSkeleton } from "@/lib/joola/embedVariantState";
@@ -41,25 +41,41 @@ export default function JoolaVariantEmbed<T extends string>({
   );
   const hostRef = useRef<HTMLDivElement>(null);
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
+  const onEmbedHeightRef = useRef(onEmbedHeight);
+  const onEmbedMessageRef = useRef(onEmbedMessage);
+  const onIframeLoadRef = useRef(onIframeLoad);
+  const buildSrcRef = useRef(buildSrc);
   const [scale, setScale] = useState(1);
+  const [srcByVariant, setSrcByVariant] = useState<Record<string, string>>({});
 
-  useEffect(() => {
+  onEmbedHeightRef.current = onEmbedHeight;
+  onEmbedMessageRef.current = onEmbedMessage;
+  onIframeLoadRef.current = onIframeLoad;
+  buildSrcRef.current = buildSrc;
+
+  useLayoutEffect(() => {
+    const variantList = variantIds;
     const onMsg = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
-      for (const v of variantIds) {
+      for (const v of variantList) {
         const win = iframeRefs.current[v]?.contentWindow;
         if (win && event.source === win) {
-          if (event.data?.type === "joola-embed-size" && typeof event.data.height === "number") {
-            const h = Math.ceil(event.data.height);
-            onEmbedHeight?.(h);
+          if (
+            event.data?.type === "joola-embed-size" &&
+            typeof event.data.height === "number"
+          ) {
+            onEmbedHeightRef.current?.(Math.ceil(event.data.height));
           }
-          onEmbedMessage(v, event.data);
+          onEmbedMessageRef.current(v, event.data);
         }
       }
     };
     window.addEventListener("message", onMsg);
+    setSrcByVariant(
+      Object.fromEntries(variantList.map((v) => [v, buildSrcRef.current(v as T)])),
+    );
     return () => window.removeEventListener("message", onMsg);
-  }, [onEmbedMessage, onEmbedHeight, variantIds]);
+  }, [variantIds.join(",")]);
 
   useLayoutEffect(() => {
     const measure = () => {
@@ -77,7 +93,7 @@ export default function JoolaVariantEmbed<T extends string>({
     };
   }, [designWidth]);
 
-  const slotH = (onEmbedHeight ? slotHeight : slotHeight) * scale;
+  const slotH = slotHeight * scale;
 
   return (
     <figure className="joola-proto-figure" data-joola-figure={figureId}>
@@ -103,7 +119,7 @@ export default function JoolaVariantEmbed<T extends string>({
         >
           {variantIds.map((v) => {
             const active = v === value;
-            const src = buildSrc(v as T);
+            const src = srcByVariant[v];
             const showSk = shouldShowSkeleton(state, v) && active;
             const h = heights[v as T] ?? slotHeight;
             return (
@@ -141,15 +157,18 @@ export default function JoolaVariantEmbed<T extends string>({
                   }}
                   title={`${figureId}-${v}`}
                   src={src}
+                  loading="eager"
                   data-joola-iframe
                   data-joola-variant={v}
                   width={designWidth}
                   height={h}
                   scrolling="no"
-                  onLoad={() => onIframeLoad(v)}
+                  onLoad={(e) =>
+                    onIframeLoadRef.current(v, e.currentTarget)
+                  }
                   style={{
                     border: 0,
-                    display: showSk ? "none" : "block",
+                    display: "block",
                     width: designWidth,
                     height: h,
                     ...(scale < 0.999

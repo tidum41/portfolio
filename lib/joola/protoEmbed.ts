@@ -52,20 +52,25 @@ export function approvalUrl(v: ApprovalVariant): string {
   });
 }
 
-/** Native layout heights at design width (measured from static embed; updated after build). */
-/** Hero: QO presets row playground (5 lines, pack chips). */
-export function qoHeroPresetsUrl(): string {
+/** Hero: Compact row (stepper only), five visible lines. */
+export function qoHeroCompactUrl(): string {
   return joolaProtoHashUrl("qo", "/prototypes/quick-order-row", {
     clean: "1",
-    v: "5",
+    v: "1",
     line: "typed",
     w: "1280",
+    rows: "5",
     latency: "0",
   });
 }
 
+/** @deprecated Presets hero — use qoHeroCompactUrl */
+export function qoHeroPresetsUrl(): string {
+  return qoHeroCompactUrl();
+}
+
 export const JOOLA_EMBED_HEIGHT: Record<string, number> = {
-  "quick-order-hero": 720,
+  "quick-order-hero": 680,
   "quick-order-portal": 1000,
   "quick-order-row-search": 900,
   /** Max across Cases / Reorder / Stock variants (no layout jump on toggle). */

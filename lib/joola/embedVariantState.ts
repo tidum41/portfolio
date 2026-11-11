@@ -48,13 +48,13 @@ export function markVariantReady(
 
 export function markVariantTimedOut(
   state: EmbedVariantSnapshot,
+  variant: string,
   now: number,
 ): EmbedVariantSnapshot {
-  const selected = state.selected;
-  if (state.byVariant[selected] === "ready") return state;
+  if (state.byVariant[variant] === "ready") return state;
   return {
     ...state,
-    byVariant: { ...state.byVariant, [selected]: "error" },
+    byVariant: { ...state.byVariant, [variant]: "error" },
     errorAt: now,
   };
 }
