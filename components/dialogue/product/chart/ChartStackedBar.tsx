@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { annotateSlug } from "@/components/dialogue/annotate";
+import { chartBarTone } from "@/components/dialogue/product/chart/chartSpec";
 
 export type ChartStackSegment = {
   label: string;
@@ -44,6 +45,7 @@ export default function ChartStackedBar({
             className="dp-chart-stack__seg"
             data-focal={seg.focal ? "" : undefined}
             data-index={i}
+            data-tone={chartBarTone(i, seg.focal)}
             style={{ width: `${(seg.value / total) * 100}%` }}
             data-annotate-part={`stack-seg-${annotateSlug(seg.label)}`}
           >
@@ -64,7 +66,7 @@ export default function ChartStackedBar({
         <div className="dp-chart-stack__lanes" data-annotate-part="stack-lanes">
           {segments.map((seg, i) => (
             <span key={seg.label} className="dp-chart-stack__lane" data-focal={seg.focal ? "" : undefined}>
-              <span className="dp-chart-stack__swatch" data-focal={seg.focal ? "" : undefined} data-index={i} aria-hidden />
+              <span className="dp-chart-stack__swatch" data-focal={seg.focal ? "" : undefined} data-index={i} data-tone={chartBarTone(i, seg.focal)} aria-hidden />
               <span className="dp-chart-stack__lane-label">{seg.label}</span>
               <span className="dp-chart-stack__lane-value">
                 <span className="dp-chart-stack__lane-count">{seg.value.toLocaleString("en-US")}</span>
@@ -77,7 +79,7 @@ export default function ChartStackedBar({
         <div className="dp-chart-stack__legend" data-annotate-part="stack-legend">
           {segments.map((seg, i) => (
             <span key={seg.label} className="dp-chart-stack__legend-item">
-              <span className="dp-chart-stack__swatch" data-focal={seg.focal ? "" : undefined} data-index={i} aria-hidden />
+              <span className="dp-chart-stack__swatch" data-focal={seg.focal ? "" : undefined} data-index={i} data-tone={chartBarTone(i, seg.focal)} aria-hidden />
               {seg.label}
             </span>
           ))}

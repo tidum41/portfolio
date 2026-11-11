@@ -32,10 +32,15 @@ export const dialogueChartSpec = {
   },
   color: {
     focal: "var(--dp-chart-focal)",
-    /** Ramp C: Carbon $teal-70, only for the second series of a two-series chart. */
+    /** Ramp B mid: ranks 2-3, or the non-focal side of a two-series chart. */
+    mid: "var(--dp-chart-mid)",
+    /** Ramp B soft: ranks 4 and later. */
+    soft: "var(--dp-chart-soft)",
+    /** Alias of mid; kept so older secondary-series call sites stay valid. */
     secondary: "var(--dp-chart-secondary)",
-    /** Every non-focal data fill. Stone-500, 3:1 or better on the track and card. */
+    /** Alias of mid for existing CSS that still names muted. */
     muted: "var(--dp-chart-muted)",
+    /** Alias of soft. */
     mutedAlt: "var(--dp-chart-muted-alt)",
     track: "var(--dp-chart-track)",
     gridline: "var(--dp-chart-gridline)",
@@ -82,7 +87,7 @@ export type ChartBarDatum = {
   /** Display string; defaults to formatted value */
   display?: string;
   focal?: boolean;
-  /** The second series beside the focal one (teal). Leave unset for a remainder or any one-series chart. */
+  /** The second series beside the focal one (ramp B mid). Leave unset for a remainder or any one-series chart. */
   secondary?: boolean;
   /** Quiet secondary figure shown after the value (for example the drop at a step). */
   detail?: string;
@@ -90,14 +95,22 @@ export type ChartBarDatum = {
   pct?: string;
 };
 
-/** Cherry for the focal bar, teal for a second series, stone-500 for everything else. */
-export function chartBarFill(_index: number, focal?: boolean, secondary?: boolean): string {
-  return focal ? dialogueChartSpec.color.focal : secondary ? dialogueChartSpec.color.secondary : dialogueChartSpec.color.muted;
+/** Cherry for the finding, mid for ranks 2-3 or a second series, soft for ranks 4+. */
+export function chartBarFill(index: number, focal?: boolean, secondary?: boolean): string {
+  if (focal) return dialogueChartSpec.color.focal;
+  if (secondary) return dialogueChartSpec.color.mid;
+  return index >= 3 ? dialogueChartSpec.color.soft : dialogueChartSpec.color.mid;
 }
 
-/** Magnitude is carried by bar length; the fill stays stone-500 (no light ramp steps). */
+/** Magnitude is carried by bar length; non-focal marks use mid, not a light ramp. */
 export function chartBarFillByMagnitude(_value: number, _max: number, focal?: boolean): string {
   return chartBarFill(0, focal);
+}
+
+/** Rank 1 finding, ranks 2-3 mid, ranks 4+ soft. */
+export function chartBarTone(index: number, focal?: boolean): "focal" | "mid" | "soft" {
+  if (focal) return "focal";
+  return index >= 3 ? "soft" : "mid";
 }
 
 export function formatChartPercent(n: number): string {

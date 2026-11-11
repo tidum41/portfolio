@@ -4212,11 +4212,13 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* Levels A/B takes: the pair's one cherry focal is the kept mark beside the figure, so the recordings carry no cherry. */
 .dlg-stage[data-neutral], .dlg-match__panel[data-neutral], .dlg-edge__panel[data-neutral] { --dp-brand: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); --dp-chart-focal: color-mix(in srgb, var(--ds-stone-900) 82%, var(--ds-white)); }
 
-/* Round 9: one encoding for the 225 and the 75 in every figure. The 225 is the focal segment (cherry; neutral only inside a
-   figure that already carries another cherry focal). The 75 is stone-500 in the segment and in its legend swatch, so a
-   swatch always matches the segment it names (the pinned chart drew the segment stone-600 and the swatch stone-500). */
-.dialogue-product-root .dp-chart-stack__seg[data-index]:nth-child(even):not([data-focal]),
-.dlg-live .dp-chart-stack__seg[data-index]:nth-child(even):not([data-focal]) { background: var(--dp-chart-muted); }
+/* Round 9, updated 10 Nov 2026 for ramp B: the 225 is the focal segment (cherry). The 75
+   and other ranks 2-3 use mid. Ranks 4+ use soft. Swatches follow data-tone so they match
+   the segment they name. */
+.dialogue-product-root .dp-chart-stack__seg:not([data-focal]):not([data-tone="soft"]),
+.dlg-live .dp-chart-stack__seg:not([data-focal]):not([data-tone="soft"]) { background: var(--dp-chart-mid); }
+.dialogue-product-root .dp-chart-stack__seg[data-tone="soft"],
+.dlg-live .dp-chart-stack__seg[data-tone="soft"] { background: var(--dp-chart-soft); }
 .dlg-reason .dialogue-lib__mark[data-kind="pro"] { color: var(--color-text-secondary); }
 @media (min-width: 601px) {
   .dlg-match[data-template="ranked"] .dlg-templates__panel.dlg-match__panel .dp-chart-bars__row { grid-template-columns: 188px minmax(0, 1fr) 72px; }
@@ -4367,6 +4369,13 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* The open group's quotes line names it with the same swatch the legend uses; the head line is the one tie to the rows. */
 .dlg-stage__sample[data-side="friday"] .dlg-sample-key { background: var(--dp-chart-focal); }
 .dlg-stage__sample[data-side="unsure"] .dlg-sample-key { background: var(--dp-chart-muted); }
+/* 10 Nov 2026, ramp B: 1px #632145 outline on the open or hovered segment only. */
+.dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-focal],
+.dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg:not([data-focal]),
+.dlg-live .dlg-live__bar:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-focal],
+.dlg-live .dlg-live__bar:has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg:not([data-focal]) {
+  box-shadow: inset 0 0 0 1px var(--dp-chart-mark-outline);
+}
 
 /* Round 19 hero (option C): the header names the open segment, the source pills are the timestamps, the quote is full width.
    The selected pill shares the quote card's warm fill, and the pills carry rest, hover and press. */

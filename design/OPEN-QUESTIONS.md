@@ -35,3 +35,8 @@ Blanks that were visible on the /dialogue page and are now off it. Each is a cal
 ## Parked headings
 
 - **"The AI picks a chart from templates I designed"** (old Data viz h2, an approved P5 heading). Bring it back once the question of whether a model or a fixed rule picks the chart is answered. Until then the h2 is "Charts count people out of their own group", which states the rule the section shows (Round 20).
+
+
+## Resolved 2026-11-10, 6:44 PM PT (Mudit OK)
+
+Paper now matches the live Dialogue CSS. Send is 36 × 36 at 50% ink when empty (`#1C1917` at `--dp-send-idle-opacity` 0.5, about `#8C8A88` on `#FCFBF9`), and full ink when ready. Composer padding 12, fill `#FCFBF9`, radius 14, and border `#E5E7EB` stay as live; the single-row empty field is 62 CSS tall (12 + 36 + 12 + 2px border), not the old r2 height of 58. Bar and track radius is 2px (`--dp-radius-bar`). This supersedes the r2 32 × 32 `#56534E` send and 4px bars. Playground r2 and Demo r3 stay as historical record.

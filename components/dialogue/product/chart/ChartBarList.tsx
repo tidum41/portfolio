@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   chartBarFill,
   chartBarFillByMagnitude,
+  chartBarTone,
   type ChartBarDatum,
   dialogueChartSpec,
 } from "@/components/dialogue/product/chart/chartSpec";
@@ -11,7 +12,7 @@ type Props = {
   rows: ChartBarDatum[];
   /** Default max = max(values); bars always scale from 0 (Carbon). */
   max?: number;
-  /** `index` = stone by row order; `magnitude` = darker = larger */
+  /** `index` = ramp B by rank order; `magnitude` = length only, mid fill */
   fillMode?: "index" | "magnitude";
   note?: ReactNode;
   className?: string;
@@ -42,6 +43,7 @@ export default function ChartBarList({
               <div className="dp-chart-cols__track">
                 <div
                   className="dp-chart-cols__bar"
+                  data-tone={chartBarTone(i, row.focal)}
                   style={{ height: `${Math.max(0, Math.min(100, (row.value / max) * 100))}%`, backgroundColor: chartBarFill(i, row.focal, row.secondary) }}
                 />
               </div>
@@ -76,6 +78,7 @@ export default function ChartBarList({
             >
               <div
                 className="dp-chart-bars__bar"
+                data-tone={chartBarTone(i, row.focal)}
                 data-annotate-part={`bar-${annotateSlug(row.label)}`}
                 style={{ width: `${widthPct}%`, backgroundColor: fill }}
               />

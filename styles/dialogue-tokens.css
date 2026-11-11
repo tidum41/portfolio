@@ -180,24 +180,26 @@
   --dp-figure-surface-problem: var(--figure-well, var(--dp-well-fallback));
   --dp-figure-surface-solution: var(--figure-well, var(--dp-well-fallback));
 
-  /* 2. Chart palette: cherry for the highlighted mark, stone-500 for every
-   *    muted data fill (4.1:1 on the paper-100 track), stone-600 as the
-   *    alternate for adjacent stacked segments. Stone-200/300/400 are tracks,
-   *    gridlines and baselines only, never data fills (3:1 rule). One finding
-   *    per chart (design/briefs/dialogue-chart-spec.md). */
+  /* 2. Chart palette (10 Nov 2026, Mudit OK, ramp B). Finding is cherry.
+   *    Ranks 2-3 use mid #D392AB. Ranks 4 and later use soft #D5B3BE. Bars
+   *    are flat, with no outline at rest. Hover or select uses a 1px
+   *    #632145 outline. Focal value text is cherry. Bar and track radius is
+   *    --dp-radius-bar (2px). Mid and soft are under 3:1 on the track; Mudit
+   *    accepted them flat. Line plots keep a stone-500 stroke so they do not
+   *    pick up the mid fill. */
   --dp-chart-focal: var(--dp-brand);
+  --dp-chart-mid: #d392ab;
+  --dp-chart-soft: #d5b3be;
+  --dp-chart-mark-outline: #632145;
   --dp-chart-track: var(--ds-paper-100);
   --dp-chart-gridline: color-mix(in srgb, var(--ds-stone-200) 60%, transparent);
   --dp-chart-baseline: var(--ds-stone-200);
-  --dp-chart-line: var(--dp-chart-muted);
-  --dp-chart-muted: var(--ds-stone-500);
-  --dp-chart-muted-alt: var(--ds-stone-600);
-  /* Ramp C: teal is the one secondary chart hue, for a second series only, never UI chrome. Teal-70 is 7.7:1 on
-   *    the white card. Soft teal is 1.3:1, so it fills only a mark that carries its own label. */
-  --dp-chart-secondary: var(--ds-teal-70);
-  --dp-chart-secondary-soft: var(--ds-teal-20);
-  /* Second series in a dense chart: stone-300 fill with a 1px stone-500 outline (3:1 by outline). */
-  --dp-chart-series-alt-fill: var(--ds-stone-300);
+  --dp-chart-line: var(--ds-stone-500);
+  --dp-chart-muted: var(--dp-chart-mid);
+  --dp-chart-muted-alt: var(--dp-chart-soft);
+  --dp-chart-secondary: var(--dp-chart-mid);
+  --dp-chart-secondary-soft: var(--dp-chart-soft);
+  --dp-chart-series-alt-fill: var(--dp-chart-mid);
   --dp-chart-seg-label: var(--ds-white);
   --dp-chart-label-color: var(--ds-stone-600);
   --dp-chart-value-color: var(--ds-stone-900);
