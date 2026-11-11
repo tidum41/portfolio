@@ -221,22 +221,23 @@ async function loadProjects(): Promise<SanityProject[]> {
         href: PROJECT_HREF_OVERRIDES[p._id] ?? p.href,
       };
     });
-  // Homepage order: BruinLease, JOOLA B2B, Dialogue, SViz, then the rest.
-  // The phone demo card is slotted in after these four by PersistentWorkShell.
+  // Homepage order: BruinLease, JOOLA B2B, Dialogue, All in One, SViz, then the rest.
+  // PersistentWorkShell slots the Habit phone demo after these (last in the grid).
   const pick = (id: string) => mapped.filter((p) => p._id === id);
-  const lead = ["project-bruinlease", "project-sviz"];
+  const lead = ["project-bruinlease", "project-todolist", "project-sviz"];
   const rest = mapped.filter((p) => !lead.includes(p._id));
   return [
     ...pick("project-bruinlease"),
     JOOLA_B2B_PROJECT,
     DIALOGUE_PROJECT,
+    ...pick("project-todolist"),
     ...pick("project-sviz"),
     ...rest,
   ];
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v12-dialogue-third"], {
+  unstable_cache(loadProjects, ["projects-v13-allinone-before-sviz"], {
     revalidate: 86400,
     tags: ["sanity", "projects"],
   }),
