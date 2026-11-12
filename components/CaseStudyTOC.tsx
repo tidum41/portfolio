@@ -141,21 +141,22 @@ export default function CaseStudyTOC({
     router.push(backHref, { scroll: false });
   }, [router, backHref]);
 
-  /** Shared 20×20 chevron for mobile + desktop (pre-#139; content-width Back). */
+  /** Shared chevron for mobile + desktop. Tight 8x12 canvas so the ink is
+      the box: no built-in icon padding, stroke matched to the 14px label. */
   const backArrow = (
     <svg
       className="cs-back-arrow"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
+      width="8"
+      height="12"
+      viewBox="0 0 8 12"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <polyline points="15 18 9 12 15 6" />
+      <polyline points="7 1 1.5 6 7 11" />
     </svg>
   );
 
@@ -171,7 +172,7 @@ export default function CaseStudyTOC({
         style={{
           ...NO_TAP_HIGHLIGHT,
           display: "inline-flex", alignItems: "center", justifyContent: "flex-start",
-          gap: 2,
+          gap: 6,
           minWidth: 44, minHeight: 44,
           margin: 0,
           padding: "0 8px 0 0",
