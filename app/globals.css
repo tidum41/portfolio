@@ -1445,14 +1445,18 @@ html[data-theme="dark"] .project-image {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin: 0;
+  /* Shared TOC offset: first section label sits at y=363 on every case
+     study page (195px below the Back hit area), so the BruinLease stack
+     centres on its hero media and the rail starts in the same place on
+     every page. */
+  margin: 179px 0 0;
   padding: 0;
   line-height: 1.5;
 }
 .cs-toc-stack {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
   margin: 0;
   padding: 0;
 }
