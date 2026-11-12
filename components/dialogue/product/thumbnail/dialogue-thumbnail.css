@@ -64,8 +64,8 @@
   overflow: visible;
 }
 
-.dlg-thumb[data-bar-style="underline"] .dlg-live .dlg-live__bar .dp-chart-stack__bar {
-  margin-bottom: calc(var(--dp-radius-bar) * 2.5);
+.dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar .dp-chart-stack__bar {
+  margin-bottom: 8px;
 }
 
 .dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar .dp-chart-stack__bar {
@@ -109,10 +109,11 @@
 }
 
 /*
- * Homepage card (data-bar-style=underline): fills are static ramp colors; bars never
- * move. Open segment gets a 3px ink underline with a 2px gap. Exploration cut
- * (data-bar-style=lift-explore) keeps 1px lift plus 2px underline for /dev only.
- * Markers follow data-side / data-press only (never hidden when data-hover moves).
+ * Homepage card (data-bar-style=states): fills are static ramp colors; bars
+ * never move and selection never recolors a segment. The legend rows carry
+ * the selection, and the pointer states below deepen the segment under the
+ * pointer. Exploration cut (data-bar-style=lift-explore) keeps its 1px lift
+ * plus marker for /dev only.
  */
 .dlg-thumb .dlg-live__bar .dp-chart-stack__seg {
   position: relative;
@@ -167,31 +168,63 @@
   background: var(--dp-border-strong);
 }
 
-/* ---- Main card: underline only (no bar motion) ---- */
+/* ---- Main card: legend carries the selection (no bar motion) ---- */
 /*
- * The underline follows the open side in every beat, poster included, and a
- * press cuts it instantly: the pressed segment gains it and the open segment
- * loses it in the same frame, so it never spans both segments.
+ * Both legend rows are always present at the same size. The open row is
+ * ink at 500 with a full swatch; the closed row mutes to 400 in
+ * --dp-muted with a dimmed swatch, its count still showing. With nothing
+ * selected (data-side="none"), both rows sit at full strength.
  */
-.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
-.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after,
-.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
-.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(-1 * var(--dp-radius-bar) * 2.5);
-  height: calc(var(--dp-radius-bar) * 1.5);
-  border-radius: var(--dp-radius-bar);
-  background: color-mix(in srgb, var(--dp-ink) 85%, transparent);
-  pointer-events: none;
+.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
+.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-value,
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-label,
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-value,
+.dlg-thumb .dlg-live__bar[data-side="none"] .dp-chart-stack__lane .dp-chart-stack__lane-label,
+.dlg-thumb .dlg-live__bar[data-side="none"] .dp-chart-stack__lane .dp-chart-stack__lane-value {
+  color: var(--dp-ink);
+  font-weight: 500;
 }
 
-/* Press wins over the open side: suppress the other segment's underline. */
-.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index]:not([data-focal])::after,
-.dlg-thumb[data-bar-style="underline"] .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index][data-focal]::after {
-  content: none;
+.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-label,
+.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-value,
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-value {
+  color: var(--dp-muted);
+  font-weight: 400;
+}
+
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__swatch[data-index] {
+  background: color-mix(in srgb, var(--dp-chart-focal) 50%, var(--dp-surface));
+}
+
+.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__swatch[data-index] {
+  background: color-mix(in srgb, var(--dp-border-strong) 55%, var(--dp-surface));
+}
+
+/*
+ * Pointer states reuse the live bar's own steps (dialogue-product.css:
+ * hover 85% / 80%, press 70% / 65%, mixed toward ink): the segment under
+ * the pointer deepens, press one step deeper, and the fill returns to
+ * the ramp when the pointer state ends. The demo cursor's hover and
+ * press beats drive data-hover / data-press; a real pointer gets the
+ * same treatment through :hover.
+ */
+.dlg-thumb .dlg-live .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-index][data-focal]:hover {
+  background: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-ink));
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-index]:not([data-focal]):hover {
+  background: color-mix(in srgb, var(--dp-border-strong) 80%, var(--dp-ink));
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal] {
+  background: color-mix(in srgb, var(--dp-chart-focal) 70%, var(--dp-ink));
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  background: color-mix(in srgb, var(--dp-border-strong) 65%, var(--dp-ink));
 }
 
 /* ---- Exploration: lift-and-marker (dev / case study only) ---- */
@@ -220,12 +253,6 @@
 .dlg-thumb[data-bar-style="lift-explore"]:not([data-beat="poster"]) .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
 .dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
   transform: translateY(-1px);
-}
-
-.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
-.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-label {
-  color: var(--dp-ink);
-  font-weight: 500;
 }
 
 /* Project card must not swap legend counts for percents on hover. */

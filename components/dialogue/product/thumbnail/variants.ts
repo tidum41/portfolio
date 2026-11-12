@@ -64,6 +64,6 @@ export const THUMBNAIL_VARIANTS: Record<ThumbnailVariantId, ThumbnailTiming> = {
 
 export const DEFAULT_THUMBNAIL_VARIANT: ThumbnailVariantId = "product";
 
-export function thumbnailBarStyleForVariant(variant: ThumbnailVariantId): "underline" | "lift-explore" {
-  return variant === "lift-explore" ? "lift-explore" : "underline";
+export function thumbnailBarStyleForVariant(variant: ThumbnailVariantId): "states" | "lift-explore" {
+  return variant === "lift-explore" ? "lift-explore" : "states";
 }

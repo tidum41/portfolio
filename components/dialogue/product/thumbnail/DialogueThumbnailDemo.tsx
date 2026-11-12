@@ -39,6 +39,8 @@ const CURSOR_HOT_X = 3;
 const CURSOR_HOT_Y = 2;
 
 type Side = "friday" | "unsure";
+/** A side, or nothing chosen yet: the bar and legend show, no people. */
+type Selection = Side | "none";
 type Quote = { participant: string; time: string; quote: string };
 
 /** 225 lead: Dev, QUOTE_LIST_FRIDAY / MOCK-DATA.md §4c. Ana stays as the second pill. */
@@ -112,7 +114,7 @@ export default function DialogueThumbnailDemo({
   const timing = THUMBNAIL_VARIANTS[variant];
   const barStyle = thumbnailBarStyleForVariant(variant);
   const rootRef = useRef<HTMLDivElement>(null);
-  const [side, setSide] = useState<Side>("friday");
+  const [side, setSide] = useState<Selection>("none");
   const [hover, setHover] = useState<Side | null>(null);
   const [press, setPress] = useState<Side | null>(null);
   const [cursorOn, setCursorOn] = useState(false);
@@ -140,7 +142,7 @@ export default function DialogueThumbnailDemo({
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!playing || reduced) {
-      setSide("friday");
+      setSide("none");
       setHover(null);
       setPress(null);
       setCursorOn(false);
@@ -226,7 +228,7 @@ export default function DialogueThumbnailDemo({
     const loop = async () => {
       while (!cancelled) {
         setBeat("poster");
-        setSide("friday");
+        setSide("none");
         setHover(null);
         setPress(null);
         setPressing(false);
@@ -311,9 +313,11 @@ export default function DialogueThumbnailDemo({
               >
                 <ChartStackedBar lanes total={300} segments={THUMB_STACK} />
               </div>
-              <div key={swapKey} className="dlg-thumb__swap">
-                <ThumbPeople side={side} />
-              </div>
+              {side !== "none" ? (
+                <div key={swapKey} className="dlg-thumb__swap">
+                  <ThumbPeople side={side} />
+                </div>
+              ) : null}
             </ChartVizCard>
           </div>
         </div>
