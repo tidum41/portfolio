@@ -32,7 +32,8 @@ const ctx = await browser.newContext({
   extraHTTPHeaders: { "x-joola-sanity-preview": "1" },
 });
 const page = await ctx.newPage();
-await page.goto(URL, { waitUntil: "networkidle", timeout: 180000 });
+await page.goto(URL, { waitUntil: "load", timeout: 120000 });
+await page.locator('[data-joola-figure="quick-order-hero"] iframe').waitFor({ timeout: 60000 });
 await scrollEntirePageAndWait(page);
 await waitForImages(page);
 await assertAllImagesLoaded(page);
