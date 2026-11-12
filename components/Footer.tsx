@@ -51,7 +51,7 @@ function FooterShell({ children }: { children?: React.ReactNode }) {
           }
         }
       `}</style>
-      <div style={{ maxWidth: "var(--grid-max-w)", margin: "0 auto" }}>
+      <div style={{ maxWidth: "var(--site-max-w)", margin: "0 auto" }}>
         <div className="footer-inner">{children}</div>
       </div>
     </footer>

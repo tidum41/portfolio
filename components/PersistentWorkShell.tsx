@@ -831,7 +831,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
         <HeroLegibilityScrim />
         <EntranceItem active={visible} instant={heroInstant} replayToken={epoch} delay={0} style={{
           position: "relative",
-          maxWidth: "var(--grid-max-w)",
+          maxWidth: "var(--site-max-w)",
           marginInline: "auto",
           paddingLeft: "var(--page-px)",
           paddingRight: "var(--page-px)",
@@ -845,7 +845,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
 
       {/* ── Project grid — data-nosnippet keeps card titles out of the Google
           blurb; the meta description + hero above should be the only candidates. */}
-      <div className="intro-hide intro-hide--snap" data-nosnippet style={{ maxWidth: "var(--grid-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: "var(--space-5)" }}>
+      <div className="intro-hide intro-hide--snap" data-nosnippet style={{ maxWidth: "var(--site-max-w)", marginInline: "auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)", paddingBottom: "var(--space-5)" }}>
         <CardFocusGrid visible={visible}>
           <div className="portfolio-grid-col">
             {leftCol.map(({ p, rank }) => renderGridCard(p, rank))}

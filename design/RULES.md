@@ -6,6 +6,15 @@ Standing rules for the portfolio. Builders read this with `design/OPEN-ASKS.md` 
 
 - Intro elements that start hidden must have a fail-safe reveal so a missed `intro-done` (or equivalent gate) cannot leave them stuck at opacity 0 with controls inert forever (HOM-01). Prefer the same fade as the normal path; clear the timer when the normal reveal runs and on unmount so the reveal never runs twice.
 
+## Site grid (Nov 11, 2026, shared outer edges)
+
+- One shared grid for Nav, Footer, the home grid (hero + masonry) and case studies: 12 columns, gap `--grid-gutter` (24), side margin `--page-px` (24, constant at every width), band capped at `--site-max-w: 2200px` and centred beyond that. Tokens in `app/globals.css`: `--site-cols: 12`, `--site-max-w: 2200px`. Callers use `--site-max-w`; `--grid-max-w` (1440) stays only for the Archive `BentoGallery` canvas and the dev nav-morph page. Do not repoint it.
+- Structural breakpoints are only 768 and 1200 (matches rachelchen.tech). At or below 1440 the band equals the viewport minus margins, so nav, footer and home grid are unchanged there.
+- Case studies at >=1200: TOC = cols 1-2 (far left, same x as nav/home/footer edge); content lane = cols 3-10 (2/3 vw - 40px, never under 760px), lane cap 1600px; hero and figures fill the lane. Prose keeps its 40rem cap, left-aligned in the lane. The hero is capped by width so it never exceeds ~80vh tall (`max-width: min(100%, max(750px, 80vh * --cs-hero-ar))`, with `--cs-hero-ar` = width/height set on the hero frame; no letterboxing).
+- Case study body size is `--fs-body` 15px, 16px at >=1920 and 17px at >=2560, scoped to `.cs-layout` only.
+- Tablet 768-1199: TOC hidden; everything except the hero stays in a centred 750px lane; the hero runs full width between the margins. Mobile (<=767) is one column at 24px margins, unchanged.
+- Case-study media `sizes` live in `lib/caseStudyLayout.ts` (`CASE_STUDY_MEDIA_SIZES`); keep them in step with the lane math above.
+
 ## Latest verdict (Nov 10, 2026, native-aspect masonry)
 
 - Homepage order: BruinLease, JOOLA, Dialogue, All in One demo, sviz, then the Habit phone demo. Only live case studies go in CASE_STUDY_PAGES; Dialogue stays out until /dialogue ships.

@@ -127,8 +127,12 @@
   --ls-label:    0.06em;
 
   /* Grid system */
-  --grid-max-w:      1440px;
+  --grid-max-w:      1440px; /* Archive BentoGallery still reads this; do not repoint. */
   --grid-gutter:     var(--page-px);
+  /* Shared site grid (Nav, Footer, home grid, case studies): 12 cols,
+     --grid-gutter gap, --page-px margin, centred beyond --site-max-w. */
+  --site-cols:       12;
+  --site-max-w:      2200px;
 
   /* Spacing ladder (8px base) — prefer these over orphan px values */
   --space-1:  8px;
@@ -1388,34 +1392,52 @@ html[data-theme="dark"] .project-image {
   .back-btn:active { transform: scale(0.96); }
 }
 
-/* ─── Case study 3-column layout ────────────────────────────────────
-   Desktop (≥1200px) : [TOC 1fr] [content max-750px] [spacer 1fr] — content centered
-   Below 1200px      : [content max-750px] centered — TOC hidden, back
-                       control lives inside .cs-content (see .cs-mobile-back)
+/* ─── Case study layout on the shared site grid ─────────────────────
+   Desktop (≥1200px) : 12 cols (gap --grid-gutter, margin --page-px, max
+                       --site-max-w centred). TOC = cols 1-2; content lane
+                       (hero + figures) = cols 3-10 (2/3 vw - 40px, ≥760px),
+                       lane cap 1600px. Prose keeps its 40rem cap, left.
+   Tablet 768-1199   : TOC hidden. Content spans the margins; every block
+                       except the hero sits in a centred 750px lane, the hero
+                       runs full width between the margins.
    Mobile (≤767px)   : [content 1fr] — TOC hidden
    The 1200px cutoff matches rachelchen.tech's lg breakpoint.
-   Restored pre-#139 aside sibling layout (review/cs-back-toc); no absolute Back.
    ─────────────────────────────────────────────────────────────────── */
 .cs-layout {
-  max-width: var(--grid-max-w);
+  max-width: var(--site-max-w);
   margin-inline: auto;
   display: grid;
-  grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
+  grid-template-columns: repeat(var(--site-cols), minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
   align-items: start;
   padding-inline: var(--page-px);
   padding-top: var(--space-5);
   padding-bottom: var(--space-9);
 }
 .cs-aside {
-  grid-column: 1;
+  grid-column: 1 / span 2;
   position: sticky;
   top: 60px;
   align-self: start;
   padding-right: var(--space-3); /* breathing room between TOC and content */
 }
 .cs-layout > .cs-content {
-  grid-column: 2;
+  grid-column: 3 / span 8;
+  width: 100%;
+  max-width: 1600px; /* lane cap; only reachable above --site-max-w */
+  justify-self: center;
   min-width: 0;
+}
+/* Case-study-only reading size bump on big monitors (home/cards untouched). */
+@media (min-width: 1920px) { .cs-layout { --fs-body: 16px; } }
+@media (min-width: 2560px) { .cs-layout { --fs-body: 17px; } }
+/* Hero: capped by width so it never exceeds ~80vh tall (no letterboxing).
+   --cs-hero-ar is the hero's width/height; the 750px floor keeps it at least
+   as wide as the old column. Desktop only; tablet hero is full width. */
+@media (min-width: 1200px) {
+  .cs-hero-media-wrap > .cs-hero-media-frame {
+    max-width: min(100%, max(750px, calc(80vh * var(--cs-hero-ar, 1.5))));
+  }
 }
 .cs-toc-root {
   position: static;
@@ -1472,10 +1494,20 @@ html[data-theme="dark"] .project-image {
   letter-spacing: var(--ls-meta);
   line-height: 1.5;
 }
-/* Below 1200px: TOC aside hidden; content column centered. */
+/* Below 1200px: TOC aside hidden; single full-width track, 750px lane for
+   everything except the hero (which runs margin to margin). */
 @media (max-width: 1199px) {
   .cs-aside { display: none !important; }
-  .cs-layout > .cs-content { grid-column: 2; }
+  .cs-layout { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
+  .cs-layout > .cs-content { grid-column: 1; max-width: none; }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .cs-layout .cs-content > *:not(.cs-hero-header),
+  .cs-layout .cs-content .cs-hero-pre-media,
+  .cs-layout .cs-content .cs-meta-grid {
+    max-width: var(--content-max-w);
+    margin-inline: auto;
+  }
 }
 /* Mobile: single column. Aside (desktop TOC) is hidden; the back control
    lives inside .cs-content so it shares the hero media's left edge. */
@@ -1984,23 +2016,8 @@ html[data-theme="dark"] .project-image {
   background: var(--color-bg-primary);
 }
 
-/* No section nav: centered content column (same as default below 1200px). */
-.cs-layout.cs-layout--no-toc .cs-content {
-  grid-column: 2;
-}
-@media (max-width: 1199px) {
-  .cs-layout.cs-layout--no-toc {
-    grid-template-columns: 1fr minmax(0, var(--content-max-w)) 1fr;
-  }
-}
-@media (max-width: 767px) {
-  .cs-layout.cs-layout--no-toc {
-    grid-template-columns: 1fr;
-  }
-  .cs-layout.cs-layout--no-toc .cs-content {
-    grid-column: 1;
-  }
-}
+/* No section nav: same lane (cols 3-10) with the TOC columns left empty;
+   below 1200px the base layout rules already apply. */
 
 .cs-person-link {
   color: inherit;

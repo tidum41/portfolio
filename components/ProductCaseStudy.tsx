@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import Image from "next/image";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyRequest from "@/components/CaseStudyRequest";
 import CaseStudyTOC from "@/components/CaseStudyTOC";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import { JOOLA_HERO_SRC, JOOLA_TITLE } from "@/lib/caseStudies/joola";
+import { CASE_STUDY_MEDIA_SIZES } from "@/lib/caseStudyLayout";
 
 const TEAM = [
   { name: "Vinay Bulusu", role: "PM", href: "https://www.linkedin.com/in/vinay-bulusu-442395b9/" },
@@ -26,7 +27,7 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
           <CaseStudyTOC items={[]} backHref="/" />
         </aside>
 
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+        <div className="cs-content" style={{ minWidth: 0 }}>
           <div className="cs-mobile-back">
             <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
           </div>
@@ -57,7 +58,7 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
               },
             ]}
           >
-            <div className="cs-hero-media-frame">
+            <div className="cs-hero-media-frame" style={{ "--cs-hero-ar": 2400 / 1600 } as CSSProperties}>
               <Image
                 src={JOOLA_HERO_SRC}
                 alt="Quick order screen from the JOOLA wholesale prototype, with tier pricing, a saved order, Net 30 credit, and an order marked ship date pending."
@@ -65,7 +66,7 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
                 height={1600}
                 priority
                 fetchPriority="high"
-                sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+                sizes={CASE_STUDY_MEDIA_SIZES}
                 style={{ width: "100%", height: "auto", display: "block" }}
               />
             </div>

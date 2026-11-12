@@ -71,7 +71,15 @@ export default function CaseStudyOpen({
       </div>
       <div className="cs-hero-media-wrap">
         {muxPlaybackId ? (
-          <div className="cs-hero-media-frame" style={{ background: heroBg }}>
+          <div
+            className="cs-hero-media-frame"
+            style={{
+              background: heroBg,
+              ...(posterWidth && posterHeight
+                ? ({ "--cs-hero-ar": posterWidth / posterHeight } as CSSProperties)
+                : null),
+            }}
+          >
             <MuxHero
               playbackId={muxPlaybackId}
               posterWidth={posterWidth}
