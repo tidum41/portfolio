@@ -230,6 +230,21 @@
 }
 
 /*
+ * States cut: the active segment carries a 2px ink ring inside its own
+ * box (Paper, adopted 2026-11-11). The ring sits on the open segment for
+ * as long as its side is open, and on the pressed segment while it is
+ * pressed. It is an inset shadow, so nothing moves, nothing resizes, and
+ * the segment keeps its data color; the legend rows still carry the
+ * selection in text. Hover alone gets no ring.
+ */
+.dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: inset 0 0 0 2px var(--dp-ink);
+}
+
+/*
  * The product's 150ms background ease is longer than the 120ms hover and
  * 140ms press windows, so the fills were still in flight when each beat
  * ended and the active state never landed. In the states cut the ease is
