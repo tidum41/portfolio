@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import SourcePill from "@/components/dialogue/product/SourcePill";
@@ -10,8 +10,12 @@ import DlgDemoCursor from "@/components/DlgDemoCursor";
 import { QUOTE_LIST, QUOTE_LIST_FRIDAY } from "@/lib/dialogue/product/sampleData";
 import {
   DEFAULT_THUMBNAIL_VARIANT,
+  THUMBNAIL_CURSOR_LEAD_MS,
+  THUMBNAIL_CURSOR_OUT_MS,
   THUMBNAIL_VARIANTS,
   thumbnailBarStyleForVariant,
+  thumbnailStateAt,
+  type ThumbnailTiming,
   type ThumbnailVariantId,
 } from "@/components/dialogue/product/thumbnail/variants";
 import { withThumbnailBarRamp } from "@/components/dialogue/product/thumbnail/thumbnailBarRamp";
@@ -32,9 +36,9 @@ const THUMB_STACK = withThumbnailBarRamp([
 const EASE_IO = (p: number) =>
   p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2;
 const CURSOR_BOW = 0.08;
-const CURSOR_LEAD_MS = 200;
+const CURSOR_LEAD_MS = THUMBNAIL_CURSOR_LEAD_MS;
 const CURSOR_LEAD_X = 70;
-const CURSOR_OUT_MS = 300;
+const CURSOR_OUT_MS = THUMBNAIL_CURSOR_OUT_MS;
 const CURSOR_HOT_X = 3;
 const CURSOR_HOT_Y = 2;
 
@@ -102,16 +106,30 @@ function ThumbPeople({ side }: { side: Side }) {
   );
 }
 
+type Pt = { x: number; y: number };
+
 export default function DialogueThumbnailDemo({
   variant = DEFAULT_THUMBNAIL_VARIANT,
   playing = true,
   showPreview = true,
+  timeMs = null,
+  timingOverride,
 }: {
   variant?: ThumbnailVariantId;
   playing?: boolean;
   showPreview?: boolean;
+  /**
+   * Scrub mode: when set, the demo renders the exact state at this loop time
+   * (see thumbnailStateAt) and the autoplay loop never runs. Null = autoplay.
+   */
+  timeMs?: number | null;
+  /** Partial timing overrides over the variant's beats, for tuning tools. */
+  timingOverride?: Partial<ThumbnailTiming>;
 }) {
-  const timing = THUMBNAIL_VARIANTS[variant];
+  const timing = useMemo<ThumbnailTiming>(
+    () => ({ ...THUMBNAIL_VARIANTS[variant], ...(timingOverride ?? {}) }),
+    [variant, timingOverride],
+  );
   const barStyle = thumbnailBarStyleForVariant(variant);
   const rootRef = useRef<HTMLDivElement>(null);
   const [side, setSide] = useState<Selection>("none");
@@ -122,6 +140,10 @@ export default function DialogueThumbnailDemo({
   const [beat, setBeat] = useState("poster");
   const [swapKey, setSwapKey] = useState(0);
   const [scale, setScale] = useState(1);
+  const [targets, setTargets] = useState<{ friday: Pt; unsure: Pt } | null>(null);
+
+  const scrubbing = timeMs != null;
+  const frame = scrubbing ? thumbnailStateAt(timing, timeMs) : null;
 
   useEffect(() => {
     const el = rootRef.current;
@@ -137,7 +159,34 @@ export default function DialogueThumbnailDemo({
     return () => ro.disconnect();
   }, []);
 
+  /* Scrub mode needs the segment centres as data, so the cursor position can
+     be computed from time alone instead of measured mid-flight. */
   useEffect(() => {
+    if (!scrubbing) return;
+    const root = rootRef.current;
+    if (!root) return;
+    const point = (which: Side): Pt => {
+      const sel =
+        which === "friday"
+          ? '.dp-chart-stack__seg[data-focal]'
+          : '.dp-chart-stack__seg:not([data-focal])';
+      const el = root.querySelector<HTMLElement>(sel);
+      const box = root.getBoundingClientRect();
+      if (!el || box.width === 0 || box.height === 0) {
+        return { x: which === "unsure" ? 320 : 160, y: 90 };
+      }
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width * 0.5 - box.left, y: r.top + r.height * 0.1 - box.top };
+    };
+    const measureTargets = () =>
+      setTargets({ friday: point("friday"), unsure: point("unsure") });
+    measureTargets();
+    const id = window.setTimeout(measureTargets, 350);
+    return () => window.clearTimeout(id);
+  }, [scrubbing, scale]);
+
+  useEffect(() => {
+    if (scrubbing) return;
     const reduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -285,7 +334,40 @@ export default function DialogueThumbnailDemo({
       waits.forEach(clearTimeout);
       rafs.forEach(cancelAnimationFrame);
     };
-  }, [playing, timing]);
+  }, [playing, timing, scrubbing]);
+
+  /* In scrub mode every rendered value comes from the frame state; in
+     autoplay it comes from the loop's state, exactly as before. */
+  const rSide: Selection = frame ? frame.side : side;
+  const rBeat = frame ? frame.beat : beat;
+  const rHover = frame ? frame.hover : hover;
+  const rPress = frame ? frame.press : press;
+  const rCursorOn = frame ? frame.cursorOn : cursorOn;
+  const rPressing = frame ? frame.pressing : pressing;
+
+  const bowTo = (a: Pt, b: Pt, p: number): Pt => {
+    const e = EASE_IO(p);
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const bow = Math.sin(Math.PI * e) * CURSOR_BOW;
+    return { x: a.x + dx * e - dy * bow, y: a.y + dy * e + dx * bow };
+  };
+
+  let cursorVars: Record<string, string> = {};
+  if (frame) {
+    const F = targets?.friday ?? { x: 160, y: 90 };
+    const U = targets?.unsure ?? { x: 320, y: 90 };
+    const leadU: Pt = { x: U.x + CURSOR_LEAD_X, y: U.y };
+    let pos = F;
+    if (frame.cursorMode === "lead-unsure") pos = leadU;
+    else if (frame.cursorMode === "to-unsure") pos = bowTo(leadU, U, frame.cursorP);
+    else if (frame.cursorMode === "at-unsure") pos = U;
+    else if (frame.cursorMode === "to-friday") pos = bowTo(U, F, frame.cursorP);
+    cursorVars = {
+      "--cursor-x": `${pos.x - CURSOR_HOT_X}px`,
+      "--cursor-y": `${pos.y - CURSOR_HOT_Y}px`,
+    };
+  }
 
   return (
     <div
@@ -293,10 +375,11 @@ export default function DialogueThumbnailDemo({
       className="dlg-thumb"
       data-variant={variant}
       data-bar-style={barStyle}
-      data-beat={beat}
-      data-side={side}
-      data-cursor={cursorOn ? "on" : undefined}
-      style={{ ["--thumb-scale" as string]: String(scale) }}
+      data-beat={rBeat}
+      data-side={rSide}
+      data-scrub={scrubbing ? "" : undefined}
+      data-cursor={rCursorOn ? "on" : undefined}
+      style={{ "--thumb-scale": String(scale), ...cursorVars } as React.CSSProperties}
     >
       {showPreview ? <span className="dlg-thumb__preview">Preview</span> : null}
       <div className="dlg-thumb__stage">
@@ -307,17 +390,17 @@ export default function DialogueThumbnailDemo({
             <ChartVizCard title={FINDING}>
               <div
                 className="dlg-live__bar dlg-thumb__bar"
-                data-hover={hover || undefined}
-                data-press={press || undefined}
-                data-side={side}
+                data-hover={rHover || undefined}
+                data-press={rPress || undefined}
+                data-side={rSide}
               >
                 <ChartStackedBar lanes total={300} segments={THUMB_STACK} />
               </div>
               {/* The swap region is always mounted: it reserves the people's
                   height in the none state, so the panel surface is the same
                   size in every state. Only its contents wait for a side. */}
-              <div key={swapKey} className="dlg-thumb__swap">
-                {side !== "none" ? <ThumbPeople side={side} /> : null}
+              <div key={frame ? `scrub-${rSide}` : swapKey} className="dlg-thumb__swap">
+                {rSide !== "none" ? <ThumbPeople side={rSide} /> : null}
               </div>
             </ChartVizCard>
           </div>
@@ -325,8 +408,8 @@ export default function DialogueThumbnailDemo({
       </div>
       <div
         className="dlg-thumb__cursor dlg-cursor"
-        data-on={cursorOn ? "" : undefined}
-        data-down={pressing ? "" : undefined}
+        data-on={rCursorOn ? "" : undefined}
+        data-down={rPressing ? "" : undefined}
         aria-hidden
       >
         <DlgDemoCursor />

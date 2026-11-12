@@ -213,20 +213,20 @@
  */
 .dlg-thumb .dlg-live .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
 .dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-index][data-focal]:hover {
-  background: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-ink));
+  background: color-mix(in srgb, var(--dp-chart-focal) var(--dlg-thumb-hover-focal, 85%), var(--dp-ink));
 }
 
 .dlg-thumb .dlg-live .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
 .dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-index]:not([data-focal]):hover {
-  background: color-mix(in srgb, var(--dp-border-strong) 80%, var(--dp-ink));
+  background: color-mix(in srgb, var(--dp-border-strong) var(--dlg-thumb-hover-neutral, 80%), var(--dp-ink));
 }
 
 .dlg-thumb .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal] {
-  background: color-mix(in srgb, var(--dp-chart-focal) 70%, var(--dp-ink));
+  background: color-mix(in srgb, var(--dp-chart-focal) var(--dlg-thumb-press-focal, 70%), var(--dp-ink));
 }
 
 .dlg-thumb .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
-  background: color-mix(in srgb, var(--dp-border-strong) 65%, var(--dp-ink));
+  background: color-mix(in srgb, var(--dp-border-strong) var(--dlg-thumb-press-neutral, 65%), var(--dp-ink));
 }
 
 /*
@@ -238,10 +238,21 @@
  * release.
  */
 .dlg-thumb[data-bar-style="states"] .dlg-live__bar .dp-chart-stack__seg {
-  transition: background-color 100ms ease;
+  transition: background-color var(--dlg-thumb-ease, 100ms) ease;
 }
 
 .dlg-thumb[data-bar-style="states"] .dlg-live__bar[data-press] .dp-chart-stack__seg {
+  transition: none;
+}
+
+/*
+ * Scrub mode renders one exact instant, so transitions come off: a stepped
+ * frame shows its state in full, never a blend toward it. Autoplay and the
+ * homepage card never carry data-scrub.
+ */
+.dlg-thumb[data-scrub] .dp-chart-stack__seg,
+.dlg-thumb[data-scrub] .dlg-thumb__cursor,
+.dlg-thumb[data-scrub] .dlg-thumb__cursor svg {
   transition: none;
 }
 
