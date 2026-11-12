@@ -4,6 +4,10 @@
  * Nothing here is imported by production screens.
  */
 import { useEffect, useLayoutEffect } from "react";
+import {
+  attachCaseStudyEmbedMode,
+  caseStudyEmbedFromSearch,
+} from "../../embed/caseStudyEmbedMode";
 import { attachEmbedHeightReporter } from "../../embed/reportEmbedHeight";
 import { useSearchParams } from "react-router-dom";
 import { QuickOrderState } from "./context";
@@ -34,12 +38,16 @@ function Stage() {
   useLayoutEffect(() => {
     if (!embed) return;
     document.documentElement.classList.add("is-embed");
-    const stop = attachEmbedHeightReporter();
+    const stopHeight = attachEmbedHeightReporter();
+    const stopCs = caseStudyEmbedFromSearch(params)
+      ? attachCaseStudyEmbedMode()
+      : () => {};
     return () => {
-      stop();
+      stopCs();
+      stopHeight();
       document.documentElement.classList.remove("is-embed");
     };
-  }, [embed]);
+  }, [embed, params]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

@@ -4,6 +4,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { chromium } from "playwright";
+import {
+  assertAllImagesLoaded,
+  waitForImages,
+} from "../joola/assertImagesLoaded.mjs";
 
 const BASE = process.env.JOOLA_CAPTURE_BASE ?? "http://localhost:3000";
 const URL = `${BASE}/joola?sanity_preview=1`;
@@ -43,7 +47,10 @@ describe("joola embed toggles", () => {
       extraHTTPHeaders: { "x-joola-sanity-preview": "1" },
     });
     const page = await context.newPage();
-    await page.goto(URL, { waitUntil: "networkidle", timeout: 120000 });
+    try {
+    await page.goto(URL, { waitUntil: "load", timeout: 120000 });
+    await page.locator('[data-joola-figure="quick-order-hero"] iframe').waitFor({ state: "visible" });
+    await page.waitForTimeout(2000);
 
     const toggles = [
       { section: "#decision-2", tabs: ["Cases", "Reorder", "Stock status"] },
@@ -66,10 +73,14 @@ describe("joola embed toggles", () => {
     }
 
     await scrollEntirePageAndWait(page);
+    await waitForImages(page);
+    await assertAllImagesLoaded(page);
     const skeletonCount = await page.locator("[data-joola-skeleton]:visible").count();
     assert.equal(skeletonCount, 0, "No skeleton should remain after full-page scroll + 3s");
 
+    } finally {
     await context.close();
     await browser.close();
+    }
   });
 });

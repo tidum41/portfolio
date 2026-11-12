@@ -56,3 +56,10 @@ html.is-embed body:has(.qo-proto) {
   height: auto !important;
   background: #fff;
 }
+
+html.is-cs-embed,
+html.is-cs-embed body,
+html.is-cs-embed #root {
+  user-select: none;
+  -webkit-user-select: none;
+}

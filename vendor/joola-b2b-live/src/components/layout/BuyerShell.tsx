@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from "react-router-dom";
 import { ACCOUNTS, DISCLAIMER, money } from "../../data/ledger";
 import { useStore } from "../../state/Store";
 import { Avatar, Button, Modal } from "../ui/primitives";
+import { publicAsset } from "../../lib/publicAsset";
 import { NavIcon, type NavIconName } from "./NavIcon";
 /* Account list comes from ledger; session actions from store. */
 
@@ -22,7 +23,7 @@ export function BuyerShell({ children }: { children?: ReactNode }) {
   return (
     <div className="app shell buyer-shell">
       <aside className="shell__sidebar">
-        <img className="shell__logo" src="/joola-logo.png" alt="JOOLA" />
+        <img className="shell__logo" src={publicAsset("joola-logo.png")} alt="JOOLA" />
         <span className="shell__chip">Wholesale</span>
         <nav className="shell__nav" aria-label="Buyer portal">
           {NAV.map((item) => (
@@ -45,9 +46,8 @@ export function BuyerShell({ children }: { children?: ReactNode }) {
         <header className="shell__topbar">
           <Link to="/cart" className="cart-pill" aria-label="Open cart">
             <NavIcon name="cart" />
-            <span>Cart</span>
-            <span className="cart-pill__count">{units}</span>
             <span className="cart-pill__total tnum">{money(cartTotal)}</span>
+            <span className="cart-pill__count">{units}</span>
           </Link>
           <AccountMenu />
         </header>

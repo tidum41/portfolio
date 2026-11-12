@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { MockApiError } from "../api/mock";
 import { useStore } from "../state/Store";
 import { Button, ErrorState, Input } from "../components/ui/primitives";
+import { publicAsset } from "../lib/publicAsset";
 
 export function LoginPage() {
   const { session, login } = useStore();
@@ -47,7 +48,7 @@ export function LoginPage() {
       <form className="login-page__card" onSubmit={onSubmit}>
         <img
           className="login-page__brand"
-          src="/joola-logo.png"
+          src={publicAsset("joola-logo.png")}
           alt="JOOLA"
         />
         <h1>Wholesale sign in</h1>

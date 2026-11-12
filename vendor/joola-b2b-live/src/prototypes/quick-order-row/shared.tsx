@@ -6,6 +6,7 @@ import {
 } from "react";
 import { Button, SearchField } from "../../components/ui/primitives";
 import { NavIcon } from "../../components/layout/NavIcon";
+import { publicAsset } from "../../lib/publicAsset";
 import { usePlay, type PlayRow } from "./context";
 import {
   caseCount,
@@ -413,7 +414,7 @@ export function PrototypePage({
       <div className="app proto-root qo-proto" data-qo-ready="">
         <div className="proto-shell">
           <aside className="proto-shell__side">
-            <img className="proto-shell__logo" src="/joola-logo.svg" alt="JOOLA" />
+            <img className="proto-shell__logo" src={publicAsset("joola-logo.svg")} alt="JOOLA" />
             <span className="proto-shell__chip">Wholesale</span>
             <nav className="proto-shell__nav" aria-label="Buyer">
               <span className="is-active">Quick order</span>
@@ -428,9 +429,8 @@ export function PrototypePage({
             <div className="proto-shell__top">
               <a className="cart-pill cart-pill--static" href="#cart" aria-label="Cart">
                 <NavIcon name="cart" />
-                <span>Cart</span>
-                <span className="cart-pill__count">{play.cart.units}</span>
                 <span className="cart-pill__total tnum">{money(play.cart.total)}</span>
+                <span className="cart-pill__count">{play.cart.units}</span>
               </a>
             </div>
             <h1>Quick order</h1>

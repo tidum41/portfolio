@@ -5,6 +5,10 @@
 import { chromium } from "playwright";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  assertAllImagesLoaded,
+  waitForImages,
+} from "../tests/joola/assertImagesLoaded.mjs";
 
 const OUT = path.resolve("artifacts/joola-sanity");
 const BASE = process.env.JOOLA_CAPTURE_BASE ?? "http://localhost:3000";
@@ -115,6 +119,8 @@ async function shot(context, name, width, height, theme) {
     timeout: 120000,
   });
   await scrollEntirePageAndWait(page);
+  await waitForImages(page);
+  await assertAllImagesLoaded(page);
   await assertNoVisibleSkeletons(page);
   await assertSegmentedFootersCentered(page);
   await assertPreviewPage(page, theme);

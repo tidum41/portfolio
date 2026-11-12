@@ -1,7 +1,12 @@
 /**
  * Isolated prototype surface: admin approval queue.
  */
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
+import {
+  attachCaseStudyEmbedMode,
+  caseStudyEmbedFromSearch,
+} from "../../embed/caseStudyEmbedMode";
+import { attachEmbedHeightReporter } from "../../embed/reportEmbedHeight";
 import { useSearchParams } from "react-router-dom";
 import { ProtoPicker } from "../ProtoPicker";
 import "./approval.css";
@@ -27,9 +32,19 @@ export function ApprovalQueueHarness() {
     { name: "Split inbox", render: () => <SplitInbox key={force} /> },
   ];
 
-  useEffect(() => {
-    if (embed) document.documentElement.classList.add("is-embed");
-  }, [embed]);
+  useLayoutEffect(() => {
+    if (!embed) return;
+    document.documentElement.classList.add("is-embed");
+    const stopHeight = attachEmbedHeightReporter();
+    const stopCs = caseStudyEmbedFromSearch(params)
+      ? attachCaseStudyEmbedMode()
+      : () => {};
+    return () => {
+      stopCs();
+      stopHeight();
+      document.documentElement.classList.remove("is-embed");
+    };
+  }, [embed, params]);
 
   if (embed) {
     return parseEmbedVariant(params.get("v"));

@@ -1,11 +1,12 @@
 import { useEffect, type ReactNode } from "react";
+import { publicAsset } from "../../lib/publicAsset";
 import { useSearchParams } from "react-router-dom";
 
 export function ApprovalFrame({ children }: { children: ReactNode }) {
   return (
     <div className="aq">
       <aside className="aq-side">
-        <img className="aq-logo" src="/joola-logo.png" alt="JOOLA" />
+        <img className="aq-logo" src={publicAsset("joola-logo.png")} alt="JOOLA" />
         <span className="aq-wholesale">Wholesale</span>
         <nav className="aq-nav" aria-label="Admin">
           <span className="is-active">Approvals</span>

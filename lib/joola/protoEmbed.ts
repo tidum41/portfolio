@@ -4,8 +4,11 @@ export function joolaProtoHashUrl(
   app: JoolaProtoApp,
   pathname: string,
   params: Record<string, string>,
+  options?: { interactive?: boolean },
 ): string {
-  const search = new URLSearchParams({ embed: "1", ...params });
+  const base: Record<string, string> = { embed: "1" };
+  if (!options?.interactive) base.cs = "1";
+  const search = new URLSearchParams({ ...base, ...params });
   const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
   return `/joola-proto/${app}/index.html#${path}?${search.toString()}`;
 }

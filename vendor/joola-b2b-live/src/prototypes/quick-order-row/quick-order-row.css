@@ -373,6 +373,10 @@ body:has(.qo-proto) {
   background: transparent;
 }
 
+.qo-step button:not(:disabled):hover {
+  background: var(--band);
+}
+
 .qo-step button:disabled {
   color: var(--faint);
   cursor: not-allowed;

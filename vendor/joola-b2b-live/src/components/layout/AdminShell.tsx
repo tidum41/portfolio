@@ -3,6 +3,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { DISCLAIMER, JOOLA_STAFF } from "../../data/ledger";
 import { useStore } from "../../state/Store";
 import { Avatar, Button } from "../ui/primitives";
+import { publicAsset } from "../../lib/publicAsset";
 import { NavIcon } from "./NavIcon";
 
 export function AdminShell({ children }: { children?: ReactNode }) {
@@ -12,7 +13,7 @@ export function AdminShell({ children }: { children?: ReactNode }) {
   return (
     <div className="app shell admin-shell">
       <aside className="shell__sidebar">
-        <img className="shell__logo" src="/joola-logo.png" alt="JOOLA" />
+        <img className="shell__logo" src={publicAsset("joola-logo.png")} alt="JOOLA" />
         <span className="shell__chip">Wholesale</span>
         <nav className="shell__nav" aria-label="Admin portal">
           <NavLink

@@ -3,6 +3,8 @@
  * Illustrative accounts and numbers only. Real wholesale figures cannot be disclosed.
  */
 
+import { publicAsset } from "../lib/publicAsset";
+
 export type ProductCategory =
   | "Paddles"
   | "Balls"
@@ -126,7 +128,7 @@ export type AdminOrder = {
   creditRemainingAfter: number;
 };
 
-const IMG = "/products";
+const productImage = (file: string) => publicAsset(`products/${file}`);
 
 /** One account price per SKU. Case-pack presets are quantity steps only. */
 export const PRODUCTS: Record<string, Product> = {
@@ -137,7 +139,7 @@ export const PRODUCTS: Record<string, Product> = {
     fullName: "Perseus Pro V",
     category: "Paddles",
     msrp: 299.95,
-    image: `${IMG}/perseus.webp`,
+    image: productImage("perseus.webp"),
     moq: 6,
     presets: [6, 12, 24],
     buyerPrice: 165.57,
@@ -149,7 +151,7 @@ export const PRODUCTS: Record<string, Product> = {
     fullName: "Hyperion Pro IV 14mm",
     category: "Paddles",
     msrp: 229.95,
-    image: `${IMG}/hyperion.webp`,
+    image: productImage("hyperion.webp"),
     moq: 6,
     presets: [6, 12, 24],
     buyerPrice: 131.07,
@@ -161,7 +163,7 @@ export const PRODUCTS: Record<string, Product> = {
     fullName: "Scorpeus Pro V",
     category: "Paddles",
     msrp: 299.95,
-    image: `${IMG}/scorpeus.webp`,
+    image: productImage("scorpeus.webp"),
     moq: 6,
     presets: [6, 12, 24],
     buyerPrice: 170.97,
@@ -173,7 +175,7 @@ export const PRODUCTS: Record<string, Product> = {
     fullName: "Magnus Pro IV 14mm",
     category: "Paddles",
     msrp: 249.95,
-    image: `${IMG}/magnus.webp`,
+    image: productImage("magnus.webp"),
     moq: 6,
     presets: [6, 12, 24],
     buyerPrice: 149.97,
@@ -185,7 +187,7 @@ export const PRODUCTS: Record<string, Product> = {
     fullName: "HC-40 Outdoor Balls (3-Pack)",
     category: "Balls",
     msrp: 9.95,
-    image: `${IMG}/hc40.webp`,
+    image: productImage("hc40.webp"),
     moq: 12,
     presets: [12, 48, 96],
     buyerPrice: 5.82,
@@ -197,7 +199,7 @@ export const PRODUCTS: Record<string, Product> = {
     fullName: "Tour Elite Pickleball Bag",
     category: "Bags",
     msrp: 89.95,
-    image: `${IMG}/tourbag.webp`,
+    image: productImage("tourbag.webp"),
     moq: 3,
     presets: [3, 6, 12],
     buyerPrice: 47.67,
@@ -209,7 +211,7 @@ export const PRODUCTS: Record<string, Product> = {
     fullName: "Compact Pickleball Practice Net",
     category: "Nets",
     msrp: 179.95,
-    image: `${IMG}/netset.webp`,
+    image: productImage("netset.webp"),
     moq: 2,
     presets: [2, 4, 8],
     buyerPrice: 98.97,
@@ -221,7 +223,7 @@ export const PRODUCTS: Record<string, Product> = {
     fullName: "Pro Overgrip (3-Pack)",
     category: "Grips",
     msrp: 9.95,
-    image: `${IMG}/overgrip.webp`,
+    image: productImage("overgrip.webp"),
     moq: 24,
     presets: [24, 60, 120],
     buyerPrice: 5.17,
@@ -233,7 +235,7 @@ export const PRODUCTS: Record<string, Product> = {
     fullName: "Pro V Pickleball Protective Edge Guard Tape",
     category: "Accessories",
     msrp: 12.95,
-    image: `${IMG}/edgetape.webp`,
+    image: productImage("edgetape.webp"),
     moq: 12,
     presets: [12, 24, 48],
     buyerPrice: 7.47,
@@ -245,7 +247,7 @@ export const PRODUCTS: Record<string, Product> = {
     fullName: "Club Hoodie",
     category: "Apparel",
     msrp: 64.95,
-    image: `${IMG}/tourbag.webp`,
+    image: productImage("tourbag.webp"),
     moq: 6,
     presets: [6, 12, 24],
     buyerPrice: 38.97,
