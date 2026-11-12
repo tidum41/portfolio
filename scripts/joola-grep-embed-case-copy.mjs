@@ -37,7 +37,7 @@ try {
 
 if (jsHits) {
   console.log(
-    "Note: qo bundle still contains dormant Cases strings (expected until re-vendor @ 8530ba5). UI is hidden at runtime.",
+    "Note: qo bundle still contains dormant Cases strings; cs=1 CSS hides case-pack UI at runtime.",
   );
 }
 

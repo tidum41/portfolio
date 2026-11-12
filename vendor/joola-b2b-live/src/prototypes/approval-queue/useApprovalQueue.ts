@@ -49,9 +49,9 @@ function seed(force: ProtoForce): QueueOrder[] {
   return QUEUE.slice();
 }
 
-export function useApprovalQueue(forceOverride?: ProtoForce) {
+export function useApprovalQueue() {
   const [params] = useSearchParams();
-  const force = forceOverride ?? readProtoForce(params.get("protoState"));
+  const force = readProtoForce(params.get("protoState"));
   const [orders, setOrders] = useState(() => seed(force));
   const [openId, setOpenId] = useState(() => seed(force)[0]?.id ?? "");
   const [reasons, setReasons] = useState<Record<string, string>>({});

@@ -95,11 +95,12 @@ const PATHS: Record<NavIconName, ReactNode> = {
       <line x1="10" y1="14" x2="21" y2="3" />
     </>
   ),
+  /* Lucide shopping-cart — matches prototype / portfolio card video */
   cart: (
     <>
-      <circle cx="9" cy="20" r="1.5" />
-      <circle cx="18" cy="20" r="1.5" />
-      <path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 7H7" />
+      <circle cx="8" cy="21" r="1" />
+      <circle cx="19" cy="21" r="1" />
+      <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
     </>
   ),
 };

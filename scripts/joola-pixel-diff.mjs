@@ -119,42 +119,48 @@ async function loadPng(file) {
 }
 
 async function waitFrameReady(frame, c) {
-  await frame.waitForSelector(c.selector, { timeout: 60000 });
+  const root = frame.locator(c.selector).first();
+  await root.waitFor({ state: "visible", timeout: 60000 });
   if (c.hash.includes("quick-order-row")) {
-    await frame.waitForSelector("[data-qo-ready]", { timeout: 20000 });
+    await frame.locator("[data-qo-ready]").first().waitFor({ timeout: 20000 });
   } else if (c.hash === "/quick-order") {
-    await frame.waitForSelector(".page--qo", { timeout: 20000 });
+    await frame.locator(".page--qo").first().waitFor({ timeout: 20000 });
     await frame
-      .waitForFunction(
-        () => !document.querySelector(".page-skel, .skel--table"),
-        null,
-        { timeout: 20000 },
-      )
+      .locator(".page-skel, .skel--table")
+      .first()
+      .waitFor({ state: "detached", timeout: 20000 })
       .catch(() => {});
   } else if (c.hash === "/review") {
-    await frame.waitForSelector(".page--review", { timeout: 20000 });
+    await frame.locator(".page--review").first().waitFor({ timeout: 20000 });
     await frame
-      .waitForFunction(
-        () => !document.querySelector(".page-skel"),
-        null,
-        { timeout: 20000 },
-      )
+      .locator(".page-skel")
+      .first()
+      .waitFor({ state: "detached", timeout: 20000 })
       .catch(() => {});
   }
-  await frame.waitForFunction(() => document.fonts?.ready, null, {
-    timeout: 15000,
-  }).catch(() => {});
-  await frame.waitForTimeout(1200);
+  await frame
+    .locator("body")
+    .evaluate(() => document.fonts?.ready)
+    .catch(() => {});
+  await new Promise((r) => setTimeout(r, 1200));
 }
 
-/** Reference: standalone static app at the same hash URL (top-level document). */
+/** Reference: static app in a fixed-height iframe (matches portfolio embed harness). */
 async function shotProto(page, c, outPath) {
   const url = protoUrl(c);
   const ih = c.iframeHeight;
-  await page.setViewportSize({ width: c.width, height: ih + 48, deviceScaleFactor: 1 });
-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
-  await waitFrameReady(page, c);
-  await page.locator(c.selector).first().screenshot({
+  await page.setViewportSize({
+    width: c.width + 16,
+    height: ih + 80,
+    deviceScaleFactor: 1,
+  });
+  await page.setContent(
+    `<!doctype html><body style="margin:0"><iframe id=f src="${url}" width="${c.width}" height="${ih}" style="border:0"></iframe></body></html>`,
+    { waitUntil: "domcontentloaded" },
+  );
+  const frame = page.frameLocator("#f");
+  await waitFrameReady(frame, c);
+  await frame.locator(c.selector).first().screenshot({
     path: outPath,
     animations: "disabled",
   });
@@ -162,7 +168,7 @@ async function shotProto(page, c, outPath) {
 
 function parityQuery(c) {
   const q = new URLSearchParams({ figure: c.figure });
-  if (c.tab === "Cases") q.set("variant", "2");
+  if (c.tab === "Compact") q.set("variant", "1");
   if (c.tab === "Reorder") q.set("variant", "3");
   if (c.tab === "Stock status") q.set("variant", "4");
   if (c.tab === "Ledger") q.set("tab", "ledger");
@@ -188,11 +194,7 @@ async function shotIframe(page, c, outPath) {
     document.body.style.overflow = "hidden";
   });
   await fig.waitFor({ state: "visible", timeout: 60000 });
-  const handle = await page
-    .locator(`[data-joola-figure="${c.figure}"] iframe`)
-    .elementHandle();
-  const frame = await handle?.contentFrame();
-  if (!frame) throw new Error("iframe contentFrame missing");
+  const frame = page.frameLocator(`[data-joola-figure="${c.figure}"] iframe`);
   await waitFrameReady(frame, c);
   await frame.locator(c.selector).first().screenshot({
     path: outPath,

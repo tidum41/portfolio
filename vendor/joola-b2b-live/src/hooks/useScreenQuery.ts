@@ -57,7 +57,7 @@ export function useScreenQuery<T>(
           e instanceof MockApiError
             ? e
             : new MockApiError(
-                "The page did not load.",
+                "Something went wrong.",
                 "server",
                 "Try again. If it keeps failing, message your JOOLA rep.",
               ),

@@ -24,7 +24,7 @@ export default function JoolaParityBench({
   tab?: string;
 }) {
   const [qoVariant, setQoVariant] = useState<QoVariant>(
-    (variantParam as QoVariant) ?? "3",
+    (variantParam as QoVariant) ?? "1",
   );
   const [approvalView, setApprovalView] = useState<"split" | "ledger">(
     tab === "ledger" ? "ledger" : "split",
@@ -73,6 +73,7 @@ export default function JoolaParityBench({
               label="Quick order line view"
               value={qoVariant}
               options={[
+                { value: "1", label: "Compact" },
                 { value: "3", label: "Reorder" },
                 { value: "4", label: "Stock status" },
               ]}

@@ -37,7 +37,7 @@ export function OrderHistoryPage() {
       <section className="page page--orders">
         <h1>Order history</h1>
         <ErrorState
-          title="Orders did not load."
+          title="Could not load orders"
           message={error.message}
           fix={error.fix}
           onRetry={reload}
@@ -75,7 +75,7 @@ export function OrderHistoryPage() {
                 <span>
                   <span className="name">{order.label}</span>
                   <span className="meta">
-                    {order.id}, {formatShortDate(order.when)}
+                    {order.id} · {formatShortDate(order.when)}
                   </span>
                 </span>
                 <span className="order-card__right">

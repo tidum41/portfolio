@@ -1,25 +1,22 @@
-# Re-vendor @ `8530ba5` (blocked)
+# JOOLA vendor status
 
-| Field | Value |
-|-------|--------|
-| **Product repo** | `tidum41/joola-b2b-casestudy` (private) |
-| **Branch** | `cursor/joola-b2b-live-prototype-6235` |
-| **Target SHA** | `8530ba5` |
-| **Vendored SHA in `vendor/joola-b2b-live/`** | **not applied** — Cursor GitHub token cannot read the product repo (`404` on clone / archive) |
+**Vendored SHA:** `8936d4f` (`vendor/joola-b2b-live/VENDOR_SHA`)
 
-**Prior vendor baseline:** `3f28b8b` (round5 `d96a273` + qo `38041d6` tarballs), plus portfolio embed/copy patches through `579c62a` / `873a76a`.
+**Source:** User-provided `git archive` of product `live/` @ `8936d4f2e330f838b973d18594179b9b77c556b3`.
 
-**When product access is available:** attach `live/` tarball or grant the cloud agent read access, then:
+**Re-vendor:**
 
 ```bash
-PRODUCT_ROOT=/path/to/live npm run joola:revendor -- 8530ba5
+PRODUCT_ROOT=/path/to/live npm run joola:revendor -- 8936d4f
 npm run joola:build-proto
 npm run joola:grep-embed-case
 npm run joola:pixel-diff
 ```
 
-Overlay files to re-apply after replace: `scripts/joola-vendor-overlay/`.
+Product `live/` @ `8936d4f` ships a **scaffold-only** `prototypes/quick-order-row/`; portfolio overlay restores the full QO prototype tree from `scripts/joola-vendor-overlay/src/prototypes/quick-order-row/` (Compact / Reorder / Stock; Cases mode omitted in embed).
 
-**Portfolio-only (this commit):** Decision 2 toggle drops **Cases**; `cs=1` embed CSS hides `.qo-case` / `.qo-caseqty`; pixel matrix drops `qo-cases`.
+**Case study rules (portfolio):**
 
-**Follow-up:** product cart badge accent blue (after next product commit) → second re-vendor.
+- Hero: Compact `v=1`, five rows, no preset chips.
+- Decision 2: **Compact**, **Reorder**, **Stock status** (Cases removed).
+- `cs=1`: interaction lock, `publicAsset()` BASE_URL, ready gates, image guards, CSS hides `.qo-case` / `.qo-caseqty`.

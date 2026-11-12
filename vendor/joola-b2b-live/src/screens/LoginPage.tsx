@@ -3,7 +3,6 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { MockApiError } from "../api/mock";
 import { useStore } from "../state/Store";
 import { Button, ErrorState, Input } from "../components/ui/primitives";
-import { publicAsset } from "../lib/publicAsset";
 
 export function LoginPage() {
   const { session, login } = useStore();
@@ -36,7 +35,7 @@ export function LoginPage() {
       setError(
         err instanceof MockApiError
           ? err
-          : new MockApiError("Could not sign in.", "server"),
+          : new MockApiError("Sign-in failed.", "server"),
       );
     } finally {
       setBusy(false);
@@ -48,12 +47,12 @@ export function LoginPage() {
       <form className="login-page__card" onSubmit={onSubmit}>
         <img
           className="login-page__brand"
-          src={publicAsset("joola-logo.png")}
+          src="/joola-logo.png"
           alt="JOOLA"
         />
         <h1>Wholesale sign in</h1>
         <p className="login-page__lede">
-          Wholesale ordering for your distributor account.
+          Order paddles, balls, and bags for your distributor account.
         </p>
 
         {error ? (

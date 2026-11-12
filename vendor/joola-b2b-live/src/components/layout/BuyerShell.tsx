@@ -37,9 +37,14 @@ export function BuyerShell({ children }: { children?: ReactNode }) {
             </NavLink>
           ))}
         </nav>
-        <a className="shell__back" href="https://www.joola.com">
-          <NavIcon name="external" />
+        <a
+          className="shell__back"
+          href="https://www.joola.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <span>Back to joola.com</span>
+          <NavIcon name="external" />
         </a>
       </aside>
       <div className="shell__main">
@@ -47,11 +52,23 @@ export function BuyerShell({ children }: { children?: ReactNode }) {
           <Link
             to="/cart"
             className="cart-pill"
-            aria-label={`Cart, ${money(cartTotal)}, ${cart.length} line${cart.length === 1 ? "" : "s"}`}
+            aria-label={
+              units > 0
+                ? `Cart, ${money(cartTotal)}, ${units} units`
+                : `Cart, ${money(cartTotal)}`
+            }
           >
             <NavIcon name="cart" />
             <span className="cart-pill__total tnum">{money(cartTotal)}</span>
-            <span className="cart-pill__count">{units}</span>
+            {units > 0 ? (
+              <span
+                className={`cart-pill__count${
+                  units >= 10 ? " is-wide" : ""
+                }`}
+              >
+                <span className="count-fig">{units.toLocaleString("en-US")}</span>
+              </span>
+            ) : null}
           </Link>
           <AccountMenu />
         </header>

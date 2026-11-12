@@ -1,12 +1,11 @@
 import { useEffect, type ReactNode } from "react";
-import { publicAsset } from "../../lib/publicAsset";
 import { useSearchParams } from "react-router-dom";
 
 export function ApprovalFrame({ children }: { children: ReactNode }) {
   return (
     <div className="aq">
       <aside className="aq-side">
-        <img className="aq-logo" src={publicAsset("joola-logo.png")} alt="JOOLA" />
+        <img className="aq-logo" src="/joola-logo.png" alt="JOOLA" />
         <span className="aq-wholesale">Wholesale</span>
         <nav className="aq-nav" aria-label="Admin">
           <span className="is-active">Approvals</span>
@@ -14,7 +13,7 @@ export function ApprovalFrame({ children }: { children: ReactNode }) {
           <span>Accounts</span>
         </nav>
         <a className="aq-store" href="https://www.joola.com">
-          Back to joola.com
+          Back to joola.com store
         </a>
       </aside>
       <div className="aq-main">
@@ -27,20 +26,18 @@ export function ApprovalFrame({ children }: { children: ReactNode }) {
         <div className="aq-page">
           <h1>Approval queue</h1>
           <p className="aq-lede">
-            Orders over the credit limit. Select a row to approve or reject.
+            Orders over credit limit that need your decision. Select a row to
+            approve, or reject when the account cannot cover the order.
           </p>
           <div className="aq-buyer">
             <span>Buyer sees</span>
             <span className="aq-pill aq-pill--pending">Pending approval</span>
-            <span>
-              Your JOOLA rep needs to approve it before a ship date can be
-              confirmed.
-            </span>
+            <span>Your rep will need to approve before it ships.</span>
           </div>
           {children}
           <p className="aq-disclaimer">
-            Demo names and figures. Client accounts and wholesale numbers stay
-            confidential.
+            Illustrative demo data. Real wholesale figures and client accounts
+            cannot be disclosed.
           </p>
         </div>
       </div>

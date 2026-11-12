@@ -108,7 +108,7 @@ export function breakPastOrders(): PastOrder[] {
       label:
         "Emergency restock after hurricane inventory loss across 14 markets",
       when: "Sep 18, 2026",
-      status: "Pending confirmation",
+      status: "Pending fulfillment",
       total: 9999999.99,
       lines: hugeCartLines().slice(0, 8),
       placedBy: "Bartholomew Fitzgerald-Jones",

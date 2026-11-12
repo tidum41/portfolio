@@ -53,7 +53,7 @@ describe("joola embed toggles", () => {
     await page.waitForTimeout(2000);
 
     const toggles = [
-      { section: "#decision-2", tabs: ["Reorder", "Stock status"] },
+      { section: "#decision-2", tabs: ["Compact", "Reorder", "Stock status"] },
       { section: "#decision-4", tabs: ["Split inbox", "Ledger"] },
     ];
 

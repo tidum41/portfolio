@@ -1164,7 +1164,8 @@ async function main() {
         gap,
         headAlign,
         hasCreditLeftAfter: /Credit left after order/i.test(body),
-        hasItems: /Items/i.test(body) && /units/i.test(body),
+        hasLines: /Lines/i.test(body),
+        hasUnits: /Units/i.test(body),
         hasNet30Remaining: /Net 30 remaining/i.test(body),
         summary,
       };
@@ -1173,7 +1174,8 @@ async function main() {
       gap: number | null;
       headAlign: string | null;
       hasCreditLeftAfter: boolean;
-      hasItems: boolean;
+      hasLines: boolean;
+      hasUnits: boolean;
       hasNet30Remaining: boolean;
       summary: string[];
     };
@@ -1222,7 +1224,7 @@ async function main() {
         detail: 'Summary must use "Credit left after order" (not Net 30 remaining)',
       });
     }
-    if (!cartChecks.hasItems) {
+    if (!cartChecks.hasLines || !cartChecks.hasUnits) {
       allFindings.push({
         severity: "P1",
         rule: "cart-summary-copy",
@@ -1230,7 +1232,7 @@ async function main() {
         state: "default",
         width: 1280,
         selector: ".cart-summary",
-        detail: 'Summary must show Items with units count',
+        detail: "Summary must show Lines and Units rows",
       });
     }
     const wantCart = ["Subtotal $8,467.08", "Credit left after order $9,908.66", "Total $8,467.08"];

@@ -31,9 +31,14 @@ export function AdminShell({ children }: { children?: ReactNode }) {
             <span>Approvals</span>
           </NavLink>
         </nav>
-        <a className="shell__back" href="https://www.joola.com">
-          <NavIcon name="external" />
+        <a
+          className="shell__back"
+          href="https://www.joola.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <span>Back to joola.com</span>
+          <NavIcon name="external" />
         </a>
       </aside>
       <div className="shell__main">

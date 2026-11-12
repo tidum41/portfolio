@@ -97,13 +97,6 @@
   font-weight: 500;
 }
 
-.cart-pill--static {
-  pointer-events: none;
-  text-decoration: none;
-  color: var(--ink);
-  cursor: default;
-}
-
 .proto-shell__main {
   padding: 28px 32px 96px;
   min-width: 0;

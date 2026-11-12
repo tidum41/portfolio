@@ -135,7 +135,7 @@ export type AdminOrder = {
 
 const productImage = (file: string) => publicAsset(`products/${file}`);
 
-/** One account price per SKU. Case-pack presets are quantity steps only. */
+/** One account price per SKU. Preset chips are quantity shortcuts only. */
 export const PRODUCTS: Record<string, Product> = {
   perseus: {
     id: "perseus",
@@ -252,7 +252,7 @@ export const PRODUCTS: Record<string, Product> = {
     fullName: "Club Hoodie",
     category: "Apparel",
     msrp: 64.95,
-    image: productImage("tourbag.webp"),
+    image: productImage("hoodie.jpg"),
     moq: 6,
     presets: [6, 12, 24],
     buyerPrice: 38.97,
@@ -587,7 +587,7 @@ export const INITIAL_PAST_ORDERS: PastOrder[] = [
   }),
   orderFromLines({
     id: "PO-098",
-    label: "Club pack",
+    label: "Club restock",
     when: "Jun 20, 2026",
     status: "Delivered",
     placedBy: "LeBron James",

@@ -53,7 +53,7 @@ export function MessagesPage() {
       <section className="page page--messages">
         <h1>Messages</h1>
         <ErrorState
-          title="Messages did not load."
+          title="Could not load messages"
           message={error.message}
           fix={error.fix}
           onRetry={reload}
@@ -121,7 +121,7 @@ export function MessagesPage() {
                     className={`msg-bubble${m.from === "buyer" ? " is-mine" : ""}`}
                   >
                     <div className="msg-bubble__meta">
-                      {m.author}, {formatShortDate(m.time)}
+                      {m.author} · {formatShortDate(m.time)}
                     </div>
                     <div className="msg-bubble__text">{m.body}</div>
                   </div>

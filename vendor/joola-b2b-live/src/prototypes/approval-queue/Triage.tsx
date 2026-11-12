@@ -18,7 +18,7 @@ export function Triage() {
       {queue.loading ? (
         <QueueSkeleton />
       ) : !order ? (
-        <p className="aq-empty">No orders need review.</p>
+        <p className="aq-empty">Nothing waiting. The queue is clear.</p>
       ) : (
         <TriageCard queue={queue} order={order} />
       )}
@@ -50,7 +50,7 @@ function TriageCard({
           <div>
             <h2>{order.account}</h2>
             <p>
-              {order.so}, {order.buyer}
+              {order.so} · {order.buyer}
             </p>
           </div>
           <Pills why={order.why} />
@@ -88,11 +88,11 @@ function TriageCard({
         <p className="aq-caption">Gray is room left. Red is over the limit.</p>
         <Lines order={order} qtyWidth={40} />
         <label className="aq-reason" htmlFor="triage-reason">
-          Rejection reason
+          Reason if you reject
           <input
             id="triage-reason"
             value={queue.reasons[order.id] ?? ""}
-            placeholder="Why this order cannot ship"
+            placeholder="Short reason for the buyer"
             aria-invalid={invalid || undefined}
             aria-errormessage={invalid ? "triage-help" : undefined}
             onChange={(event) => queue.setReason(order.id, event.target.value)}
@@ -119,7 +119,7 @@ function TriageCard({
             id="triage-help"
             className={`aq-help${invalid ? " is-error" : ""}`}
           >
-            Required to reject. The buyer sees this note.
+            Required to reject.
           </span>
         </div>
       </article>

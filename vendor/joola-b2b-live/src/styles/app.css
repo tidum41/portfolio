@@ -415,6 +415,10 @@ a.btn {
   width: 100%;
   box-sizing: border-box;
 }
+.shell__nav a,
+.shell__back {
+  border: 1px solid transparent;
+}
 .shell__nav a:hover,
 .shell__back:hover {
   background: rgba(112, 115, 147, 0.06);
@@ -423,6 +427,10 @@ a.btn {
 .shell__nav a:active,
 .shell__back:active {
   background: rgba(112, 115, 147, 0.12);
+}
+.shell__nav a:focus-visible,
+.shell__back:focus-visible {
+  border-color: transparent;
 }
 .shell__nav a.is-active {
   background: var(--blue-soft);
@@ -511,8 +519,8 @@ a.btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: var(--input-h);
-  padding: 0 12px;
+  height: 36px;
+  padding: 0 12px 0 12px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--line);
   background: #fff;
@@ -520,6 +528,19 @@ a.btn {
   color: var(--ink);
   font-size: 13px;
   font-weight: 500;
+  line-height: 1;
+  box-sizing: border-box;
+}
+.cart-pill:not(:has(.cart-pill__count)) {
+  padding-right: 12px;
+}
+.cart-pill .icon-slot {
+  flex-shrink: 0;
+  margin-right: -2px;
+  transform: translate(-0.375px, -0.25px);
+}
+.cart-pill .icon-slot svg {
+  stroke-width: 2;
 }
 .cart-pill:hover {
   background: var(--band);
@@ -528,23 +549,40 @@ a.btn {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+.cart-pill__total {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  color: var(--ink);
+  font-weight: 500;
+  transform: translate(-0.196px, 0.134px);
+}
 .cart-pill__count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
+  box-sizing: border-box;
   height: 20px;
+  min-width: 20px;
   padding: 0 6px;
-  border-radius: var(--radius-pill);
-  background: var(--ink);
+  border-radius: 10px;
+  background: var(--accent);
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  transform: translate(-0.375px, 0.02px);
 }
-.cart-pill__total {
-  font-variant-numeric: tabular-nums;
-  color: var(--muted);
-  font-weight: 400;
+.cart-pill__count.is-wide {
+  min-width: 26px;
+  padding: 0 8px;
+  padding-top: 1px;
+}
+.cart-pill__count .count-fig {
+  display: block;
+  line-height: 1;
+  transform: translate(-0.36px, -0.46px);
 }
 
 /* Account menu */
@@ -1664,13 +1702,6 @@ a.btn {
     var(--wash) var(--credit-order-end, 0%),
     var(--wash) 100%
   );
-}
-.credit-order-amt {
-  margin: 8px 0 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
 }
 .cart-notice {
   margin-top: 12px;
