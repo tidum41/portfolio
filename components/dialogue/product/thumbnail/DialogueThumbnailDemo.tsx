@@ -13,7 +13,9 @@ import {
   THUMBNAIL_CURSOR_LEAD_MS,
   THUMBNAIL_CURSOR_OUT_MS,
   THUMBNAIL_VARIANTS,
+  THUMBNAIL_ENTER_TOTAL_MS,
   thumbnailBarStyleForVariant,
+  thumbnailEnterProgress,
   thumbnailStateAt,
   type ThumbnailTiming,
   type ThumbnailVariantId,
@@ -88,18 +90,37 @@ function ThumbQuote({ q }: { q: Quote }) {
   );
 }
 
-function ThumbPeople({ side }: { side: Side }) {
+function ThumbPeople({
+  side,
+  enter,
+}: {
+  side: Side;
+  /**
+   * Scrub mode only: eased entrance progress for the loop's first open.
+   * Autoplay runs the same entrance as a CSS animation instead (the swap
+   * carries data-enter), so it passes null here.
+   */
+  enter?: { chips: number; quote: number } | null;
+}) {
   const rows = side === "friday" ? FRIDAY_QUOTES : UNSURE_QUOTES;
   const [lead, next] = rows;
   const more = (side === "friday" ? 225 : 75) - rows.length;
+  const rise = (p: number): React.CSSProperties =>
+    p >= 1 ? {} : { opacity: p, transform: `translateY(${6 * (1 - p)}px)` };
   return (
     <>
-      <div className="dp-sources dlg-thumb__sources">
+      <div
+        className="dp-sources dlg-thumb__sources"
+        style={enter ? rise(enter.chips) : undefined}
+      >
         <SourcePill name={lead.participant} time={startOf(lead.time)} selected />
         <SourcePill name={next.participant} time={startOf(next.time)} />
         <SourcePill name={`+${more} more`} time="" />
       </div>
-      <div className="dp-clip-quotes dlg-thumb__quote">
+      <div
+        className="dp-clip-quotes dlg-thumb__quote"
+        style={enter ? rise(enter.quote) : undefined}
+      >
         <ThumbQuote q={lead} />
       </div>
     </>
@@ -139,6 +160,9 @@ export default function DialogueThumbnailDemo({
   const [pressing, setPressing] = useState(false);
   const [beat, setBeat] = useState("poster");
   const [swapKey, setSwapKey] = useState(0);
+  /** Autoplay: true only while the loop's first open is on screen. */
+  const [enterFirst, setEnterFirst] = useState(false);
+  const enterArmedRef = useRef(true);
   const [scale, setScale] = useState(1);
   const [targets, setTargets] = useState<{ friday: Pt; unsure: Pt } | null>(null);
 
@@ -272,6 +296,15 @@ export default function DialogueThumbnailDemo({
     const openSide = (which: Side) => {
       setSide(which);
       setSwapKey((n) => n + 1);
+      /* Only the loop's first open plays the answer's entrance: the swap
+         mounts with data-enter and the CSS animation runs. A switch lands
+         whole. The entrance re-arms when the loop returns to none. */
+      if (barStyle === "states" && enterArmedRef.current) {
+        enterArmedRef.current = false;
+        setEnterFirst(true);
+      } else {
+        setEnterFirst(false);
+      }
     };
 
     const loop = async () => {
@@ -282,6 +315,8 @@ export default function DialogueThumbnailDemo({
         setPress(null);
         setPressing(false);
         setCursorOn(false);
+        enterArmedRef.current = true;
+        setEnterFirst(false);
         await wait(timing.restMs);
         if (cancelled) return;
         setBeat("move-unsure");
@@ -344,6 +379,12 @@ export default function DialogueThumbnailDemo({
   const rPress = frame ? frame.press : press;
   const rCursorOn = frame ? frame.cursorOn : cursorOn;
   const rPressing = frame ? frame.pressing : pressing;
+  /* Scrub mode computes the first open's entrance from the frame state.
+     Autoplay passes null and runs the same entrance as a CSS animation. */
+  const rEnter =
+    frame && frame.enterMs != null && frame.enterMs < THUMBNAIL_ENTER_TOTAL_MS && barStyle === "states"
+      ? thumbnailEnterProgress(frame.enterMs)
+      : null;
 
   const bowTo = (a: Pt, b: Pt, p: number): Pt => {
     const e = EASE_IO(p);
@@ -399,8 +440,12 @@ export default function DialogueThumbnailDemo({
               {/* The swap region is always mounted: it reserves the people's
                   height in the none state, so the panel surface is the same
                   size in every state. Only its contents wait for a side. */}
-              <div key={frame ? `scrub-${rSide}` : swapKey} className="dlg-thumb__swap">
-                {rSide !== "none" ? <ThumbPeople side={rSide} /> : null}
+              <div
+                key={frame ? `scrub-${rSide}` : swapKey}
+                className="dlg-thumb__swap"
+                data-enter={!frame && enterFirst ? "" : undefined}
+              >
+                {rSide !== "none" ? <ThumbPeople side={rSide} enter={rEnter} /> : null}
               </div>
             </ChartVizCard>
           </div>

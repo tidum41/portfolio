@@ -93,6 +93,11 @@ export type ThumbnailFrameState = {
   cursorMode: ThumbnailCursorMode;
   /** Travel progress 0..1 for the to-* cursor modes. */
   cursorP: number;
+  /**
+   * Milliseconds since the loop's first open began, during that open only.
+   * The first open plays the answer's entrance; every later switch is a cut.
+   */
+  enterMs: number | null;
 };
 
 export type ThumbnailPhase = { beat: string; label: string; start: number; end: number };
@@ -150,7 +155,7 @@ export function thumbnailStateAt(timing: ThumbnailTiming, timeMs: number): Thumb
     t -= dur;
     return at >= 0 && at < dur ? at : -1;
   };
-  const base = { hover: null, press: null, pressing: false } as const;
+  const base = { hover: null, press: null, pressing: false, enterMs: null } as const;
   let p: number;
   if ((p = seg(rest)) >= 0)
     return { ...base, beat: "poster", side: "none", cursorOn: false, cursorMode: "off", cursorP: 0 };
@@ -161,16 +166,51 @@ export function thumbnailStateAt(timing: ThumbnailTiming, timeMs: number): Thumb
   if ((p = seg(hover)) >= 0)
     return { ...base, beat: "hover-unsure", side: "none", hover: "unsure", cursorOn: true, cursorMode: "at-unsure", cursorP: 1 };
   if ((p = seg(press)) >= 0)
-    return { beat: "press-unsure", side: "none", hover: "unsure", press: "unsure", pressing: true, cursorOn: true, cursorMode: "at-unsure", cursorP: 1 };
+    return { beat: "press-unsure", side: "none", hover: "unsure", press: "unsure", pressing: true, cursorOn: true, cursorMode: "at-unsure", cursorP: 1, enterMs: null };
   if ((p = seg(payoff)) >= 0)
-    return { ...base, beat: "unsure", side: "unsure", cursorOn: true, cursorMode: "at-unsure", cursorP: 1 };
+    return { ...base, beat: "unsure", side: "unsure", cursorOn: true, cursorMode: "at-unsure", cursorP: 1, enterMs: p };
   if ((p = seg(move)) >= 0)
     return { ...base, beat: "move-friday", side: "unsure", cursorOn: true, cursorMode: "to-friday", cursorP: move ? p / move : 1 };
   if ((p = seg(hover)) >= 0)
     return { ...base, beat: "hover-friday", side: "unsure", hover: "friday", cursorOn: true, cursorMode: "at-friday", cursorP: 1 };
   if ((p = seg(press)) >= 0)
-    return { beat: "press-friday", side: "unsure", hover: "friday", press: "friday", pressing: true, cursorOn: true, cursorMode: "at-friday", cursorP: 1 };
+    return { beat: "press-friday", side: "unsure", hover: "friday", press: "friday", pressing: true, cursorOn: true, cursorMode: "at-friday", cursorP: 1, enterMs: null };
   if ((p = seg(payoff)) >= 0)
     return { ...base, beat: "poster", side: "friday", cursorOn: true, cursorMode: "at-friday", cursorP: 1 };
   return { ...base, beat: "poster", side: "friday", cursorOn: false, cursorMode: "at-friday", cursorP: 1 };
+}
+
+/**
+ * The first open's entrance, in the product's own grammar: the sources rise
+ * in the way dlg-rise brings an element in (fade, 6px rise, 240ms,
+ * cubic-bezier(0.2, 0, 0, 1)), and the quote follows 100ms later, the way
+ * dlg-grow delays an answer's inner fade. Switches after the first open get
+ * no entrance: their progress here is never consulted.
+ */
+export const THUMBNAIL_ENTER_RISE_MS = 240;
+export const THUMBNAIL_ENTER_QUOTE_DELAY_MS = 100;
+export const THUMBNAIL_ENTER_TOTAL_MS = THUMBNAIL_ENTER_RISE_MS + THUMBNAIL_ENTER_QUOTE_DELAY_MS;
+
+/** cubic-bezier(0.2, 0, 0, 1) as a function of x, solved by bisection. */
+function dlgRiseEase(x: number): number {
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+  const cx = (t: number) => 3 * (1 - t) ** 2 * t * 0.2 + t ** 3;
+  const cy = (t: number) => 3 * (1 - t) * t ** 2 + t ** 3;
+  let lo = 0;
+  let hi = 1;
+  let t = x;
+  for (let i = 0; i < 24; i++) {
+    t = (lo + hi) / 2;
+    if (cx(t) < x) lo = t;
+    else hi = t;
+  }
+  return cy(t);
+}
+
+/** Eased entrance progress 0..1 for the chips row and the quote. */
+export function thumbnailEnterProgress(enterMs: number): { chips: number; quote: number } {
+  const chips = dlgRiseEase(enterMs / THUMBNAIL_ENTER_RISE_MS);
+  const quote = dlgRiseEase((enterMs - THUMBNAIL_ENTER_QUOTE_DELAY_MS) / THUMBNAIL_ENTER_RISE_MS);
+  return { chips, quote };
 }
