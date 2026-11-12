@@ -1,7 +1,6 @@
 import { money, usedBefore } from "./data";
 import {
   ActionButton,
-  ApprovalFrame,
   Pills,
   QueueSkeleton,
   Toast,
@@ -14,7 +13,7 @@ export function Triage() {
   const order = queue.orders[0];
 
   return (
-    <ApprovalFrame>
+    <>
       {queue.loading ? (
         <QueueSkeleton />
       ) : !order ? (
@@ -29,7 +28,7 @@ export function Triage() {
           onDone={queue.dismissToast}
         />
       ) : null}
-    </ApprovalFrame>
+    </>
   );
 }
 

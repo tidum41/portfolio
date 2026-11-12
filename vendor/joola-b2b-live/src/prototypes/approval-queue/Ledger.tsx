@@ -1,12 +1,12 @@
 import { money, usedBefore, type QueueOrder } from "./data";
-import { ActionButton, ApprovalFrame, Pills, QueueSkeleton, Toast } from "./Frame";
+import { ActionButton, Pills, QueueSkeleton, Toast } from "./Frame";
 import { useApprovalQueue } from "./useApprovalQueue";
 
 export function Ledger() {
   const queue = useApprovalQueue();
 
   return (
-    <ApprovalFrame>
+    <>
       {queue.loading ? (
         <QueueSkeleton />
       ) : queue.orders.length === 0 ? (
@@ -127,7 +127,7 @@ export function Ledger() {
           onDone={queue.dismissToast}
         />
       ) : null}
-    </ApprovalFrame>
+    </>
   );
 }
 

@@ -127,15 +127,11 @@ function AppRoutes() {
         <Route path="/dev/break-qty" element={<BreakQtyHarness />} />
         <Route path="/dev/break-approvals" element={<BreakApprovalsHarness />} />
         <Route path="/dev/states-sheet" element={<StatesSheet />} />
-        <Route
-          path="/prototypes/approval-queue"
-          element={<ApprovalQueueHarness />}
-        />
-        <Route
-          path="/prototypes/quick-order-row"
-          element={<QuickOrderRowHarness />}
-        />
         <Route element={<RequireBuyer />}>
+          <Route
+            path="/prototypes/quick-order-row"
+            element={<QuickOrderRowHarness />}
+          />
           <Route path="/" element={<Navigate to="/quick-order" replace />} />
           <Route path="/quick-order" element={<QuickOrderPage />} />
           <Route path="/catalog" element={<CatalogPage />} />
@@ -151,6 +147,10 @@ function AppRoutes() {
           <Route path="/admin" element={<Navigate to="/admin/orders" replace />} />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/admin/approvals" element={<ApprovalQueuePage />} />
+          <Route
+            path="/prototypes/approval-queue"
+            element={<ApprovalQueueHarness />}
+          />
         </Route>
         <Route path="*" element={<Navigate to="/quick-order" replace />} />
       </Routes>

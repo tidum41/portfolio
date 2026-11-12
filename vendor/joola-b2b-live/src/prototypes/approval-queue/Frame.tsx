@@ -1,25 +1,16 @@
 import { useEffect, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AdminShell } from "../../components/layout/AdminShell";
-
-export function ApprovalFrame({ children }: { children: ReactNode }) {
+export function ApprovalQueueSection({ children }: { children: ReactNode }) {
   return (
-    <AdminShell>
-      <section className="page page--approvals aq-proto">
-        <h1>Approval queue</h1>
-        <p className="page-lede">
-          Orders over credit limit that need your decision. Select a row to
-          approve, or reject when the account cannot cover the order.
-        </p>
-        <div className="aq-buyer">
-          <span>Buyer sees</span>
-          <span className="aq-pill aq-pill--pending">Pending approval</span>
-          <span>Your rep will need to approve before it ships.</span>
-        </div>
-        {children}
-      </section>
-    </AdminShell>
+    <section className="page page--approvals aq-proto">
+      {children}
+    </section>
   );
+}
+
+/** @deprecated Use ApprovalQueueSection inside AdminShell. */
+export function ApprovalFrame({ children }: { children: ReactNode }) {
+  return <ApprovalQueueSection>{children}</ApprovalQueueSection>;
 }
 
 export function Pills({ why }: { why: ("over-limit" | "overdue")[] }) {

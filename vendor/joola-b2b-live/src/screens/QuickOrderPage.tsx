@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  FULFILLMENT,
+  visibleAvailability,
   money,
   lineAmount,
 } from "../data/ledger";
@@ -187,7 +187,7 @@ export function QuickOrderPage() {
           {matches.map((p) => {
             const qty = qtys[p.id] ?? 0;
             const total = qty > 0 ? lineAmount(p, qty) : 0;
-            const fulfill = FULFILLMENT[p.id];
+            const availability = visibleAvailability(p.id);
             return (
               <div className="qo-table__row" key={p.id}>
                 <div className="qo-thumb">
@@ -198,10 +198,8 @@ export function QuickOrderPage() {
                     {p.fullName}
                   </div>
                   <div className="prod-sku">SKU {p.sku}</div>
-                  {fulfill ? (
-                    <span className="avail-tag">
-                      {fulfill.warehouse}, {fulfill.availability}
-                    </span>
+                  {availability ? (
+                    <div className="prod-sku">{availability}</div>
                   ) : null}
                 </div>
                 <div className="price-block end">
@@ -213,7 +211,6 @@ export function QuickOrderPage() {
                 <QtyStepper
                   value={qty}
                   onChange={(n) => setQty(p.id, n)}
-                  presets={p.presets}
                   moq={p.moq}
                   error={Boolean(addErrors[p.id])}
                 />

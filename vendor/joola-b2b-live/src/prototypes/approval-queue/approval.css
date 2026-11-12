@@ -1,4 +1,4 @@
-.page--approvals.aq-proto {
+.aq {
   --ink: #1a1a1a;
   --muted: #5c5c66;
   --faint: #8a8a96;
@@ -9,6 +9,12 @@
   --wash: #2c3ee014;
   --danger: #c62828;
   --ease: cubic-bezier(0.2, 0, 0, 1);
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #fff;
   color: var(--ink);
   font-family: "FKGroteskNeue", "FK Grotesk Neue", sans-serif;
   font-weight: 400;

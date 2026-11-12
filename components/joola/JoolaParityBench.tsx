@@ -74,8 +74,8 @@ export default function JoolaParityBench({
               value={qoVariant}
               options={[
                 { value: "1", label: "Compact" },
-                { value: "3", label: "Reorder" },
-                { value: "4", label: "Stock status" },
+                { value: "2", label: "Reorder" },
+                { value: "3", label: "Stock status" },
               ]}
               onChange={setQoVariant}
             />

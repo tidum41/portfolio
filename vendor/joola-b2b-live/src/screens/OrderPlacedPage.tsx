@@ -62,7 +62,7 @@ export function OrderPlacedPage() {
       <StatusPill tone={pendingApproval ? "amber" : "green"}>
         {displayStatus}
       </StatusPill>
-      <h1>Order {lastPlacedOrderId}</h1>
+      <h1>{displayStatus}</h1>
       <p className="page-lede">
         {pendingApproval
           ? `${repName} needs to approve this order before a ship date can be confirmed.`

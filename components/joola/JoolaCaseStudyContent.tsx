@@ -135,9 +135,9 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
   const [approvalView, setApprovalView] = useState<"split" | "ledger">("split");
   const [qoHeights, setQoHeights] = useState<Record<QoVariant, number>>({
     "1": JOOLA_EMBED_HEIGHT["quick-order-row-compact"],
-    "3": JOOLA_EMBED_HEIGHT["quick-order-row-reorder"],
+    "2": JOOLA_EMBED_HEIGHT["quick-order-row-reorder"],
+    "3": JOOLA_EMBED_HEIGHT["quick-order-row-stock"],
     "4": JOOLA_EMBED_HEIGHT["quick-order-row-stock"],
-    "2": JOOLA_EMBED_HEIGHT["quick-order-row-compact"],
     "5": JOOLA_EMBED_HEIGHT["quick-order-row-compact"],
   });
   const [approvalHeights, setApprovalHeights] = useState({
@@ -218,8 +218,8 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
           value={qoVariant}
           options={[
             { value: "1", label: "Compact" },
-            { value: "3", label: "Reorder" },
-            { value: "4", label: "Stock status" },
+            { value: "2", label: "Reorder" },
+            { value: "3", label: "Stock status" },
           ]}
           onChange={setQoVariant}
           buildSrc={qoRowUrl}
@@ -229,8 +229,8 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
           onEmbedHeight={bumpQoH}
           captions={{
             "1": cs.d2Caption ?? "",
+            "2": cs.d2Caption ?? "",
             "3": cs.d2Caption ?? "",
-            "4": cs.d2Caption ?? "",
           }}
         />
       </Section>

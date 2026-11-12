@@ -105,7 +105,6 @@ export function CartPage() {
                 </div>
                 <QtyStepper
                   value={line.qty}
-                  presets={p.presets}
                   moq={p.moq}
                   onChange={(n) => {
                     if (n === 0) removeFromCart(line.productId);

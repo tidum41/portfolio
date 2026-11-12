@@ -1,6 +1,6 @@
 /**
  * Mock wholesale ledger for the JOOLA B2B live prototype.
- * Demo names and figures. Client accounts and wholesale numbers stay confidential.
+ * Mock case study data only.
  */
 
 import { publicAsset } from "../lib/publicAsset";
@@ -135,7 +135,7 @@ export type AdminOrder = {
 
 const productImage = (file: string) => publicAsset(`products/${file}`);
 
-/** One account price per SKU. Preset chips are quantity shortcuts only. */
+/** One account price per SKU. presets kept for MOQ defaults only (not shown in UI). */
 export const PRODUCTS: Record<string, Product> = {
   perseus: {
     id: "perseus",
@@ -503,6 +503,13 @@ export const RECOMMENDED_META: Record<
   },
 };
 
+/** Availability shown under a SKU. Warehouse stays in the data and is not rendered. In stock renders nothing. */
+export function visibleAvailability(productId: string): string | null {
+  const row = FULFILLMENT[productId];
+  if (!row || row.availability === "In stock") return null;
+  return row.availability;
+}
+
 export const FULFILLMENT: Record<
   string,
   { warehouse: string; availability: string }
@@ -694,7 +701,7 @@ export const INITIAL_THREADS: Thread[] = [
         id: "m3",
         from: "staff",
         author: "Anna Bright",
-        body: "PO-118 left the CA warehouse this morning. Tracking updates should show by end of day.",
+        body: "PO-118 left this morning. Tracking updates should show by end of day.",
         time: "Mon 9:14 AM",
       },
     ],
@@ -1022,3 +1029,17 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
 
 export const DISCLAIMER =
   "Demo names and figures. Client accounts and wholesale numbers stay confidential.";
+
+/** Prior purchase qty per SKU for the Reorder quick-order row variant. */
+export const LAST_ORDER_QTY: Record<string, number> = {
+  perseus: 12,
+  hyperion: 12,
+  scorpeus: 12,
+  magnus: 12,
+  hc40: 96,
+  tourbag: 0,
+  net: 0,
+  overgrip: 60,
+  edgetape: 0,
+  clubhoodie: 0,
+};

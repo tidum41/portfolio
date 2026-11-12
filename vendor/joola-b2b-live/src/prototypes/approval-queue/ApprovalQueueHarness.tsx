@@ -1,12 +1,12 @@
 /**
- * Isolated prototype surface: admin approval queue.
- * Directions from docs/prototype-variants.md. Nothing here is imported
- * by production screens. /prototypes/quick-order-row is a different branch.
+ * Admin approval queue prototype inside production AdminShell.
  */
 import { useSearchParams } from "react-router-dom";
+import { AdminShell } from "../../components/layout/AdminShell";
 import { ProtoPicker } from "../ProtoPicker";
+import { ApprovalQueueIntro } from "./ApprovalQueueIntro";
 import "./approval.css";
-import { ProtoStateDial } from "./Frame";
+import { ApprovalQueueSection, ProtoStateDial } from "./Frame";
 import { Ledger } from "./Ledger";
 import { SplitInbox } from "./Split";
 import { Triage } from "./Triage";
@@ -15,15 +15,39 @@ export function ApprovalQueueHarness() {
   const [params] = useSearchParams();
   const force = params.get("protoState") || "default";
   const variants = [
-    { name: "Ledger", render: () => <Ledger key={force} /> },
-    { name: "Triage card", render: () => <Triage key={force} /> },
-    { name: "Split inbox", render: () => <SplitInbox key={force} /> },
+    {
+      name: "Ledger",
+      render: () => (
+        <ApprovalQueueSection>
+          <ApprovalQueueIntro />
+          <Ledger key={force} />
+        </ApprovalQueueSection>
+      ),
+    },
+    {
+      name: "Triage card",
+      render: () => (
+        <ApprovalQueueSection>
+          <ApprovalQueueIntro />
+          <Triage key={force} />
+        </ApprovalQueueSection>
+      ),
+    },
+    {
+      name: "Split inbox",
+      render: () => (
+        <ApprovalQueueSection>
+          <ApprovalQueueIntro />
+          <SplitInbox key={force} />
+        </ApprovalQueueSection>
+      ),
+    },
   ];
   return (
-    <>
+    <AdminShell protoFoot>
       <ProtoStateDial />
       <ProtoPicker variants={variants} hasMotion />
-    </>
+    </AdminShell>
   );
 }
 

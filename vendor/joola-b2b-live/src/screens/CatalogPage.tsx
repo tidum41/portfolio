@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { RECOMMENDED_META, money } from "../data/ledger";
+import { RECOMMENDED_META, money, visibleAvailability } from "../data/ledger";
 import { useStore } from "../state/Store";
 import { useScreenQuery } from "../hooks/useScreenQuery";
 import {
@@ -46,7 +46,7 @@ export function CatalogPage() {
       <section className="page page--catalog">
         <h1>Catalog</h1>
         <ErrorState
-          title="Could not load catalog"
+          title="Catalog did not load."
           message={error.message}
           fix={error.fix}
           onRetry={reload}
@@ -125,7 +125,9 @@ export function CatalogPage() {
         <EmptyState>No products in this category.</EmptyState>
       ) : (
         <div className="catalog-grid">
-          {filtered.map((p) => (
+          {filtered.map((p) => {
+            const availability = visibleAvailability(p.id);
+            return (
             <article className="catalog-card" key={p.id}>
               <div className="media">
                 <img src={p.image} alt="" />
@@ -133,6 +135,7 @@ export function CatalogPage() {
               <div className="card-body">
                 <h3>{p.fullName}</h3>
                 <div className="meta">SKU {p.sku}</div>
+                {availability ? <div className="meta">{availability}</div> : null}
                 <div className="price tnum">{money(p.buyerPrice)}</div>
                 <Button
                   variant="primary"
@@ -145,7 +148,8 @@ export function CatalogPage() {
                 </Button>
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>

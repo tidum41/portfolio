@@ -1075,8 +1075,8 @@ async function main() {
         detail: "Sidebar icons are not unique",
       });
     }
-    const perseusChip = page.locator(".qo-table__row").filter({ hasText: "Perseus Pro V" }).locator(".qty-presets button").nth(2);
-    await perseusChip.click();
+    const perseusRow = page.locator(".qo-table__row").filter({ hasText: "Perseus Pro V" });
+    await perseusRow.locator("input.qty").fill("24");
     await page.waitForTimeout(100);
     const afterQty = await page.evaluate(`(() => {
       const row = [...document.querySelectorAll(".qo-table__row")].find((el) =>
@@ -1466,15 +1466,30 @@ async function main() {
           detail: `Qty groups do not share one left edge and width (left Δ${qoLayout.leftSpread}px, width Δ${qoLayout.widthSpread}px)`,
         });
       }
-      if (qoLayout.chipSpread > 1) {
+      const presetCount = await page.locator(".qo-table .qty-presets button").count();
+      if (presetCount > 0) {
         allFindings.push({
           severity: "P1",
-          rule: "qty-chip-width",
+          rule: "qo-no-presets",
           screen: "quick-order",
           state: "default",
           width,
-          selector: ".qty-presets button",
-          detail: `Pack chips are not one width (Δ${qoLayout.chipSpread}px)`,
+          selector: ".qty-presets",
+          detail: `Quick order must not show preset chips (${presetCount} found)`,
+        });
+      }
+      const docOverflow = await page.evaluate(
+        "() => document.documentElement.scrollWidth - window.innerWidth",
+      );
+      if (docOverflow > 1) {
+        allFindings.push({
+          severity: "P1",
+          rule: "horizontal-overflow",
+          screen: "quick-order",
+          state: "default",
+          width,
+          selector: "html",
+          detail: `Horizontal overflow ${docOverflow}px`,
         });
       }
       const edgeDelta = Math.abs(qoLayout.tableR - qoLayout.btnR);
@@ -1507,19 +1522,28 @@ async function main() {
     const aqErrors: string[] = [];
     page.on("pageerror", (err) => aqErrors.push(String(err)));
     const aqUrl = (query: string) =>
-      `${base}/prototypes/approval-queue?clean=1&${query}`;
+      `${base}/prototypes/approval-queue?clean=1&view=admin&screen=approvals&state=default&account=dicks&${query}`;
     const ink = "rgb(26, 26, 26)";
     const danger = "rgb(198, 40, 40)";
+
+    await page.goto(`${base}/admin/approvals?${qs("admin", "approvals", "default")}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    });
+    await page.waitForTimeout(600);
 
     await page.goto(aqUrl("v=1"), { waitUntil: "domcontentloaded", timeout: 30000 });
     await page.waitForTimeout(400);
     const ledgerGuard = (await page.evaluate(`(() => {
       const heroes = [...document.querySelectorAll(".aq-hero")].map((el) => getComputedStyle(el).color);
-      const overChip = getComputedStyle(document.querySelector(".aq-pill--over")).color;
+      const overEl = document.querySelector(".aq-pill--over");
+      if (!overEl) return { missing: "aq-pill--over" };
+      const overChip = getComputedStyle(overEl).color;
       const due = document.querySelector(".aq-pill--due");
       const dueColor = due ? getComputedStyle(due).color : "";
       const buttons = [...document.querySelectorAll(".aq-btn")].map((el) => Math.round(el.getBoundingClientRect().height));
       const btn = document.querySelector(".aq-btn");
+      if (!btn) return { missing: "aq-btn" };
       const before = btn.getBoundingClientRect().width;
       btn.setAttribute("data-busy", "");
       const after = btn.getBoundingClientRect().width;
@@ -1546,7 +1570,17 @@ async function main() {
       outlineW: number;
       rule: boolean;
     };
-    if (ledgerGuard.heroes.some((color) => color !== ink)) {
+    if ("missing" in ledgerGuard) {
+      allFindings.push({
+        severity: "P1",
+        rule: "aq-prototype-mount",
+        screen: "approval-queue",
+        state: "default",
+        width: 1280,
+        selector: ".aq-btn",
+        detail: `Approval prototype missing ${(ledgerGuard as { missing: string }).missing}`,
+      });
+    } else if (ledgerGuard.heroes.some((color) => color !== ink)) {
       allFindings.push({
         severity: "P1",
         rule: "aq-overby-ink",
@@ -1830,8 +1864,11 @@ async function main() {
         await page.goto(aqUrl(query), { waitUntil: "domcontentloaded", timeout: 30000 });
         await page.waitForTimeout(200);
         const gap = (await page.evaluate(`(() => {
-          const scroller = document.querySelector(".aq-page");
-          const disc = document.querySelector(".aq-disclaimer");
+          const scroller = document.querySelector(".shell__body") || document.querySelector(".aq-page");
+          const disc =
+            document.querySelector(".shell__site-foot .disclaimer-strip") ||
+            document.querySelector(".shell__body > .disclaimer-strip") ||
+            document.querySelector(".disclaimer-strip");
           const picker = document.querySelector(".proto-picker");
           if (!scroller || !disc || !picker) return { missing: true, gap: 0, overlaps: true };
           function measure() {
@@ -1842,7 +1879,7 @@ async function main() {
             const bottom = Math.min(d.bottom, s.bottom);
             const visible = bottom > top + 1;
             const overlaps = visible && bottom > p.top && top < p.bottom && d.right > p.left && d.left < p.right;
-            const clear = p.top - (visible ? bottom : s.bottom);
+            const clear = p.top - d.bottom;
             return { overlaps, clear };
           }
           const atTop = measure();
@@ -1854,15 +1891,17 @@ async function main() {
             clear: Math.min(atTop.clear, atEnd.clear),
           };
         })()`)) as { missing: boolean; overlaps: boolean; clear: number };
-        if (gap.missing || gap.overlaps || gap.clear < 23) {
+        if (gap.missing || gap.overlaps || (gap.clear ?? 0) < 23) {
           allFindings.push({
             severity: "P1",
             rule: "aq-picker-clearance",
             screen: "approval-queue",
             state: query,
             width,
-            selector: ".aq-disclaimer",
-            detail: `Switcher clearance ${gap.clear.toFixed(1)}px on ${query}`,
+            selector: ".disclaimer-strip",
+            detail: gap.missing
+              ? `Disclaimer or picker missing on ${query}`
+              : `Switcher clearance ${gap.clear.toFixed(1)}px on ${query}`,
           });
         }
       }
@@ -1877,9 +1916,12 @@ async function main() {
     await reducedPage.goto(aqUrl("v=1"), { waitUntil: "domcontentloaded", timeout: 30000 });
     await reducedPage.waitForTimeout(200);
     const animationName = await reducedPage.evaluate(
-      `(() => getComputedStyle(document.querySelector(".aq-detail")).animationName)()`,
+      `(() => {
+        const el = document.querySelector(".aq-detail");
+        return el ? getComputedStyle(el).animationName : "none";
+      })()`,
     );
-    if (animationName !== "none") {
+    if (animationName && animationName !== "none") {
       allFindings.push({
         severity: "P1",
         rule: "aq-reduced-motion",

@@ -6,7 +6,14 @@ import { Avatar, Button } from "../ui/primitives";
 import { publicAsset } from "../../lib/publicAsset";
 import { NavIcon } from "./NavIcon";
 
-export function AdminShell({ children }: { children?: ReactNode }) {
+export function AdminShell({
+  children,
+  protoFoot,
+}: {
+  children?: ReactNode;
+  /** Pin disclaimer under scroll area for fixed prototype picker clearance */
+  protoFoot?: boolean;
+}) {
   const { logout } = useStore();
   const rep = JOOLA_STAFF.collin;
 
@@ -59,8 +66,16 @@ export function AdminShell({ children }: { children?: ReactNode }) {
         </header>
         <main className="shell__body">
           {children ?? <Outlet />}
-          <p className="disclaimer-strip">{DISCLAIMER}</p>
+          {protoFoot ? null : (
+            <p className="disclaimer-strip">{DISCLAIMER}</p>
+          )}
         </main>
+        {protoFoot ? (
+          <footer className="shell__site-foot">
+            <p className="disclaimer-strip">{DISCLAIMER}</p>
+            <div className="proto-picker-safe" aria-hidden="true" />
+          </footer>
+        ) : null}
       </div>
     </div>
   );

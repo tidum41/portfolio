@@ -1,7 +1,6 @@
 import { money } from "./data";
 import {
   ActionButton,
-  ApprovalFrame,
   Pills,
   QueueSkeleton,
   Toast,
@@ -16,7 +15,7 @@ export function SplitInbox() {
   const invalid = current ? queue.reasonError === current.id : false;
 
   return (
-    <ApprovalFrame>
+    <>
       {queue.loading ? (
         <QueueSkeleton />
       ) : queue.orders.length === 0 || !current ? (
@@ -125,6 +124,6 @@ export function SplitInbox() {
           onDone={queue.dismissToast}
         />
       ) : null}
-    </ApprovalFrame>
+    </>
   );
 }

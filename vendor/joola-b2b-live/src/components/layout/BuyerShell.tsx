@@ -16,7 +16,13 @@ const NAV: { to: string; label: string; icon: NavIconName }[] = [
   { to: "/messages", label: "Messages", icon: "messages" },
 ];
 
-export function BuyerShell({ children }: { children?: ReactNode }) {
+export function BuyerShell({
+  children,
+  protoFoot,
+}: {
+  children?: ReactNode;
+  protoFoot?: boolean;
+}) {
   const { cart, cartTotal } = useStore();
   const units = cart.reduce((s, l) => s + l.qty, 0);
 
@@ -74,8 +80,16 @@ export function BuyerShell({ children }: { children?: ReactNode }) {
         </header>
         <main className="shell__body">
           {children ?? <Outlet />}
-          <p className="disclaimer-strip">{DISCLAIMER}</p>
+          {protoFoot ? null : (
+            <p className="disclaimer-strip">{DISCLAIMER}</p>
+          )}
         </main>
+        {protoFoot ? (
+          <footer className="shell__site-foot">
+            <p className="disclaimer-strip">{DISCLAIMER}</p>
+            <div className="proto-picker-safe" aria-hidden="true" />
+          </footer>
+        ) : null}
       </div>
     </div>
   );

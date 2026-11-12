@@ -49,7 +49,7 @@ export function InvoicesPage() {
       <section className="page page--invoices">
         <h1>Invoices and terms</h1>
         <ErrorState
-          title="Could not load invoices"
+          title="Invoices did not load."
           message={error.message}
           fix={error.fix}
           onRetry={reload}
@@ -159,8 +159,7 @@ export function InvoicesPage() {
             available credit until paid.
           </p>
           <p>
-            Orders that exceed remaining credit are held for sales approval
-            before fulfillment.
+            Orders over remaining credit stay on pending approval until a JOOLA rep approves them.
           </p>
           <p>
             Credit limit for {account?.name ?? "this account"} is{" "}

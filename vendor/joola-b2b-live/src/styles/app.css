@@ -406,7 +406,8 @@ a.btn {
   align-items: center;
   gap: 8px;
   height: 32px;
-  padding: 0 8px;
+  /* 7px, not 8px: the 1px transparent border would otherwise shift icons to x=21 */
+  padding: 0 7px;
   border-radius: var(--radius-control);
   font-size: var(--text-ui);
   font-weight: 400;
@@ -436,7 +437,7 @@ a.btn {
   background: var(--blue-soft);
   color: var(--accent);
   font-weight: 500;
-  padding: 0 8px;
+  padding: 0 7px;
 }
 .shell__nav a:focus-visible,
 .shell__back:focus-visible {
@@ -464,12 +465,18 @@ a.btn {
 .shell__back {
   margin-top: auto;
 }
+/* Trailing external icon stays after the label. The inset matches a leading icon slot plus the 8px gap, so the label shares x=44 with nav labels. */
+.shell__back > span:first-child {
+  margin-left: calc(var(--icon-slot) + 8px);
+}
 .shell__main {
   display: flex;
   flex-direction: column;
   min-width: 0;
   max-width: 100%;
+  min-height: 100vh;
   position: relative;
+  background: #fff;
 }
 .shell__topbar {
   height: var(--topbar-h);
@@ -2658,16 +2665,13 @@ a.btn {
 .page-skel { min-height: 280px; }
 
 .qo-table {
-  --qo-chip: 60px;
-  --qo-stepper: 108px;
-  --qo-qty: calc(var(--qo-stepper) + var(--qo-chip) * 3);
+  --qo-stepper: 100px;
   width: 100%;
+  max-width: 100%;
   border-top: 1px solid var(--line);
   display: grid;
-  /* Product and price hug their text. Qty is one fixed track. Total takes
-     the rest and right-aligns so the table meets the content edge. */
-  grid-template-columns: 48px max-content max-content max-content minmax(max-content, 1fr);
-  column-gap: 24px;
+  grid-template-columns: 48px minmax(0, 1fr) max-content minmax(var(--qo-stepper), max-content) minmax(4.5rem, 1fr);
+  column-gap: 16px;
 }
 .qo-table__head,
 .qo-table__row {
@@ -2706,9 +2710,11 @@ a.btn {
   justify-content: flex-start;
 }
 .qo-table__row .qty-group {
-  width: max-content;
-  min-width: max-content;
-  max-width: none;
+  width: 100%;
+  min-width: 0 !important;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
   flex-direction: row;
   align-items: stretch;
   justify-content: flex-start;
@@ -2755,27 +2761,25 @@ a.btn {
 }
 .qo-table__row .qty-cell {
   position: relative;
-  min-width: max-content;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   gap: 0;
-  overflow: visible;
+  overflow: hidden;
   align-items: flex-start;
   justify-content: flex-start;
 }
-/* Stepper + three equal chips. Presets always reserve 3 slots so 2-chip rows match. */
-.qo-table__row .qty-group {
-  flex-direction: row;
-  align-items: stretch;
-  justify-content: flex-start;
-  width: max-content;
-  min-width: max-content;
-  max-width: none;
-  overflow: visible;
-}
 .qo-table__row .qty-stepper {
   height: 36px;
-  width: var(--qo-stepper);
-  flex: 0 0 var(--qo-stepper);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  box-sizing: border-box;
+}
+.qo-table__row .qty-stepper button {
+  width: 32px;
+  min-width: 32px;
 }
 .qo-table__row .qty-stepper .qty,
 .qo-table__row .qty-stepper input.qty {
@@ -2833,8 +2837,10 @@ a.btn {
 .tpl-head-row { width: 100%; }
 .tpl-stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(72px, max-content));
+  grid-template-columns: 72px 88px 104px 148px;
   gap: 16px;
+  justify-items: end;
+  text-align: right;
   font-size: 13px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
@@ -3259,6 +3265,19 @@ a.btn {
 .admin-orders-table td:nth-child(5) { width: 14%; }
 .admin-orders-table th:nth-child(6),
 .admin-orders-table td:nth-child(6) { width: 12%; }
+.admin-orders-table {
+  min-width: 0;
+  width: 100%;
+}
+.admin-orders-table td:nth-child(4) {
+  white-space: nowrap;
+  overflow: hidden;
+}
+.admin-orders-table td:nth-child(4) .sub {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .rep-dist strong {
   display: block;
   font-weight: 500;
@@ -3284,9 +3303,12 @@ a.btn {
   .shell {
     --sidebar-w: 200px;
   }
+  .page--qo {
+    overflow-x: clip;
+  }
   .qo-table {
-    grid-template-columns: 40px max-content max-content max-content minmax(max-content, 1fr);
-    column-gap: 24px;
+    grid-template-columns: 40px minmax(0, 1fr) minmax(0, max-content) var(--qo-stepper) minmax(3.5rem, 1fr);
+    column-gap: 12px;
   }
   .qo-thumb {
     width: 40px;
@@ -3320,8 +3342,27 @@ a.btn {
   .rep-table td:nth-child(5) {
     width: 168px;
   }
+  /* Six-column orders table: stay inside the content box. The 5-col 168px rule above must not apply. */
+  .admin-orders-table {
+    min-width: 0;
+    width: 100%;
+  }
+  .admin-orders-table th:nth-child(1),
+  .admin-orders-table td:nth-child(1) { width: 18%; }
+  .admin-orders-table th:nth-child(2),
+  .admin-orders-table td:nth-child(2) { width: 13%; }
+  .admin-orders-table th:nth-child(3),
+  .admin-orders-table td:nth-child(3) { width: 14%; }
+  .admin-orders-table th:nth-child(4),
+  .admin-orders-table td:nth-child(4) { width: 21%; }
+  .admin-orders-table th:nth-child(5),
+  .admin-orders-table td:nth-child(5) { width: 22%; }
+  .admin-orders-table th:nth-child(6),
+  .admin-orders-table td:nth-child(6) { width: 12%; }
   .tpl-stats {
-    grid-template-columns: repeat(2, minmax(72px, max-content));
+    grid-template-columns: 72px 88px 104px 148px;
+    justify-items: end;
+    text-align: right;
   }
 }
 
@@ -3417,4 +3458,93 @@ html.is-paused .app *:not(.dialkit-root):not(.dialkit-root *) {
 }
 .guides-readout span {
   color: rgba(255, 255, 255, 0.82);
+}
+
+/* Quick-order row prototype (embed source) */
+.qo-row-proto .qo-table {
+  grid-template-columns: 48px minmax(0, 1fr) max-content minmax(var(--qo-stepper), max-content) minmax(4.5rem, 1fr);
+}
+.qo-row-proto--stock .qo-table__row .avail-tag {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted);
+}
+.qo-row-proto__qty {
+  width: auto !important;
+  min-width: var(--qo-stepper) !important;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.qo-use-last {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--band);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.qo-use-last:hover {
+  background: var(--wash);
+}
+.qo-use-last:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.aq-proto .aq-buyer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--band);
+  font-size: 13px;
+  color: var(--muted);
+}
+.shell__site-foot {
+  flex-shrink: 0;
+  padding: 0 28px;
+}
+.shell__site-foot .disclaimer-strip {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+.proto-picker-safe {
+  display: none;
+  height: 0;
+}
+/* Proto picker: scroll page body; pin disclaimer in footer above fixed picker */
+.shell:has(.proto-picker) .shell__main {
+  max-height: 100vh;
+  overflow: hidden;
+}
+.shell:has(.proto-picker) .shell__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.shell:has(.proto-picker) .shell__site-foot .proto-picker-safe {
+  display: block;
+  height: calc(24px + 44px + 84px);
+  width: 100%;
+}
+.aq-proto .aq-pill--pending {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: var(--blue-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
 }

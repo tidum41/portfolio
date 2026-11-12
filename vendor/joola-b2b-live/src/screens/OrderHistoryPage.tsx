@@ -75,7 +75,7 @@ export function OrderHistoryPage() {
                 <span>
                   <span className="name">{order.label}</span>
                   <span className="meta">
-                    {order.id} · {formatShortDate(order.when)}
+                    {order.id}, {formatShortDate(order.when)}
                   </span>
                 </span>
                 <span className="order-card__right">
