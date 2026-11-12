@@ -4,6 +4,7 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button, SearchField } from "../../components/ui/primitives";
 import { NavIcon } from "../../components/layout/NavIcon";
 import { publicAsset } from "../../lib/publicAsset";
@@ -174,7 +175,9 @@ export function ProductBlock({
   noticeId?: string;
   hideCaseMeta?: boolean;
 }) {
-  const hideCase = hideCaseMeta ?? packNamedInTitle(sku.fullName);
+  const [params] = useSearchParams();
+  const hideCase =
+    params.get("cs") === "1" || hideCaseMeta || packNamedInTitle(sku.fullName);
   return (
     <div className="qo-product">
       <div className="qo-name" data-qo-fit="">

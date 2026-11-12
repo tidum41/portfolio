@@ -9,6 +9,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "joola:build-proto": "node scripts/build-joola-proto.mjs",
+    "joola:revendor": "node scripts/joola-revendor.mjs",
+    "joola:grep-embed-case": "node scripts/joola-grep-embed-case-copy.mjs",
     "joola:pixel-diff": "node scripts/joola-pixel-diff.mjs",
     "prebuild": "npm run joola:build-proto",
     "studio": "sanity dev",

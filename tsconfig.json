@@ -47,6 +47,7 @@
     "vendor/joola-b2b-live/src/prototypes/quick-order-row/QuickOrderRowHarness.tsx",
     "vendor/joola-b2b-live/src/prototypes/approval-queue/ApprovalQueueHarness.tsx",
     "vendor/joola-b2b-live/src/components/PlaygroundDial.tsx",
-    "vendor/joola-b2b-live/src/prototypes/quick-order-row/QuickOrderDial.tsx"
+    "vendor/joola-b2b-live/src/prototypes/quick-order-row/QuickOrderDial.tsx",
+    "scripts/joola-vendor-overlay/**"
   ]
 }

@@ -121,7 +121,7 @@ function MockDisclaimer() {
 
 export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
   const painPoints = cs.painPoints ?? [];
-  const [qoVariant, setQoVariant] = useState<QoVariant>("2");
+  const [qoVariant, setQoVariant] = useState<QoVariant>("3");
   const [approvalView, setApprovalView] = useState<"split" | "ledger">("split");
   const [qoSlotH, setQoSlotH] = useState(JOOLA_EMBED_HEIGHT["quick-order-row-compare"]);
   const [approvalSlotH, setApprovalSlotH] = useState(
@@ -214,7 +214,6 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
           label="Quick order line view"
           value={qoVariant}
           options={[
-            { value: "2", label: "Cases" },
             { value: "3", label: "Reorder" },
             { value: "4", label: "Stock status" },
           ]}
@@ -223,12 +222,11 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
           figureId="quick-order-row-compare"
           designWidth={QO_W}
           heights={{
-            "2": qoSlotH,
             "3": qoSlotH,
             "4": qoSlotH,
           }}
           onEmbedHeight={bumpQoH}
-          caption="Case pack steps and stock status sit on the same line."
+          caption="Reorder hints and stock status sit on the same line."
         />
       </Section>
 

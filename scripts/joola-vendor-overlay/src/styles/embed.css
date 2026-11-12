@@ -1,0 +1,71 @@
+html.is-embed,
+html.is-embed body {
+  margin: 0;
+  overflow: hidden;
+  height: auto;
+  min-height: 0;
+  background: #fff;
+}
+
+html.is-embed #root {
+  height: auto;
+  min-height: 0;
+}
+
+html.is-embed .proto-picker,
+html.is-embed .qo-stage__kit,
+html.is-embed .proto-state-dial,
+html.is-embed .playground-dial,
+html.is-embed .guides-root {
+  display: none !important;
+}
+
+html.is-embed .page--review {
+  padding-bottom: 0;
+}
+
+html.is-embed .review-grid {
+  margin-bottom: 0;
+}
+
+html.is-embed .shell,
+html.is-embed .shell__sidebar,
+html.is-embed .app.shell,
+html.is-embed .buyer-shell,
+html.is-embed .shell__main,
+html.is-embed .aq {
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+html.is-embed .disclaimer-strip,
+html.is-embed .aq-disclaimer {
+  display: none !important;
+}
+
+html.is-embed .qo-proto .qo-stage,
+html.is-embed .qo-proto .qo-frame,
+html.is-embed .qo-proto.proto-root,
+html.is-embed [data-qo-ready] {
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+html.is-embed body:has(.qo-proto) {
+  min-height: 0 !important;
+  height: auto !important;
+  background: #fff;
+}
+
+html.is-cs-embed,
+html.is-cs-embed body,
+html.is-cs-embed #root {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Case-study embeds: no case-pack quantity mode or "Case of N" copy */
+html.is-cs-embed .qo-case,
+html.is-cs-embed .qo-caseqty {
+  display: none !important;
+}

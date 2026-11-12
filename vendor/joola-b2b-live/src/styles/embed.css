@@ -63,3 +63,9 @@ html.is-cs-embed #root {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* Case-study embeds: no case-pack quantity mode or "Case of N" copy */
+html.is-cs-embed .qo-case,
+html.is-cs-embed .qo-caseqty {
+  display: none !important;
+}

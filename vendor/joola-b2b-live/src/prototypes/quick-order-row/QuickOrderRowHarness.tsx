@@ -14,16 +14,15 @@ import { QuickOrderState } from "./context";
 import { QuickOrderDial } from "./QuickOrderDial";
 import { parseVariant, VARIANTS } from "./logic";
 import { AvailabilityVariant } from "./variants/Availability";
-import { CasesVariant } from "./variants/Cases";
 import { CompactVariant } from "./variants/Compact";
 import { ReorderVariant } from "./variants/Reorder";
 import { PresetsVariant } from "./variants/Presets";
 import "../proto-scaffold.css";
 import "./quick-order-row.css";
 
+/** Portfolio case-study embeds omit the Cases quantity mode (v=2). */
 const RENDER = {
   "1": CompactVariant,
-  "2": CasesVariant,
   "3": ReorderVariant,
   "4": AvailabilityVariant,
   "5": PresetsVariant,
@@ -32,8 +31,9 @@ const RENDER = {
 function Stage() {
   const [params, setParams] = useSearchParams();
   const embed = params.get("embed") === "1";
-  const variant = parseVariant(params.get("v"));
-  const Active = RENDER[variant];
+  let variant = parseVariant(params.get("v"));
+  if (caseStudyEmbedFromSearch(params) && variant === "2") variant = "3";
+  const Active = RENDER[variant as keyof typeof RENDER] ?? CompactVariant;
 
   useLayoutEffect(() => {
     if (!embed) return;

@@ -55,17 +55,6 @@ const CASES = [
     iframeHeight: EMBED_H.qoSearch,
   },
   {
-    id: "qo-cases",
-    figure: "quick-order-row-compare",
-    path: "/joola-proto/qo/index.html",
-    hash: "/prototypes/quick-order-row",
-    params: "embed=1&clean=1&v=2&line=typed&w=1024&latency=0",
-    selector: "[data-qo-ready]",
-    width: 1024,
-    tab: "Cases",
-    iframeHeight: EMBED_H.qoCompare,
-  },
-  {
     id: "qo-reorder",
     figure: "quick-order-row-compare",
     path: "/joola-proto/qo/index.html",
