@@ -470,3 +470,109 @@
     transition: none;
   }
 }
+
+/*
+ * Selection prototype variants (dev states playground, built with the
+ * /prototype method: numbered versions, one at a time at full size,
+ * behind an instant switcher). Every variant moves the outline to the
+ * segment's outer edge and colours the quote's voice icon with the open
+ * side; they differ in outline colour, row fill and hover behaviour.
+ * Unset on the homepage card, which keeps the shipped states treatment.
+ */
+
+/* Outer outline in place of the inset ring: open and pressed segments. */
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: 0 0 0 2px var(--dp-ink);
+}
+
+/* sel-2: the outline in each segment's own press tone. */
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-2"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-2"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal] {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dp-chart-focal) 70%, var(--dp-ink));
+}
+
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-2"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-2"] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dp-border-strong) 65%, var(--dp-ink));
+}
+
+/* sel-3: an offset ring, a surface gap before the ink (the focus-ring pattern). */
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-3"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-3"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-3"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-3"] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: 0 0 0 2px var(--dp-surface), 0 0 0 4px var(--dp-ink);
+}
+
+/*
+ * Row fill: in the fill variants both lanes take the same widened box, a
+ * 12px bleed past the text padding with 3px of air above and below, so
+ * switching sides never moves any text. Only the open lane paints.
+ */
+.dlg-thumb[data-sel-variant="sel-1"] .dp-chart-stack__lane,
+.dlg-thumb[data-sel-variant="sel-2"] .dp-chart-stack__lane,
+.dlg-thumb[data-sel-variant="sel-3"] .dp-chart-stack__lane,
+.dlg-thumb[data-sel-variant="sel-5"] .dp-chart-stack__lane {
+  margin: 0 -12px;
+  padding: 3px 12px;
+  border-radius: var(--ds-radius-md);
+}
+
+.dlg-thumb[data-sel-variant="sel-1"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal],
+.dlg-thumb[data-sel-variant="sel-2"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal],
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] {
+  background: color-mix(in srgb, var(--dp-chart-focal) 14%, var(--dp-surface));
+}
+
+.dlg-thumb[data-sel-variant="sel-1"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]),
+.dlg-thumb[data-sel-variant="sel-2"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]),
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) {
+  background: color-mix(in srgb, var(--dp-muted) 14%, var(--dp-surface));
+}
+
+.dlg-thumb[data-sel-variant="sel-3"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal],
+.dlg-thumb[data-sel-variant="sel-3"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) {
+  background: var(--dp-warm);
+}
+
+/* The quote's voice icon takes the open side's colour, in every variant. */
+.dlg-thumb[data-sel-variant][data-side="friday"] .dp-clip-quote__icon {
+  color: var(--dp-chart-focal);
+}
+
+.dlg-thumb[data-sel-variant][data-side="unsure"] .dp-clip-quote__icon {
+  color: var(--dp-muted);
+}
+
+/*
+ * sel-5: the product's own hover swap (count for share) switched on for
+ * this variant only, driven by the demo's hover state so it also fires
+ * inside the loop's hover beats. The project card keeps it off, per the
+ * rule above.
+ */
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar[data-hover="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-count,
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-count,
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar .dp-chart-stack__lane:hover .dp-chart-stack__lane-count {
+  opacity: 0;
+}
+
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar[data-hover="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-share,
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-share,
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar .dp-chart-stack__lane:hover .dp-chart-stack__lane-share {
+  opacity: 1;
+}
+
+/* sel-5 with a real pointer over the bar: both lanes swap, as the product's
+   own Round 18 rule does. The demo's 120ms hover beats are shorter than the
+   swap's 150ms fade, so inside the loop the swap only begins; a held hover
+   completes it. */
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar:hover .dp-chart-stack__lane-count {
+  opacity: 0;
+}
+
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar:hover .dp-chart-stack__lane-share {
+  opacity: 1;
+}

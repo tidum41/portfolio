@@ -135,10 +135,17 @@ export default function DialogueThumbnailDemo({
   showPreview = true,
   timeMs = null,
   timingOverride,
+  selVariant,
 }: {
   variant?: ThumbnailVariantId;
   playing?: boolean;
   showPreview?: boolean;
+  /**
+   * Selection-state prototype variant (dev states playground only, the
+   * /prototype method: numbered versions behind a switcher). Unset keeps
+   * the shipped states treatment.
+   */
+  selVariant?: "sel-1" | "sel-2" | "sel-3" | "sel-4" | "sel-5";
   /**
    * Scrub mode: when set, the demo renders the exact state at this loop time
    * (see thumbnailStateAt) and the autoplay loop never runs. Null = autoplay.
@@ -416,6 +423,7 @@ export default function DialogueThumbnailDemo({
       className="dlg-thumb"
       data-variant={variant}
       data-bar-style={barStyle}
+      data-sel-variant={selVariant}
       data-beat={rBeat}
       data-side={rSide}
       data-scrub={scrubbing ? "" : undefined}
