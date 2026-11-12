@@ -1438,9 +1438,11 @@ html[data-theme="dark"] .project-image {
 .cs-back-arrow {
   display: block;
   flex-shrink: 0;
-  /* Optical lift: flex centring centres the line box, not the cap height,
-     so the chevron sits a fraction high to centre on the caps. */
-  transform: translateY(-0.875px);
+  /* Optical offset: flex centring centres the box, not the ink.
+     Measured in the real build against Helvetica Neue, the chevron's
+     ink centre lands on the label's cap centre at +0.125px; the
+     earlier -0.875px lift left it about a pixel high. */
+  transform: translateY(0.125px);
 }
 .cs-back-desktop-label {
   font-family: var(--font-sans);

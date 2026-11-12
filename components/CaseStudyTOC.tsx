@@ -142,7 +142,11 @@ export default function CaseStudyTOC({
   }, [router, backHref]);
 
   /** Shared chevron for mobile + desktop. Tight 8x12 canvas so the ink is
-      the box: no built-in icon padding, stroke matched to the 14px label. */
+      the box: no built-in icon padding, stroke matched to the 14px label.
+      Points span 9 of the 12 tall canvas (1.5 to 10.5), so the rendered ink
+      is about 10.5px against the label's 10px cap height, a half pixel of
+      overshoot, with its centre on the cap centre at the +0.125px offset
+      in globals.css. Calibrated at 4x against Helvetica Neue. */
   const backArrow = (
     <svg
       className="cs-back-arrow"
@@ -156,7 +160,7 @@ export default function CaseStudyTOC({
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <polyline points="7 1 1.5 6 7 11" />
+      <polyline points="7 1.5 1.5 6 7 10.5" />
     </svg>
   );
 
