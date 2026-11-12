@@ -111,7 +111,7 @@ export default function AboutPageContent({
                   lineHeight: "var(--lh-meta)",
                   color: "var(--color-text-muted)",
                   margin: "0 0 24px",
-                }}>B.S. Cognitive Science | UCLA &apos;27</p>
+                }}>Cognitive Science &amp; Computing at UCLA</p>
               </Enter>
 
               <Enter playEnter={playEnter} enterEpoch={enterEpoch} delay={enterMs(2)}>
