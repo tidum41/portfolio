@@ -50,7 +50,7 @@ function TriageCard({
           <div>
             <h2>{order.account}</h2>
             <p>
-              {order.so} · {order.buyer}
+              {order.so}, {order.buyer}
             </p>
           </div>
           <Pills why={order.why} />

@@ -11,6 +11,7 @@ import {
 import { attachEmbedHeightReporter } from "../../embed/reportEmbedHeight";
 import { useSearchParams } from "react-router-dom";
 import { QuickOrderState } from "./context";
+import { QoEmbedBootstrap } from "./QoEmbedBootstrap";
 import { QuickOrderDial } from "./QuickOrderDial";
 import { parseVariant, VARIANTS } from "./logic";
 import { AvailabilityVariant } from "./variants/Availability";
@@ -84,6 +85,7 @@ function Stage() {
 export function QuickOrderRowHarness() {
   return (
     <QuickOrderState>
+      <QoEmbedBootstrap />
       <Stage />
     </QuickOrderState>
   );

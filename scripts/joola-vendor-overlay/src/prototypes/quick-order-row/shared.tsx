@@ -5,9 +5,9 @@ import {
   type ReactNode,
 } from "react";
 import { useSearchParams } from "react-router-dom";
+import { BuyerShell } from "../../components/layout/BuyerShell";
 import { Button, SearchField } from "../../components/ui/primitives";
-import { NavIcon } from "../../components/layout/NavIcon";
-import { publicAsset } from "../../lib/publicAsset";
+import { caseStudyEmbedFromSearch } from "../../embed/caseStudyEmbedMode";
 import { usePlay, type PlayRow } from "./context";
 import {
   caseCount,
@@ -209,8 +209,13 @@ export function QtyField({
   onCommit: (qty: number, notice: string) => void;
 }) {
   const disabled = mode !== "edit";
+  const [params] = useSearchParams();
+  const csEmbed = caseStudyEmbedFromSearch(params);
   const [draft, setDraft] = useState<string | null>(null);
   const shown = draft ?? String(qty);
+  const groupLabel = csEmbed
+    ? `Quantity for ${sku.fullName}`
+    : `Quantity for ${sku.fullName}, case of ${sku.pack}`;
 
   function commit(raw: string) {
     const result = commitQty(raw, sku.pack, sku.stock);
@@ -229,7 +234,7 @@ export function QtyField({
       className={cx("qo-step", disabled && "is-disabled")}
       data-qo-control=""
       role="group"
-      aria-label={`Quantity for ${sku.fullName}, case of ${sku.pack}`}
+      aria-label={groupLabel}
     >
       <button
         type="button"
@@ -413,71 +418,44 @@ export function PrototypePage({
   }
 
   return (
-    <div className="qo-frame" data-w={play.width} data-qo-state={play.line}>
-      <div className="app proto-root qo-proto" data-qo-ready="">
-        <div className="proto-shell">
-          <aside className="proto-shell__side">
-            <img className="proto-shell__logo" src={publicAsset("joola-logo.svg")} alt="JOOLA" />
-            <span className="proto-shell__chip">Wholesale</span>
-            <nav className="proto-shell__nav" aria-label="Buyer">
-              <span className="is-active">Quick order</span>
-              <span>Catalog</span>
-              <span>Saved orders</span>
-              <span>Order history</span>
-              <span>Invoices</span>
-              <span>Messages</span>
-            </nav>
-          </aside>
-          <div className="proto-shell__main">
-            <div className="proto-shell__top">
-              <a
-                className="cart-pill cart-pill--static"
-                href="#cart"
-                aria-label={`Cart, ${money(play.cart.total)}, ${play.cart.lines} line${play.cart.lines === 1 ? "" : "s"}`}
-              >
-                <NavIcon name="cart" />
-                <span className="cart-pill__total tnum">{money(play.cart.total)}</span>
-                <span className="cart-pill__count">{play.cart.units}</span>
-              </a>
-            </div>
-            <h1>Quick order</h1>
-            <p className="proto-shell__lede">
-              One account price per SKU. Quantities move by the case.
-            </p>
-            <div className="qo-search">
-              <SearchField
-                value={play.query}
-                onChange={(event) => play.setQuery(event.target.value)}
-              />
-            </div>
-            {play.rows.length === 0 ? (
-              <div className="qo-empty">
-                <p>No results for “{play.query}”. Try a SKU or a shorter product name.</p>
-                <button type="button" className="qo-textbtn" onClick={() => play.setQuery("")}>
-                  Clear search
-                </button>
-              </div>
-            ) : (
-              table
-            )}
-            <div className="qo-footer">
-              <span
-                className={cx("qo-footer__meta", waiting && "is-waiting")}
-                aria-live="polite"
-              >
-                {footer}
-              </span>
-              <Button
-                variant="primary"
-                disabled={waiting || play.mode !== "edit"}
-                onClick={play.add}
-              >
-                Add to cart
-              </Button>
-            </div>
+    <div className="qo-frame qo-proto" data-w={play.width} data-qo-state={play.line}>
+      <BuyerShell>
+        <section className="page page--qo" data-qo-ready="">
+          <h1>Quick order</h1>
+          <p className="page-lede">One account price per SKU.</p>
+          <div className="search-row">
+            <SearchField
+              value={play.query}
+              onChange={(event) => play.setQuery(event.target.value)}
+            />
           </div>
-        </div>
-      </div>
+          {play.rows.length === 0 ? (
+            <div className="qo-empty">
+              <p>No results for “{play.query}”. Try a SKU or a shorter product name.</p>
+              <button type="button" className="qo-textbtn" onClick={() => play.setQuery("")}>
+                Clear search
+              </button>
+            </div>
+          ) : (
+            table
+          )}
+          <div className="qo-footer">
+            <span
+              className={cx("qo-footer__meta", waiting && "is-waiting")}
+              aria-live="polite"
+            >
+              {footer}
+            </span>
+            <Button
+              variant="primary"
+              disabled={waiting || play.mode !== "edit"}
+              onClick={play.add}
+            >
+              Add to cart
+            </Button>
+          </div>
+        </section>
+      </BuyerShell>
     </div>
   );
 }

@@ -53,27 +53,12 @@ body:has(.qo-proto) {
   background: #fff;
 }
 
-/* One continuous column, same as .shell__main / .shell__body: 28px inset, white through the padding. */
-.qo-proto .proto-shell {
+.qo-proto .buyer-shell {
   min-height: 100vh;
-  background: #fff;
 }
 
-.qo-proto .proto-shell__main {
-  min-height: 100vh;
-  padding-top: 28px;
-  padding-bottom: 28px;
-  padding-left: var(--space-7);
-  padding-right: var(--space-7);
-  background: #fff;
-  overflow-x: clip;
-}
-
-.qo-proto .proto-shell__main h1 {
-  font-size: 24px;
-  font-weight: 500;
-  line-height: 28px;
-  letter-spacing: -0.01em;
+.qo-proto .page--qo .search-row {
+  margin-bottom: 16px;
 }
 
 .qo-cart {

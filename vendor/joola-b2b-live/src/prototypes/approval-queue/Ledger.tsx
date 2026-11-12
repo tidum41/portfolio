@@ -35,7 +35,7 @@ export function Ledger() {
                   <div>
                     <div className="aq-name">{order.account}</div>
                     <div className="aq-meta">
-                      {order.so} · {order.buyer}
+                      {order.so}, {order.buyer}
                     </div>
                   </div>
                   <div className="aq-hero tnum">{money(order.overBy)}</div>

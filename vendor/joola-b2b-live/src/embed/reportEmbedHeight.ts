@@ -1,4 +1,4 @@
-const ROOTS = [".buyer-shell", ".aq", "[data-qo-ready]"] as const;
+const ROOTS = [".buyer-shell", ".admin-shell", "[data-qo-ready]"] as const;
 
 function findRoot(): HTMLElement | null {
   for (const sel of ROOTS) {

@@ -37,7 +37,7 @@ export function SplitInbox() {
                   <span className="aq-list__over tnum">{money(order.overBy)}</span>
                 </span>
                 <span className="aq-meta">
-                  {order.so} · {order.buyer}
+                  {order.so}, {order.buyer}
                 </span>
                 <Pills why={order.why} />
               </button>
@@ -46,7 +46,7 @@ export function SplitInbox() {
           <div className="aq-decision">
             <h2>{current.account}</h2>
             <p className="aq-meta aq-meta--13">
-              {current.so} · {current.buyer}
+              {current.so}, {current.buyer}
             </p>
             <div className="aq-quad">
               <div>

@@ -6,8 +6,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useStore } from "../../state/Store";
 import {
   CATALOG,
   modeFor,
@@ -56,6 +58,7 @@ function parseWidth(value: string | null): 1024 | 1280 {
 }
 
 export function QuickOrderState({ children }: { children: ReactNode }) {
+  const { replaceCart } = useStore();
   const [params, setParams] = useSearchParams();
   const line = parseLine(params.get("line"));
   const width = parseWidth(params.get("w"));
@@ -142,6 +145,14 @@ export function QuickOrderState({ children }: { children: ReactNode }) {
     const n = Number(params.get("rows"));
     return Number.isFinite(n) && n > 0 ? n : null;
   }, [params]);
+
+  useEffect(() => {
+    const lines = CATALOG.filter((sku) => (qtys[sku.id] ?? 0) > 0).map((sku) => ({
+      productId: sku.id,
+      qty: qtys[sku.id] ?? 0,
+    }));
+    replaceCart(lines);
+  }, [qtys, replaceCart]);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();

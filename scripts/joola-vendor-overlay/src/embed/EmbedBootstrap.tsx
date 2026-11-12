@@ -46,7 +46,9 @@ export function EmbedBootstrap() {
   }, [params]);
 
   useEffect(() => {
-    const wantAdmin = params.get("view") === "admin";
+    const wantAdmin =
+      params.get("view") === "admin" ||
+      pathname.includes("/prototypes/approval-queue");
     const accountId = params.get("account") ?? "dicks";
     const roleOk = wantAdmin
       ? session?.role === "admin"

@@ -32,8 +32,8 @@ html.is-embed .shell,
 html.is-embed .shell__sidebar,
 html.is-embed .app.shell,
 html.is-embed .buyer-shell,
-html.is-embed .shell__main,
-html.is-embed .aq {
+html.is-embed .admin-shell,
+html.is-embed .shell__main {
   min-height: 0 !important;
   height: auto !important;
 }

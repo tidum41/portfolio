@@ -1,47 +1,24 @@
 import { useEffect, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
+import { AdminShell } from "../../components/layout/AdminShell";
 
 export function ApprovalFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="aq">
-      <aside className="aq-side">
-        <img className="aq-logo" src="/joola-logo.png" alt="JOOLA" />
-        <span className="aq-wholesale">Wholesale</span>
-        <nav className="aq-nav" aria-label="Admin">
-          <span className="is-active">Approvals</span>
-          <span>Replacements</span>
-          <span>Accounts</span>
-        </nav>
-        <a className="aq-store" href="https://www.joola.com">
-          Back to joola.com store
-        </a>
-      </aside>
-      <div className="aq-main">
-        <header className="aq-top">
-          <div className="aq-rep">
-            <strong>Collin Johns</strong>
-            <span>Sales rep</span>
-          </div>
-        </header>
-        <div className="aq-page">
-          <h1>Approval queue</h1>
-          <p className="aq-lede">
-            Orders over credit limit that need your decision. Select a row to
-            approve, or reject when the account cannot cover the order.
-          </p>
-          <div className="aq-buyer">
-            <span>Buyer sees</span>
-            <span className="aq-pill aq-pill--pending">Pending approval</span>
-            <span>Your rep will need to approve before it ships.</span>
-          </div>
-          {children}
-          <p className="aq-disclaimer">
-            Illustrative demo data. Real wholesale figures and client accounts
-            cannot be disclosed.
-          </p>
+    <AdminShell>
+      <section className="page page--approvals aq-proto">
+        <h1>Approval queue</h1>
+        <p className="page-lede">
+          Orders over credit limit that need your decision. Select a row to
+          approve, or reject when the account cannot cover the order.
+        </p>
+        <div className="aq-buyer">
+          <span>Buyer sees</span>
+          <span className="aq-pill aq-pill--pending">Pending approval</span>
+          <span>Your rep will need to approve before it ships.</span>
         </div>
-      </div>
-    </div>
+        {children}
+      </section>
+    </AdminShell>
   );
 }
 
