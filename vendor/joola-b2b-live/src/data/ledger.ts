@@ -1,6 +1,6 @@
 /**
  * Mock wholesale ledger for the JOOLA B2B live prototype.
- * Illustrative accounts and numbers only. Real wholesale figures cannot be disclosed.
+ * Demo names and figures. Client accounts and wholesale numbers stay confidential.
  */
 
 import { publicAsset } from "../lib/publicAsset";
@@ -122,7 +122,12 @@ export type AdminOrder = {
   buyer: string;
   placed: string;
   total: number;
-  status: "Auto-approved" | "Shipped" | "Fulfilled";
+  status:
+    | "Pending confirmation"
+    | "Confirmed"
+    | "Pending fulfillment"
+    | "Shipped"
+    | "Delivered";
   lines: Line[];
   creditLimit: number;
   creditRemainingAfter: number;
@@ -557,7 +562,7 @@ export const INITIAL_PAST_ORDERS: PastOrder[] = [
     id: "PO-118",
     label: "Match week restock",
     when: "Sep 18, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     placedBy: "Maya Okonkwo",
     lines: [
       { productId: "perseus", qty: 12 },
@@ -570,7 +575,7 @@ export const INITIAL_PAST_ORDERS: PastOrder[] = [
     id: "PO-104",
     label: "Back-to-school",
     when: "Jul 28, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     placedBy: "Maya Okonkwo",
     lines: [
       { productId: "perseus", qty: 24 },
@@ -584,7 +589,7 @@ export const INITIAL_PAST_ORDERS: PastOrder[] = [
     id: "PO-098",
     label: "Club pack",
     when: "Jun 20, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     placedBy: "LeBron James",
     lines: [
       { productId: "perseus", qty: 24 },
@@ -787,8 +792,40 @@ function adminOrder(
   return { ...partial, total };
 }
 
-/** 12 recent auto-approved orders across 8 accounts. */
+/** Recent orders across accounts (within-limit path skips approval queue). */
 export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
+  adminOrder({
+    id: "ao-0a",
+    so: "SO-48294",
+    accountId: "dicks",
+    distributor: "Dick's Sporting Goods",
+    buyer: "Maya Okonkwo",
+    placed: "Nov 12, 2026",
+    status: "Confirmed",
+    creditLimit: 25000,
+    creditRemainingAfter: 11240.5,
+    lines: [
+      { productId: "perseus", qty: 24 },
+      { productId: "hyperion", qty: 12 },
+      { productId: "overgrip", qty: 48 },
+    ],
+  }),
+  adminOrder({
+    id: "ao-0b",
+    so: "SO-48293",
+    accountId: "dicks",
+    distributor: "Dick's Sporting Goods",
+    buyer: "LeBron James",
+    placed: "Nov 11, 2026",
+    status: "Pending fulfillment",
+    creditLimit: 25000,
+    creditRemainingAfter: 13892.12,
+    lines: [
+      { productId: "scorpeus", qty: 12 },
+      { productId: "hc40", qty: 96 },
+      { productId: "tourbag", qty: 6 },
+    ],
+  }),
   adminOrder({
     id: "ao-1",
     so: "SO-48290",
@@ -796,7 +833,7 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
     distributor: "Dick's Sporting Goods",
     buyer: "Maya Okonkwo",
     placed: "Nov 8, 2026",
-    status: "Auto-approved",
+    status: "Pending confirmation",
     creditLimit: 25000,
     creditRemainingAfter: 15091.34,
     lines: [
@@ -828,7 +865,7 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
     distributor: "Courtside Supply",
     buyer: "Sam Rivera",
     placed: "Nov 6, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     creditLimit: 25000,
     creditRemainingAfter: 19875,
     lines: [
@@ -844,7 +881,7 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
     distributor: "Rally House PB",
     buyer: "Taylor Kim",
     placed: "Nov 5, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     creditLimit: 15000,
     creditRemainingAfter: 11240,
     lines: [
@@ -860,7 +897,7 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
     distributor: "NetZone Club Shop",
     buyer: "Avery Cole",
     placed: "Nov 4, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     creditLimit: 12000,
     creditRemainingAfter: 8640,
     lines: [
@@ -876,7 +913,7 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
     distributor: "Spin Lab Pro Shop",
     buyer: "Cameron Blake",
     placed: "Nov 3, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     creditLimit: 18000,
     creditRemainingAfter: 14120,
     lines: [
@@ -892,7 +929,7 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
     distributor: "CourtCraft Retail",
     buyer: "Jordan Miles",
     placed: "Nov 2, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     creditLimit: 20000,
     creditRemainingAfter: 15680,
     lines: [
@@ -908,7 +945,7 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
     distributor: "Paddle Path Co-op",
     buyer: "Riley Santos",
     placed: "Nov 1, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     creditLimit: 10000,
     creditRemainingAfter: 7425,
     lines: [
@@ -924,7 +961,7 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
     distributor: "Dick's Sporting Goods",
     buyer: "LeBron James",
     placed: "Oct 28, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     creditLimit: 25000,
     creditRemainingAfter: 17200,
     lines: [
@@ -940,7 +977,7 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
     distributor: "Baseline Pickleball Co.",
     buyer: "Jordan Hale",
     placed: "Oct 24, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     creditLimit: 25000,
     creditRemainingAfter: 20100,
     lines: [
@@ -956,7 +993,7 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
     distributor: "Rally House PB",
     buyer: "Taylor Kim",
     placed: "Oct 21, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     creditLimit: 15000,
     creditRemainingAfter: 12800,
     lines: [
@@ -972,7 +1009,7 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
     distributor: "Spin Lab Pro Shop",
     buyer: "Cameron Blake",
     placed: "Oct 18, 2026",
-    status: "Fulfilled",
+    status: "Delivered",
     creditLimit: 18000,
     creditRemainingAfter: 15550,
     lines: [
@@ -984,4 +1021,4 @@ export const INITIAL_ADMIN_ORDERS: AdminOrder[] = [
 ];
 
 export const DISCLAIMER =
-  "Illustrative demo data. Real wholesale figures and client accounts cannot be disclosed.";
+  "Demo names and figures. Client accounts and wholesale numbers stay confidential.";

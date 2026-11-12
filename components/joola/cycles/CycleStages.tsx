@@ -351,7 +351,7 @@ export function MotionStage({ v, replayKey = 0 }: { v: number; replayKey?: numbe
 export function QuickOrderStage({ v }: { v: number }) {
   const placeholder =
     v >= 17
-      ? "Search by name, category, or SKU"
+      ? "Search by name or SKU"
       : v >= 16
         ? "search by name, category, sku"
         : "Search SKU";

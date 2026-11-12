@@ -97,13 +97,13 @@ export function ApprovalQueuePage() {
         await approveOverride(row.id, why);
         setResult({ kind: "approved", row, reason: why });
         toast.success("Order approved", {
-          description: `${row.so} can ship.`,
+          description: `${row.so} is pending confirmation.`,
           action: {
             label: "Undo",
             onClick: () => {
               restoreApproval(row);
               setResult(null);
-              toast.message("Approval undone — back in queue");
+              toast.message("Approval undone. Back in the queue.");
             },
           },
         });
@@ -117,7 +117,7 @@ export function ApprovalQueuePage() {
             onClick: () => {
               restoreApproval(row);
               setResult(null);
-              toast.message("Rejection undone — back in queue");
+              toast.message("Rejection undone. Back in the queue.");
             },
           },
         });
@@ -142,11 +142,11 @@ export function ApprovalQueuePage() {
           <h1>{approved ? "Order approved" : "Order rejected"}</h1>
           <p className="page-lede">
             {approved
-              ? `${result.row.distributor} can ship ${result.row.so}.`
+              ? `${result.row.so} is pending confirmation.`
               : `${result.row.so} will not ship.`}
           </p>
           <StatusPill tone={approved ? "green" : "danger"}>
-            {approved ? "Approved" : "Rejected"}
+            {approved ? "Pending confirmation" : "Rejected"}
           </StatusPill>
           <div className="result-card">
             <div className="row">
@@ -196,7 +196,7 @@ export function ApprovalQueuePage() {
       <section className="page page--approvals">
         <h1>Approval queue</h1>
         <ErrorState
-          title="Approvals did not load"
+          title="Approvals did not load."
           message={error.message}
           fix={error.fix}
           onRetry={reload}
@@ -209,13 +209,12 @@ export function ApprovalQueuePage() {
     <section className="page page--approvals">
       <h1>Approval queue</h1>
       <p className="page-lede">
-        Orders over credit limit that need your decision. Select a row to
-        approve, or reject when the account cannot cover the order.
+        Orders over the credit limit. Select a row to approve or reject.
       </p>
       {syncing ? <SyncBanner>Saving approval…</SyncBanner> : null}
 
       {status === "empty" || approvals.length === 0 ? (
-        <EmptyState>No orders need review</EmptyState>
+        <EmptyState>No orders need review.</EmptyState>
       ) : (
         <div className="rep-table-wrap">
           <table className="rep-table rep-table--decision">
@@ -271,7 +270,7 @@ export function ApprovalQueuePage() {
                             {row.distributor}
                           </strong>
                           <div className="sub">
-                            {row.so} · {row.buyer}
+                            {row.so}, {row.buyer}
                           </div>
                         </td>
                         <td className="rep-over">
@@ -279,8 +278,8 @@ export function ApprovalQueuePage() {
                             {money(over)}
                           </div>
                           <div className="sub tnum">
-                            Order {money(row.orderTotal)} · Credit left{" "}
-                            {money(row.remaining)}
+                            Order {money(row.orderTotal)}. Credit left{" "}
+                            {money(row.remaining)}.
                           </div>
                         </td>
                         <td>
@@ -418,7 +417,7 @@ export function ApprovalQueuePage() {
               placeholder={
                 modal.kind === "reject"
                   ? "Why this order cannot ship"
-                  : "Why this order can ship over the limit"
+                  : "Why you are approving this over-limit order"
               }
               value={reason}
               aria-invalid={tried && !reason.trim()}
@@ -440,7 +439,7 @@ export function ApprovalQueuePage() {
               {tried && !reason.trim()
                 ? modal.kind === "reject"
                   ? "Enter a short reason for the buyer."
-                  : "Enter a reason so the buyer knows why this order can ship."
+                  : "Enter a reason so the buyer knows why this order is approved."
                 : "\u00a0"}
             </div>
             <div className="modal__actions">

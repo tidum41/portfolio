@@ -135,7 +135,7 @@ export function QuickOrderPage() {
       <section className="page page--qo">
         <h1>Quick order</h1>
         <ErrorState
-          title="Products did not load"
+          title="Products did not load."
           message={error.message}
           fix={error.fix}
           onRetry={reload}
@@ -160,7 +160,7 @@ export function QuickOrderPage() {
     <section className="page page--qo">
       <h1>Quick order</h1>
       <p className="page-lede">
-        Search by name or SKU, set pack quantities, and add lines to your cart.
+        Search by name or SKU, then add lines to your cart.
       </p>
       {syncing ? <SyncBanner>Saving draft quantities…</SyncBanner> : null}
 
@@ -200,7 +200,7 @@ export function QuickOrderPage() {
                   <div className="prod-sku">SKU {p.sku}</div>
                   {fulfill ? (
                     <span className="avail-tag">
-                      {fulfill.warehouse} · {fulfill.availability}
+                      {fulfill.warehouse}, {fulfill.availability}
                     </span>
                   ) : null}
                 </div>

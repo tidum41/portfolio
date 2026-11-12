@@ -14,7 +14,7 @@ export function ApprovalFrame({ children }: { children: ReactNode }) {
           <span>Accounts</span>
         </nav>
         <a className="aq-store" href="https://www.joola.com">
-          Back to joola.com store
+          Back to joola.com
         </a>
       </aside>
       <div className="aq-main">
@@ -27,18 +27,20 @@ export function ApprovalFrame({ children }: { children: ReactNode }) {
         <div className="aq-page">
           <h1>Approval queue</h1>
           <p className="aq-lede">
-            Orders over credit limit that need your decision. Select a row to
-            approve, or reject when the account cannot cover the order.
+            Orders over the credit limit. Select a row to approve or reject.
           </p>
           <div className="aq-buyer">
             <span>Buyer sees</span>
             <span className="aq-pill aq-pill--pending">Pending approval</span>
-            <span>Your rep will need to approve before it ships.</span>
+            <span>
+              Your JOOLA rep needs to approve it before a ship date can be
+              confirmed.
+            </span>
           </div>
           {children}
           <p className="aq-disclaimer">
-            Illustrative demo data. Real wholesale figures and client accounts
-            cannot be disclosed.
+            Demo names and figures. Client accounts and wholesale numbers stay
+            confidential.
           </p>
         </div>
       </div>

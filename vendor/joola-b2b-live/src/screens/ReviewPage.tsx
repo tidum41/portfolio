@@ -71,7 +71,7 @@ export function ReviewPage() {
       );
       navigate("/order-placed");
     } catch {
-      toast.error("Place order failed. Nothing was charged. Try again.", {
+      toast.error("Could not place the order. Nothing was charged. Try again.", {
         id,
       });
     } finally {
@@ -93,7 +93,7 @@ export function ReviewPage() {
       <section className="page page--review">
         <h1>Review and place order</h1>
         <ErrorState
-          title="Could not load checkout"
+          title="Checkout did not load."
           message={error.message}
           fix={error.fix}
           onRetry={reload}
@@ -106,7 +106,9 @@ export function ReviewPage() {
     return (
       <section className="page page--review">
         <h1>Review and place order</h1>
-        <EmptyState>Your cart is empty. Add products before placing.</EmptyState>
+        <EmptyState>
+          Your cart is empty. Add lines from Quick order or Catalog.
+        </EmptyState>
         <div style={{ marginTop: 16 }}>
           <Link to="/quick-order" className="btn btn--primary">
             Go to Quick order
@@ -120,7 +122,7 @@ export function ReviewPage() {
     <section className="page page--review">
       <h1>Review and place order</h1>
       <p className="page-lede">
-        Checkout opens on Net 30 and shows the credit in use.
+        This order uses your Net 30 credit.
       </p>
       {syncing || placing ? <SyncBanner>Placing order…</SyncBanner> : null}
 
@@ -175,7 +177,7 @@ export function ReviewPage() {
             {over ? (
               <p className="cart-notice">
                 This order is over your remaining Net 30 credit. Your JOOLA rep
-                needs to approve it before it ships.
+                needs to approve it before a ship date can be confirmed.
               </p>
             ) : null}
           </div>

@@ -70,7 +70,7 @@ export function Textarea({
 
 export function SearchField({
   className,
-  label = "Search by name, category, or SKU",
+  label = "Search by name or SKU",
   ...props
 }: InputHTMLAttributes<HTMLInputElement> & { label?: string }) {
   return (
@@ -95,7 +95,6 @@ export function QtyStepper({
   value,
   onChange,
   presets = [],
-  presetPrices,
   moq = 1,
   disabled = false,
   id,
@@ -104,8 +103,6 @@ export function QtyStepper({
   value: number;
   onChange: (n: number) => void;
   presets?: number[];
-  /** Formatted unit price per preset qty (shown on chips). */
-  presetPrices?: Record<number, string>;
   moq?: number;
   disabled?: boolean;
   id?: string;
@@ -158,26 +155,20 @@ export function QtyStepper({
         </div>
         {presets.length > 0 ? (
           <div className="qty-presets">
-            {presets.slice(0, 3).map((p) => {
-              const price = presetPrices?.[p];
-              return (
-                <button
-                  key={p}
-                  type="button"
-                  className={value === p ? "on" : undefined}
-                  disabled={disabled}
-                  title={price ? `${p} @ ${price} ea` : String(p)}
-                  onClick={() => setSafe(p)}
-                >
-                  <span className="qty-presets__qty">
-                    {p.toLocaleString("en-US")}
-                  </span>
-                  {price ? (
-                    <span className="qty-presets__price">{price}</span>
-                  ) : null}
-                </button>
-              );
-            })}
+            {presets.slice(0, 3).map((p) => (
+              <button
+                key={p}
+                type="button"
+                className={value === p ? "on" : undefined}
+                disabled={disabled}
+                title={String(p)}
+                onClick={() => setSafe(p)}
+              >
+                <span className="qty-presets__qty">
+                  {p.toLocaleString("en-US")}
+                </span>
+              </button>
+            ))}
           </div>
         ) : null}
       </div>
@@ -233,7 +224,7 @@ export function EmptyState({
 }
 
 export function ErrorState({
-  title = "Something went wrong",
+  title = "The page did not load.",
   message,
   fix,
   onRetry,

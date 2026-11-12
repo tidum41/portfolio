@@ -10,7 +10,7 @@ export function Ledger() {
       {queue.loading ? (
         <QueueSkeleton />
       ) : queue.orders.length === 0 ? (
-        <p className="aq-empty">Nothing waiting. The queue is clear.</p>
+        <p className="aq-empty">No orders need review.</p>
       ) : (
         <div className="aq-table" role="table" aria-label="Approval queue">
           <div className="aq-head aq-ledger" role="row">
@@ -35,7 +35,7 @@ export function Ledger() {
                   <div>
                     <div className="aq-name">{order.account}</div>
                     <div className="aq-meta">
-                      {order.so} · {order.buyer}
+                      {order.so}, {order.buyer}
                     </div>
                   </div>
                   <div className="aq-hero tnum">{money(order.overBy)}</div>
@@ -90,11 +90,11 @@ export function Ledger() {
                     </div>
                     <Lines order={order} qtyWidth={48} />
                     <label className="aq-reason" htmlFor={`reason-${order.id}`}>
-                      Reason if you reject
+                      Rejection reason
                       <input
                         id={`reason-${order.id}`}
                         value={queue.reasons[order.id] ?? ""}
-                        placeholder="Short reason for the buyer"
+                        placeholder="Why this order cannot ship"
                         aria-invalid={invalid || undefined}
                         aria-errormessage={
                           invalid ? `help-${order.id}` : undefined
@@ -107,7 +107,7 @@ export function Ledger() {
                         id={`help-${order.id}`}
                         className={`aq-help${invalid ? " is-error" : ""}`}
                       >
-                        Required to reject.
+                        Required to reject. The buyer sees this note.
                       </span>
                     </label>
                     <span className="aq-sr">

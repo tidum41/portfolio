@@ -89,7 +89,7 @@
     "url": "http://localhost:3000/joola-proto/round5/index.html#/prototypes/approval-queue?embed=1&clean=1&v=3&protoState=default&latency=0",
     "compareSize": {
       "w": 1280,
-      "h": 824
+      "h": 804
     },
     "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-split-proto.png",
     "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-split-portfolio.png",
@@ -101,7 +101,7 @@
     "url": "http://localhost:3000/joola-proto/round5/index.html#/prototypes/approval-queue?embed=1&clean=1&v=1&protoState=default&latency=0",
     "compareSize": {
       "w": 1280,
-      "h": 896
+      "h": 876
     },
     "proto": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-ledger-proto.png",
     "portfolio": "/agent/repos/portfolio/artifacts/joola-sanity/pixel-diff/approval-ledger-portfolio.png",

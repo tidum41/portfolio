@@ -114,8 +114,7 @@ function PainPoint({ text }: { text: string }) {
 function MockDisclaimer() {
   return (
     <p className="joola-mock-note" role="note">
-      Names and numbers in these screens are mocked. They are illustrative, not JOOLA clients or
-      real wholesale figures.
+      Names and numbers in these screens are mocked for this case study.
     </p>
   );
 }
@@ -199,7 +198,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
           src={qoRowUrl("1")}
           designWidth={QO_W}
           designHeight={JOOLA_EMBED_HEIGHT["quick-order-row-search"]}
-          caption="Search by name, category, or SKU, with CSV upload for large orders."
+          caption="Search by name or SKU, with CSV upload for large orders."
         />
       </Section>
 
@@ -229,7 +228,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
             "4": qoSlotH,
           }}
           onEmbedHeight={bumpQoH}
-          caption="Case pack steps, reorder, and stock status on the same line component."
+          caption="Case pack steps and stock status sit on the same line."
         />
       </Section>
 

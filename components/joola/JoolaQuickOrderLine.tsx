@@ -132,11 +132,11 @@ function QuickOrderLineInner({
       ) : null}
       <div className="search-row">
         <label className="search-wrap">
-          <span className="visually-hidden">Search by name, category, or SKU</span>
+          <span className="visually-hidden">Search by name or SKU</span>
           <input
             className="search-field"
             type="search"
-            placeholder="Search by name, category, or SKU"
+            placeholder="Search by name or SKU"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />

@@ -62,7 +62,7 @@ export function SavedOrdersPage() {
     if (!name) return;
     try {
       await renameSaved(id, name);
-      toast.success("Template renamed");
+      toast.success("Saved order renamed");
     } catch {
       toast.error("Could not rename. Name restored.");
     }
@@ -75,32 +75,32 @@ export function SavedOrdersPage() {
     setDeleteId(null);
     try {
       await deleteSaved(id);
-      toast.message("Template deleted", {
+      toast.message("Saved order deleted", {
         action: snapshot
           ? {
               label: "Undo",
               onClick: () => {
                 restoreSaved(snapshot);
-                toast.success("Template restored");
+                toast.success("Saved order restored");
               },
             }
           : undefined,
       });
     } catch {
-      toast.error("Could not delete. Template restored.");
+      toast.error("Could not delete. Saved order restored.");
     }
   }
 
   async function createFromCart() {
     if (cart.length === 0) {
-      toast.error("Add items to the cart before saving a template.");
+      toast.error("Add lines to the cart before saving an order.");
       return;
     }
     try {
-      await saveTemplate("New template", cart);
-      toast.success("Template saved from cart");
+      await saveTemplate("New saved order", cart);
+      toast.success("Saved order created from cart");
     } catch {
-      toast.error("Could not save template.");
+      toast.error("Could not save the order.");
     }
   }
 
@@ -118,7 +118,7 @@ export function SavedOrdersPage() {
       <section className="page page--saved">
         <h1>Saved orders</h1>
         <ErrorState
-          title="Could not load saved orders"
+          title="Saved orders did not load."
           message={error.message}
           fix={error.fix}
           onRetry={reload}
@@ -136,7 +136,7 @@ export function SavedOrdersPage() {
         </EmptyState>
         <div style={{ marginTop: 16 }}>
           <Button variant="primary" onClick={createFromCart}>
-            Save cart as template
+            Save this cart
           </Button>
         </div>
       </section>
@@ -149,16 +149,16 @@ export function SavedOrdersPage() {
         <div>
           <h1>Saved orders</h1>
           <p className="page-lede">
-            Templates belong to the store, so anyone on the team can reorder.
+            Saved orders belong to the account, so anyone on the team can reorder.
           </p>
         </div>
         <Button variant="primary" onClick={createFromCart}>
-          Save cart as template
+          Save this cart
         </Button>
       </div>
-      {syncing ? <SyncBanner>Syncing templates…</SyncBanner> : null}
+      {syncing ? <SyncBanner>Syncing saved orders…</SyncBanner> : null}
 
-      <h2 className="section-title">Templates</h2>
+      <h2 className="section-title">Saved for reorder</h2>
       <div className="saved-list">
         {templates.map((tpl) => (
           <SavedCard
@@ -178,7 +178,7 @@ export function SavedOrdersPage() {
             onDelete={() => setDeleteId(tpl.id)}
             onAddToCart={() => {
               replaceCart(tpl.lines);
-              toast.success("Template added to cart");
+              toast.success("Saved order added to cart");
             }}
             onEditItems={() => {
               setEditLinesId(tpl.id);
@@ -203,8 +203,8 @@ export function SavedOrdersPage() {
               toast.success("Past order added to cart");
             }}
             onSaveAsTemplate={async () => {
-              await saveTemplate(`${po.label} template`, po.lines);
-              toast.success("Template created from past order");
+              await saveTemplate(po.label, po.lines);
+              toast.success("Saved order created from past order");
             }}
             products={products}
             fallbackBuyer={account?.buyer ?? "Buyer"}
@@ -214,8 +214,8 @@ export function SavedOrdersPage() {
 
       <ConfirmDialog
         open={Boolean(deleteId)}
-        title="Delete template?"
-        message="This removes the saved template for everyone on the account."
+        title="Delete saved order?"
+        message="This removes the saved order for everyone on the account."
         confirmLabel="Delete"
         danger
         onConfirm={() => void confirmDelete()}
@@ -224,7 +224,7 @@ export function SavedOrdersPage() {
 
       {editLinesId ? (
         <div className="inline-edit-panel">
-          <h3>Edit items</h3>
+          <h3>Edit lines</h3>
           {lineDraft.map((line) => {
             const p = products[line.productId];
             if (!p) return null;
@@ -255,14 +255,14 @@ export function SavedOrdersPage() {
                     editLinesId,
                     lineDraft.filter((l) => l.qty > 0),
                   );
-                  toast.success("Template items updated");
+                  toast.success("Lines updated");
                   setEditLinesId(null);
                 } catch {
-                  toast.error("Could not update items.");
+                  toast.error("Could not update lines.");
                 }
               }}
             >
-              Save items
+              Save lines
             </Button>
             <Button variant="outline" onClick={() => setEditLinesId(null)}>
               Cancel
@@ -322,7 +322,7 @@ function SavedCard({
                   if (e.key === "Enter") onCommitRename();
                   if (e.key === "Escape") onCancelEdit();
                 }}
-                aria-label="Template name"
+                aria-label="Saved order name"
                 autoFocus
               />
             ) : (
@@ -337,12 +337,12 @@ function SavedCard({
               </span>
             )}
             <span className="meta">
-              Saved by {order.savedBy} · Updated {formatShortDate(order.updated)}
+              Saved by {order.savedBy}, updated {formatShortDate(order.updated)}
             </span>
           </span>
           <span className="tpl-stats">
             <span>
-              <b className="tnum">{items}</b> {items === 1 ? "item" : "items"}
+              <b className="tnum">{items}</b> {items === 1 ? "line" : "lines"}
             </span>
             <span>
               <b className="tnum">{units}</b> {units === 1 ? "unit" : "units"}
@@ -372,7 +372,7 @@ function SavedCard({
               Rename
             </Button>
             <Button variant="outline" onClick={onEditItems}>
-              Edit items
+              Edit lines
             </Button>
             <Button variant="danger" onClick={onDelete}>
               Delete
@@ -414,12 +414,12 @@ function PastOrderCard({
           <span className="tpl-title">
             <span className="name">{order.label}</span>
             <span className="meta">
-              {poLabel} · Placed by {placedBy}
+              {poLabel}, placed by {placedBy}
             </span>
           </span>
           <span className="tpl-stats">
             <span>
-              <b className="tnum">{items}</b> {items === 1 ? "item" : "items"}
+              <b className="tnum">{items}</b> {items === 1 ? "line" : "lines"}
             </span>
             <span>
               <b className="tnum">{units}</b> {units === 1 ? "unit" : "units"}
@@ -440,7 +440,7 @@ function PastOrderCard({
               Add to cart
             </Button>
             <Button variant="outline" onClick={() => void onSaveAsTemplate()}>
-              Save as template
+              Save this order
             </Button>
           </div>
         </div>

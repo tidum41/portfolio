@@ -37,7 +37,7 @@ export function AdminOrdersPage() {
       <section className="page page--admin-orders">
         <h1>Recent orders</h1>
         <ErrorState
-          title="Orders did not load"
+          title="Orders did not load."
           message={error.message}
           fix={error.fix}
           onRetry={reload}
@@ -50,8 +50,8 @@ export function AdminOrdersPage() {
     <section className="page page--admin-orders">
       <h1>Recent orders</h1>
       <p className="page-lede">
-        Orders placed within credit limit and auto-approved. Open the approval
-        queue only when an account goes over.
+        Orders within the credit limit skip the approval queue and go to pending
+        confirmation. Open the approval queue when an account goes over.
       </p>
       {syncing ? <SyncBanner>Refreshing orders…</SyncBanner> : null}
 
@@ -80,7 +80,7 @@ export function AdminOrdersPage() {
                   <td className="tnum">{row.so}</td>
                   <td>{row.placed}</td>
                   <td className="tnum">
-                    {row.lines.length} · {linesUnits(row.lines)} units
+                    {row.lines.length} lines, {linesUnits(row.lines)} units
                     <div className="sub">
                       {row.lines
                         .slice(0, 2)
@@ -94,7 +94,10 @@ export function AdminOrdersPage() {
                   <td>
                     <StatusPill
                       tone={
-                        row.status === "Auto-approved" ? "green" : "neutral"
+                        row.status === "Pending confirmation" ||
+                        row.status === "Confirmed"
+                          ? "green"
+                          : "neutral"
                       }
                     >
                       {row.status}

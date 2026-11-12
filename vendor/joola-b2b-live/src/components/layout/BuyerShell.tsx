@@ -44,7 +44,11 @@ export function BuyerShell({ children }: { children?: ReactNode }) {
       </aside>
       <div className="shell__main">
         <header className="shell__topbar">
-          <Link to="/cart" className="cart-pill" aria-label="Open cart">
+          <Link
+            to="/cart"
+            className="cart-pill"
+            aria-label={`Cart, ${money(cartTotal)}, ${cart.length} line${cart.length === 1 ? "" : "s"}`}
+          >
             <NavIcon name="cart" />
             <span className="cart-pill__total tnum">{money(cartTotal)}</span>
             <span className="cart-pill__count">{units}</span>
@@ -91,7 +95,7 @@ function AccountMenu() {
           <span className="account-menu__meta">
             <span className="name">{account.name}</span>
             <span className="role">
-              {account.buyer} · {account.role}
+              {account.buyer}, {account.role}
             </span>
           </span>
         </button>
@@ -152,7 +156,7 @@ function AccountMenu() {
               <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2 }}>
                 <strong style={{ fontWeight: 500 }}>{a.name}</strong>
                 <span style={{ color: "var(--muted)", fontSize: 12 }}>
-                  {a.buyer} · {a.role}
+                  {a.buyer}, {a.role}
                 </span>
               </span>
             </button>

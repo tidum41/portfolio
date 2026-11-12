@@ -30,7 +30,7 @@ function PresetsRow({ row }: { row: PlayRow }) {
         <div className="prod-sku">SKU {sku.sku}</div>
         {fulfill ? (
           <span className="avail-tag">
-            {fulfill.warehouse} · {fulfill.availability}
+            {fulfill.warehouse}, {fulfill.availability}
           </span>
         ) : null}
       </div>

@@ -222,7 +222,7 @@ export async function mockRequest<T>(
     throw new MockApiError(
       "You appear to be offline.",
       "offline",
-      "Check your connection, then retry. Unsaved cart lines stay on this device.",
+      "Check your connection, then try again. Unsaved cart lines stay on this device.",
     );
   }
 
@@ -230,7 +230,7 @@ export async function mockRequest<T>(
   if (fails > 0) {
     setDevConfig({ failNext: { [screen]: fails - 1 } });
     throw new MockApiError(
-      "The server did not respond.",
+      "The page did not load.",
       "server",
       "Try again. If it keeps failing, message your JOOLA rep.",
     );
@@ -239,7 +239,7 @@ export async function mockRequest<T>(
   const roll = Math.random();
   if (state === "error" || (config.failureRate > 0 && roll < config.failureRate)) {
     throw new MockApiError(
-      "The server did not respond.",
+      "The page did not load.",
       "server",
       "Try again. If it keeps failing, message your JOOLA rep.",
     );

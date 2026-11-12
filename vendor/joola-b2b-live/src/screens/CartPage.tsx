@@ -43,7 +43,7 @@ export function CartPage() {
       <section className="page page--cart">
         <h1>Cart</h1>
         <ErrorState
-          title="Could not load cart"
+          title="Cart did not load."
           message={error.message}
           fix={error.fix}
           onRetry={reload}
@@ -76,7 +76,7 @@ export function CartPage() {
   return (
     <section className="page page--cart">
       <h1>Cart</h1>
-      <p className="page-lede">Review quantities before placing on Net 30.</p>
+      <p className="page-lede">Review quantities before you place the order.</p>
       {syncing ? <SyncBanner>Updating cart…</SyncBanner> : null}
 
       <div className="cart-layout">
@@ -99,7 +99,7 @@ export function CartPage() {
                   <div>
                     <div className="prod-name">{p.fullName}</div>
                     <div className="prod-sku">
-                      SKU {p.sku} · {money(p.buyerPrice)} ea
+                      SKU {p.sku}, {money(p.buyerPrice)} ea
                     </div>
                   </div>
                 </div>
@@ -142,10 +142,12 @@ export function CartPage() {
         <aside className="cart-summary">
           <h2>Summary</h2>
           <div className="cart-summary__row">
-            <span>Items</span>
-            <span className="tnum">
-              {cart.length} · {units} units
-            </span>
+            <span>Lines</span>
+            <span className="tnum">{cart.length}</span>
+          </div>
+          <div className="cart-summary__row">
+            <span>Units</span>
+            <span className="tnum">{units}</span>
           </div>
           <div className="cart-summary__row">
             <span>Subtotal</span>
@@ -160,7 +162,7 @@ export function CartPage() {
           {over ? (
             <p className="cart-notice">
               This order is over your remaining Net 30 credit. Your JOOLA rep
-              needs to approve it before it ships.
+              needs to approve it before a ship date can be confirmed.
             </p>
           ) : null}
           <div className="cart-summary__total">

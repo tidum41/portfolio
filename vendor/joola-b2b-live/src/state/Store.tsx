@@ -74,6 +74,7 @@ type StoreValue = {
   shipToId: string;
   needBy: string;
   lastPlacedOrderId: string | null;
+  lastPlacedOrderStatus: string | null;
   syncing: boolean;
   fixture: FixtureMode;
   login: (email: string, asAdmin?: boolean) => Promise<void>;
@@ -239,6 +240,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [lastPlacedOrderId, setLastPlacedOrderId] = useState<string | null>(
     null,
   );
+  const [lastPlacedOrderStatus, setLastPlacedOrderStatus] = useState<
+    string | null
+  >(null);
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
@@ -354,6 +358,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const remaining = account?.creditRemaining ?? 0;
         const needsApproval = cartTotal > remaining;
         setLastPlacedOrderId(orderId);
+        const placedStatus = needsApproval
+          ? "Pending approval"
+          : "Pending confirmation";
+        setLastPlacedOrderStatus(placedStatus);
         setPastOrders((prev) => [
           {
             id: orderId,
@@ -363,7 +371,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               day: "numeric",
               year: "numeric",
             }),
-            status: needsApproval ? "Pending approval" : "Pending Fulfillment",
+            status: placedStatus,
             total: cartTotal,
             lines: cart.map((l) => ({ ...l })),
             placedBy: account?.buyer ?? "Buyer",
@@ -520,6 +528,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     shipToId,
     needBy,
     lastPlacedOrderId,
+    lastPlacedOrderStatus,
     syncing,
     fixture,
     login,

@@ -427,7 +427,11 @@ export function PrototypePage({
           </aside>
           <div className="proto-shell__main">
             <div className="proto-shell__top">
-              <a className="cart-pill cart-pill--static" href="#cart" aria-label="Cart">
+              <a
+                className="cart-pill cart-pill--static"
+                href="#cart"
+                aria-label={`Cart, ${money(play.cart.total)}, ${play.cart.lines} line${play.cart.lines === 1 ? "" : "s"}`}
+              >
                 <NavIcon name="cart" />
                 <span className="cart-pill__total tnum">{money(play.cart.total)}</span>
                 <span className="cart-pill__count">{play.cart.units}</span>

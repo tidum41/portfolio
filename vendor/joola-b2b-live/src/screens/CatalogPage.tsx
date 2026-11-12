@@ -46,7 +46,7 @@ export function CatalogPage() {
       <section className="page page--catalog">
         <h1>Catalog</h1>
         <ErrorState
-          title="Could not load catalog"
+          title="Catalog did not load."
           message={error.message}
           fix={error.fix}
           onRetry={reload}

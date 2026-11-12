@@ -36,7 +36,7 @@ export function LoginPage() {
       setError(
         err instanceof MockApiError
           ? err
-          : new MockApiError("Sign-in failed.", "server"),
+          : new MockApiError("Could not sign in.", "server"),
       );
     } finally {
       setBusy(false);
@@ -53,7 +53,7 @@ export function LoginPage() {
         />
         <h1>Wholesale sign in</h1>
         <p className="login-page__lede">
-          Order paddles, balls, and bags for your distributor account.
+          Wholesale ordering for your distributor account.
         </p>
 
         {error ? (

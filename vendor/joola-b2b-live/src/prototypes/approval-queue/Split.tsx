@@ -20,7 +20,7 @@ export function SplitInbox() {
       {queue.loading ? (
         <QueueSkeleton />
       ) : queue.orders.length === 0 || !current ? (
-        <p className="aq-empty">Nothing waiting. The queue is clear.</p>
+        <p className="aq-empty">No orders need review.</p>
       ) : (
         <div className="aq-split">
           <div className="aq-list">
@@ -37,7 +37,7 @@ export function SplitInbox() {
                   <span className="aq-list__over tnum">{money(order.overBy)}</span>
                 </span>
                 <span className="aq-meta">
-                  {order.so} · {order.buyer}
+                  {order.so}, {order.buyer}
                 </span>
                 <Pills why={order.why} />
               </button>
@@ -46,7 +46,7 @@ export function SplitInbox() {
           <div className="aq-decision">
             <h2>{current.account}</h2>
             <p className="aq-meta aq-meta--13">
-              {current.so} · {current.buyer}
+              {current.so}, {current.buyer}
             </p>
             <div className="aq-quad">
               <div>
@@ -79,7 +79,7 @@ export function SplitInbox() {
               <input
                 id="split-reason"
                 value={queue.reasons[current.id] ?? ""}
-                placeholder="Tell the buyer why this order is rejected"
+                placeholder="Why this order cannot ship"
                 aria-invalid={invalid || undefined}
                 aria-errormessage={invalid ? "split-help" : undefined}
                 onChange={(event) =>

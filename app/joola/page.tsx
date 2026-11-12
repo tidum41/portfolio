@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   description,
   alternates: { canonical: `${SITE_URL}/joola` },
   openGraph: {
-    title: `${JOOLA_TITLE} — Mudit Mahajan`,
+    title: `${JOOLA_TITLE} | Mudit Mahajan`,
     description,
     url: `${SITE_URL}/joola`,
   },
