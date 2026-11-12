@@ -25,9 +25,29 @@ async function sidebarGap(page, figureId) {
     const shell =
       sidebar.closest(".buyer-shell, .admin-shell, .shell") ?? sidebar.parentElement;
     const sh = shell?.getBoundingClientRect();
+    const frameBottom = document.documentElement.clientHeight;
+    const target = sh ? Math.min(sh.bottom, frameBottom) : frameBottom;
     if (!sh) return 999;
-    return Math.max(0, Math.round(sh.bottom - sb.bottom));
+    return Math.max(0, Math.round(target - sb.bottom));
   });
+}
+
+async function beforeAfterCircleDelta(page) {
+  const deltas = await page.locator(".joola-before-after__step").evaluateAll((steps) =>
+    steps.map((step) => {
+      const num = step.querySelector(".joola-before-after__num");
+      const text = step.querySelector(".joola-before-after__text");
+      if (!num || !text) return 999;
+      const nr = num.getBoundingClientRect();
+      const tr = text.getBoundingClientRect();
+      const lh = parseFloat(getComputedStyle(text).lineHeight);
+      const lineH = Number.isFinite(lh) ? lh : parseFloat(getComputedStyle(text).fontSize) * 1.45;
+      const firstLineCenter = tr.top + lineH / 2;
+      const numCenter = nr.top + nr.height / 2;
+      return Math.abs(firstLineCenter - numCenter);
+    }),
+  );
+  return Math.max(...deltas, 0);
 }
 
 async function iframeBannedText(page, figureId) {
@@ -75,6 +95,14 @@ async function runViewport(page, viewport, tag) {
     const bad = await iframeBannedText(page, fig);
     assert.equal(bad.length, 0, `${fig} @ ${tag}: ${bad.join(", ")}`);
   }
+
+  await page.locator("#solution").scrollIntoViewIfNeeded();
+  const circleDelta = await beforeAfterCircleDelta(page);
+  assert.ok(
+    circleDelta <= 0.5,
+    `Before/after step circle alignment @ ${tag}: ${circleDelta.toFixed(2)}px`,
+  );
+  await captureFigure(page, "solution-before-after", `joola-audit-${tag}-solution-flow.png`);
 
   await captureFigure(page, "quick-order-hero", `joola-audit-${tag}-hero.png`);
   await captureFigure(page, "quick-order-portal", `joola-audit-${tag}-solution.png`);

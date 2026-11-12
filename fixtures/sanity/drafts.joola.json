@@ -25,7 +25,7 @@
   ],
   "problemBody": "The current loop for ordering requires back and forth emailing, spreadsheet order forms, and causes all parties involved to focus on aspects that can be designed for.",
   "problemHeading": "Distributors need self-service ordering for wholesale orders and one-off orders, that reflect their business pricing.",
-  "problemImageCaption": "[PLACEHOLDER: caption for the before-state image: NetSuite entry plus email and spreadsheet order forms]",
+  "problemImageCaption": "",
   "problemLabel": "Problem",
   "researchBody": "[PLACEHOLDER: short research summary. Audit of NetSuite SuiteCommerce, Elastic Suite, RepSpark, BigCommerce B2B Edition, Shopify B2B and Faire, one finding per row, from research/erp-audit.md. Add Mudit's picks from the muse.ai report. No time-saving claims.]",
   "researchHeading": "[PLACEHOLDER: research heading, e.g. what sales interviews, the NetSuite process review and an audit of other B2B portals showed]",

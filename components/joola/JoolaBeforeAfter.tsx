@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
+import "./joola-case-study.css";
 
 /**
  * Static before/after flow figure in the site font (not FK Grotesk).
- * Placeholder-quality code figure Mudit can replace with a Paper board.
  */
 export default function JoolaBeforeAfter({
   caption,
@@ -10,20 +10,8 @@ export default function JoolaBeforeAfter({
   caption?: string | ReactNode;
 }) {
   return (
-    <figure className="joola-figure">
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr auto 1fr",
-          gap: 16,
-          alignItems: "stretch",
-          padding: "20px 16px",
-          borderRadius: 8,
-          border: "1px solid var(--color-border-subtle)",
-          background: "var(--color-bg-secondary)",
-          fontFamily: "var(--font-sans)",
-        }}
-      >
+    <figure className="joola-figure joola-before-after" data-joola-figure="solution-before-after">
+      <div className="joola-before-after__panel">
         <FlowCol
           label="Before"
           steps={[
@@ -32,21 +20,24 @@ export default function JoolaBeforeAfter({
             "Stock and payment questions stay in the inbox",
           ]}
         />
-        <div
-          aria-hidden
-          style={{
-            alignSelf: "center",
-            color: "var(--color-text-muted)",
-            fontSize: 20,
-            paddingTop: 18,
-          }}
-        >
-          →
+        <div className="joola-before-after__arrow" aria-hidden>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="9 6 15 12 9 18" />
+          </svg>
         </div>
         <FlowCol
           label="In the portal"
           steps={[
-            "Buyer builds the order in Quick Order",
+            "Buyer builds the order in Quick order",
             "Net 30 and credit show at checkout",
             "A rep steps in when credit or stock needs one",
           ]}
@@ -60,46 +51,14 @@ export default function JoolaBeforeAfter({
 function FlowCol({ label, steps }: { label: string; steps: string[] }) {
   return (
     <div>
-      <p
-        style={{
-          margin: "0 0 12px",
-          fontSize: "var(--fs-meta, 12px)",
-          color: "var(--color-text-tertiary)",
-        }}
-      >
-        {label}
-      </p>
-      <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 10 }}>
+      <p className="joola-before-after__col-label">{label}</p>
+      <ol className="joola-before-after__list">
         {steps.map((step, i) => (
-          <li
-            key={step}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "22px 1fr",
-              gap: 10,
-              alignItems: "start",
-              fontSize: "var(--fs-sm, 14px)",
-              lineHeight: 1.45,
-              color: "var(--color-text-secondary)",
-            }}
-          >
-            <span
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 999,
-                background: "var(--color-accent-subtle)",
-                color: "var(--color-text-primary)",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 11,
-                fontWeight: 500,
-              }}
-            >
+          <li key={step} className="joola-before-after__step">
+            <span className="joola-before-after__num" data-step-num={i + 1}>
               {i + 1}
             </span>
-            {step}
+            <span className="joola-before-after__text">{step}</span>
           </li>
         ))}
       </ol>

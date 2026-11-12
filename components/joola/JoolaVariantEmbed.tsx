@@ -184,7 +184,12 @@ export default function JoolaVariantEmbed<T extends string>({
         <JoolaFigureSeg label={label} value={value} options={options} onChange={pick} />
       </div>
       {captionText ? (
-        <figcaption className="cs-figcaption">{captionText}</figcaption>
+        <div
+          className="joola-proto-figure__caption-align"
+          style={{ width: designWidth * scale, maxWidth: "100%" }}
+        >
+          <figcaption className="cs-figcaption">{captionText}</figcaption>
+        </div>
       ) : null}
     </figure>
   );

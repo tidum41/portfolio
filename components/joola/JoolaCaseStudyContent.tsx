@@ -135,9 +135,9 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
     ledger: JOOLA_EMBED_HEIGHT["approval-queue-ledger"],
   });
   const bumpQoH = (v: QoVariant, h: number) =>
-    setQoHeights((prev) => ({ ...prev, [v]: Math.max(prev[v] ?? 0, h) }));
+    setQoHeights((prev) => ({ ...prev, [v]: h }));
   const bumpApprovalH = (v: "split" | "ledger", h: number) =>
-    setApprovalHeights((prev) => ({ ...prev, [v]: Math.max(prev[v] ?? 0, h) }));
+    setApprovalHeights((prev) => ({ ...prev, [v]: h }));
 
   return (
     <article style={{ minWidth: 0 }}>
@@ -151,13 +151,6 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <Body>
           <JoolaSanityText text={cs.problemBody} />
         </Body>
-        {cs.problemImageCaption ? (
-          <JoolaBeforeAfter
-            caption={<JoolaSanityText text={cs.problemImageCaption} />}
-          />
-        ) : (
-          <JoolaBeforeAfter />
-        )}
         {painPoints.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 24 }}>
             {painPoints.map((text, i) => (
@@ -172,6 +165,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <H2>
           <JoolaSanityText text={cs.solutionHeading} />
         </H2>
+        <JoolaBeforeAfter />
         <Body>
           <JoolaSanityText text={cs.solutionBody} />
         </Body>
