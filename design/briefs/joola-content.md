@@ -24,7 +24,7 @@ Keep these strings verbatim when they appear:
 - `Placing order` (no ellipsis)
 - `Upload CSV`
 - `Add 4 lines to cart`
-- `$25,693.50 left of $50,000`
+- `$20,800.00 left of $25,000`
 - `Saved orders`
 - `Add to order` / `Replace order`
 

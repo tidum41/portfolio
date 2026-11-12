@@ -50,7 +50,7 @@ async function goThrough(page, width, height, prefix) {
   await shot(page, `${prefix}-02b-po-error.png`);
 
   // Fix PO, continue without ship-to to show ship-to error
-  await page.fill("#ob-po", "ENG-9812");
+  await page.fill("#ob-po", "PO-9812");
   await page.locator("#ob-po").evaluate((el) => el.blur());
   await clickBtn(page, "Save defaults");
   await page.waitForSelector("text=Choose a ship-to address");
