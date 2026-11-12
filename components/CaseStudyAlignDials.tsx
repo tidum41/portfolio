@@ -14,11 +14,11 @@ const STYLE_ID = "cs-align-dials-live";
 export default function CaseStudyAlignDials() {
   const dk = useDialKit("CS Align", {
     Mobile: {
-      backX:    [-6, -48, 48, 1],
+      backX:    [0, -48, 48, 1],
       titleX:   [-2, -48, 48, 1],
     },
     Desktop: {
-      backX:    [-6, -48, 48, 1],
+      backX:    [0, -48, 48, 1],
       titleX:   [-2, -48, 48, 1],
     },
   });
