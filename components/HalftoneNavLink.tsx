@@ -209,11 +209,16 @@ export default function HalftoneNavLink({
       !!nextEl.closest("[data-nav-word]") &&
       !e.currentTarget.contains(nextEl);
     // The flex gap between words is the <nav> itself. Don't start the
-    // ease-out there — the next word's enter snaps this one instead.
+    // ease-out there — the next word's enter snaps this one instead. Only
+    // the strip level with the words counts: the <nav> is taller than the
+    // links, so exiting through its top/bottom padding is leaving the bar,
+    // not crossing a gap (that case used to leave the word stuck lit).
+    const linkRect = e.currentTarget.getBoundingClientRect();
     const inWordGap =
       !!nextEl &&
-      !!nextEl.closest("nav.site-nav") &&
-      !nextEl.closest("button");
+      nextEl.matches("nav.site-nav") &&
+      e.clientY >= linkRect.top &&
+      e.clientY <= linkRect.bottom;
     if (!ontoSibling && !inWordGap) onHoverEnd?.();
     if (pendingNavSettleRef.current || settleTimeoutRef.current) return;
     disarmTap();
