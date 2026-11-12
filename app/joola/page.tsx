@@ -43,7 +43,7 @@ const FB: CaseStudyData = {
     { _key: "solution", id: "solution", label: "Solution" },
     { _key: "research", id: "research", label: "Research" },
     { _key: "d1", id: "decision-1", label: "Search first" },
-    { _key: "d2", id: "decision-2", label: "Line quantity" },
+    { _key: "d2", id: "decision-2", label: "Stock status sits on the same line." },
     { _key: "d3", id: "decision-3", label: "Net 30 credit in use" },
     { _key: "d4", id: "decision-4", label: "Split inbox approvals" },
   ],

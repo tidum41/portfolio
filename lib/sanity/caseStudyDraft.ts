@@ -28,13 +28,13 @@ const DRAFT_FIELDS = `{
   slug,
   tocItems[]{ _key, id, label },
   heroTagline, heroTitle,
-  problemLabel, problemHeading, problemBody, problemImageCaption, painPoints,
+  problemLabel, problemHeading, problemBody, problemImageCaption, beforeAfterCaption, painPoints,
   researchLabel, researchHeading, researchBody,
-  d1Label, d1Heading, d1Body,
-  d2Label, d2Heading, d2Body,
-  d3Label, d3Heading, d3Body,
-  d4Label, d4Heading, d4Body,
-  solutionLabel, solutionHeading, solutionBody
+  d1Label, d1Heading, d1Body, d1Caption,
+  d2Label, d2Heading, d2Body, d2Caption,
+  d3Label, d3Heading, d3Body, d3Caption,
+  d4Label, d4Heading, d4Body, d4Caption,
+  solutionLabel, solutionHeading, solutionBody, solutionEmbedCaption
 }`;
 
 function mapRawToCaseStudy(raw: Record<string, unknown> | null): CaseStudyData | null {

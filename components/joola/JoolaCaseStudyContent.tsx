@@ -84,6 +84,16 @@ function Body({ children }: { children: ReactNode }) {
   return <CaseStudyBody>{children}</CaseStudyBody>;
 }
 
+function SanityParagraphs({ text }: { text?: string }) {
+  const parts = (text ?? "").split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
+  if (parts.length === 0) return null;
+  return parts.map((part, i) => (
+    <Body key={i}>
+      <JoolaSanityText text={part} />
+    </Body>
+  ));
+}
+
 function PainPoint({ text }: { text: string }) {
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -114,7 +124,7 @@ function PainPoint({ text }: { text: string }) {
 function MockDisclaimer() {
   return (
     <p className="joola-mock-note" role="note">
-      Names and numbers in these screens are mocked for this case study.
+      I made up the numbers and account names in these screens. They&apos;re illustrative, not JOOLA clients or real wholesale figures.
     </p>
   );
 }
@@ -148,9 +158,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <H2>
           <JoolaSanityText text={cs.problemHeading} />
         </H2>
-        <Body>
-          <JoolaSanityText text={cs.problemBody} />
-        </Body>
+        <SanityParagraphs text={cs.problemBody} />
         {painPoints.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 24 }}>
             {painPoints.map((text, i) => (
@@ -165,16 +173,14 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <H2>
           <JoolaSanityText text={cs.solutionHeading} />
         </H2>
-        <JoolaBeforeAfter />
-        <Body>
-          <JoolaSanityText text={cs.solutionBody} />
-        </Body>
+        <JoolaBeforeAfter caption={cs.beforeAfterCaption} />
+        <SanityParagraphs text={cs.solutionBody} />
         <JoolaProtoIframe
           figureId="quick-order-portal"
           src={JOOLA_FIGURE_URLS["quick-order-portal"]}
           designWidth={EMBED_W}
           designHeight={JOOLA_EMBED_HEIGHT["quick-order-portal"]}
-          caption="Quick order in the portal shell, search-first for buyers who already know the SKUs."
+          caption={cs.solutionEmbedCaption}
         />
       </Section>
 
@@ -183,9 +189,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <H2>
           <JoolaSanityText text={cs.researchHeading} />
         </H2>
-        <Body>
-          <JoolaSanityText text={cs.researchBody} />
-        </Body>
+        <SanityParagraphs text={cs.researchBody} />
       </Section>
 
       <Section id="decision-1">
@@ -193,15 +197,13 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <H2>
           <JoolaSanityText text={cs.d1Heading} />
         </H2>
-        <Body>
-          <JoolaSanityText text={cs.d1Body} />
-        </Body>
+        <SanityParagraphs text={cs.d1Body} />
         <JoolaProtoIframe
           figureId="quick-order-row-search"
           src={qoRowUrl("1")}
           designWidth={EMBED_W}
           designHeight={JOOLA_EMBED_HEIGHT["quick-order-row-search"]}
-          caption="Search by name or SKU on the quick-order line."
+          caption={cs.d1Caption}
         />
       </Section>
 
@@ -210,9 +212,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <H2>
           <JoolaSanityText text={cs.d2Heading} />
         </H2>
-        <Body>
-          <JoolaSanityText text={cs.d2Body} />
-        </Body>
+        <SanityParagraphs text={cs.d2Body} />
         <JoolaVariantEmbed
           label="Quick order line view"
           value={qoVariant}
@@ -228,9 +228,9 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
           heights={qoHeights}
           onEmbedHeight={bumpQoH}
           captions={{
-            "1": "Compact stepper-only line, one account price per SKU.",
-            "3": "Use last reorder and quantity on the same row.",
-            "4": "Stock status and quantity controls on one line.",
+            "1": cs.d2Caption ?? "",
+            "3": cs.d2Caption ?? "",
+            "4": cs.d2Caption ?? "",
           }}
         />
       </Section>
@@ -243,15 +243,13 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <H2>
           <JoolaSanityText text={cs.d3Heading} />
         </H2>
-        <Body>
-          <JoolaSanityText text={cs.d3Body} />
-        </Body>
+        <SanityParagraphs text={cs.d3Body} />
         <JoolaProtoIframe
           figureId="review-checkout"
           src={JOOLA_FIGURE_URLS["review-checkout"]}
           designWidth={EMBED_W}
           designHeight={JOOLA_EMBED_HEIGHT["review-checkout"]}
-          caption="Checkout opens on Net 30 and shows credit in use before the buyer places the order."
+          caption={cs.d3Caption}
         />
       </Section>
 
@@ -260,9 +258,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <H2>
           <JoolaSanityText text={cs.d4Heading} />
         </H2>
-        <Body>
-          <JoolaSanityText text={cs.d4Body} />
-        </Body>
+        <SanityParagraphs text={cs.d4Body} />
         <JoolaVariantEmbed
           label="Approval queue view"
           value={approvalView}
@@ -277,8 +273,8 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
           heights={approvalHeights}
           onEmbedHeight={bumpApprovalH}
           captions={{
-            split: "Over-limit orders in a split inbox with credit math beside the list.",
-            ledger: "Ledger inbox with expandable rows and credit math per order.",
+            split: cs.d4Caption ?? "",
+            ledger: cs.d4Caption ?? "",
           }}
         />
       </Section>

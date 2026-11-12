@@ -278,7 +278,7 @@
 }
 
 .joola-hero-embed .joola-proto-figure__chrome {
-  border-radius: var(--radius-card, 8px);
+  border-radius: 8px;
 }
 
 .joola-proto-figure {
