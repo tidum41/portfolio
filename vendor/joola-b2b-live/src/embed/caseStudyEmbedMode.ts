@@ -19,7 +19,7 @@ function blockEvent(event: Event) {
   event.stopImmediatePropagation();
 }
 
-function onFocusIn(event: FocusEvent) {
+function onFocusIn(event: Event) {
   const target = event.target;
   if (target instanceof HTMLElement) target.blur();
   blockEvent(event);
