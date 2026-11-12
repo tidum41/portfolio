@@ -1,20 +1,29 @@
 @import "tailwindcss";
 
-/* Helvetica Neue — local faces for Regular (400) and Medium (500) only.
-   Site UI weights cap at 500. Georgia remains the serif / page-title face. */
+/* Helvetica Neue — Regular (400) and Medium (500) only. Site UI weights
+   cap at 500. Georgia remains the serif / page-title face. */
+/* Helvetica Neue is self-hosted so every visitor renders the same font,
+   not just Apple devices with it installed locally. The files in
+   public/fonts are subset to Latin and punctuation and carry Apple's
+   published vertical metrics for the family (ascent 0.975em, descent
+   -0.217em, cap height 0.714em), so line boxes match the system font
+   these rules replaced. The -v1 suffix versions the files: bump it when
+   a file changes, the /fonts cache header in next.config.mjs is
+   immutable. No local() source on purpose: an installed copy can be a
+   different cut or metrics, which is the inconsistency this removes. */
 @font-face {
   font-family: "Helvetica Neue";
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  src: local("HelveticaNeue"), local("HelveticaNeue-Regular"), local("Helvetica Neue");
+  src: url("/fonts/helvetica-neue-400-v1.woff2") format("woff2");
 }
 @font-face {
   font-family: "Helvetica Neue";
   font-weight: 500;
   font-style: normal;
   font-display: swap;
-  src: local("HelveticaNeue-Medium"), local("Helvetica Neue Medium");
+  src: url("/fonts/helvetica-neue-500-v1.woff2") format("woff2");
 }
 
 @theme {
