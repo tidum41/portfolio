@@ -17,8 +17,9 @@ const FIGURES = [
 ];
 
 const BANNED = [
-  { id: "case-pack", re: /\bcase of\b|by the case|quantities move by the case/i },
+  { id: "case-pack", re: /\bcase[\s-]?pack\b|\bcase of\b|by the case|quantities move by the case/i },
   { id: "cases-mode", re: /\bcases\b(?!\s+for)/i },
+  { id: "tier", re: /\btier(?:ed|s)?\b|\bprice break/i },
   { id: "dot-sep", re: /·/ },
   { id: "store-link", re: /joola\.com store/i },
   { id: "em-dash", re: /—/ },

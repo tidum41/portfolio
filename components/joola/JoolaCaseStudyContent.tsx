@@ -9,6 +9,7 @@ import JoolaBeforeAfter from "./JoolaBeforeAfter";
 import JoolaProtoIframe from "./JoolaProtoIframe";
 import JoolaVariantEmbed from "./JoolaVariantEmbed";
 import {
+  JOOLA_EMBED_DESIGN_WIDTH,
   JOOLA_EMBED_HEIGHT,
   JOOLA_FIGURE_URLS,
   approvalUrl,
@@ -18,8 +19,7 @@ import {
 import "./joola-case-study.css";
 
 const COLOR_WRONG = "#C62828";
-const QO_W = 1024;
-const PORTAL_W = 1280;
+const EMBED_W = JOOLA_EMBED_DESIGN_WIDTH;
 
 function Section({
   id,
@@ -123,12 +123,21 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
   const painPoints = cs.painPoints ?? [];
   const [qoVariant, setQoVariant] = useState<QoVariant>("1");
   const [approvalView, setApprovalView] = useState<"split" | "ledger">("split");
-  const [qoSlotH, setQoSlotH] = useState(JOOLA_EMBED_HEIGHT["quick-order-row-compare"]);
-  const [approvalSlotH, setApprovalSlotH] = useState(
-    Math.max(JOOLA_EMBED_HEIGHT["approval-queue-split"], JOOLA_EMBED_HEIGHT["approval-queue-ledger"]),
-  );
-  const bumpQoH = (h: number) => setQoSlotH((prev) => Math.max(prev, h));
-  const bumpApprovalH = (h: number) => setApprovalSlotH((prev) => Math.max(prev, h));
+  const [qoHeights, setQoHeights] = useState<Record<QoVariant, number>>({
+    "1": JOOLA_EMBED_HEIGHT["quick-order-row-compact"],
+    "3": JOOLA_EMBED_HEIGHT["quick-order-row-reorder"],
+    "4": JOOLA_EMBED_HEIGHT["quick-order-row-stock"],
+    "2": JOOLA_EMBED_HEIGHT["quick-order-row-compact"],
+    "5": JOOLA_EMBED_HEIGHT["quick-order-row-compact"],
+  });
+  const [approvalHeights, setApprovalHeights] = useState({
+    split: JOOLA_EMBED_HEIGHT["approval-queue-split"],
+    ledger: JOOLA_EMBED_HEIGHT["approval-queue-ledger"],
+  });
+  const bumpQoH = (v: QoVariant, h: number) =>
+    setQoHeights((prev) => ({ ...prev, [v]: Math.max(prev[v] ?? 0, h) }));
+  const bumpApprovalH = (v: "split" | "ledger", h: number) =>
+    setApprovalHeights((prev) => ({ ...prev, [v]: Math.max(prev[v] ?? 0, h) }));
 
   return (
     <article style={{ minWidth: 0 }}>
@@ -169,7 +178,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <JoolaProtoIframe
           figureId="quick-order-portal"
           src={JOOLA_FIGURE_URLS["quick-order-portal"]}
-          designWidth={PORTAL_W}
+          designWidth={EMBED_W}
           designHeight={JOOLA_EMBED_HEIGHT["quick-order-portal"]}
           caption="Quick order in the portal shell, search-first for buyers who already know the SKUs."
         />
@@ -196,9 +205,9 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <JoolaProtoIframe
           figureId="quick-order-row-search"
           src={qoRowUrl("1")}
-          designWidth={QO_W}
+          designWidth={EMBED_W}
           designHeight={JOOLA_EMBED_HEIGHT["quick-order-row-search"]}
-          caption="Search by name or SKU, with CSV upload for large orders."
+          caption="Search by name or SKU on the quick-order line."
         />
       </Section>
 
@@ -221,14 +230,14 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
           onChange={setQoVariant}
           buildSrc={qoRowUrl}
           figureId="quick-order-row-compare"
-          designWidth={QO_W}
-          heights={{
-            "1": qoSlotH,
-            "3": qoSlotH,
-            "4": qoSlotH,
-          }}
+          designWidth={EMBED_W}
+          heights={qoHeights}
           onEmbedHeight={bumpQoH}
-          caption="Compact steppers, reorder hints, and stock status on the same line."
+          captions={{
+            "1": "Compact stepper-only line, one account price per SKU.",
+            "3": "Use last reorder and quantity on the same row.",
+            "4": "Stock status and quantity controls on one line.",
+          }}
         />
       </Section>
 
@@ -246,7 +255,7 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
         <JoolaProtoIframe
           figureId="review-checkout"
           src={JOOLA_FIGURE_URLS["review-checkout"]}
-          designWidth={PORTAL_W}
+          designWidth={EMBED_W}
           designHeight={JOOLA_EMBED_HEIGHT["review-checkout"]}
           caption="Checkout opens on Net 30 and shows credit in use before the buyer places the order."
         />
@@ -270,13 +279,13 @@ export default function JoolaCaseStudyContent({ cs }: { cs: CaseStudyData }) {
           onChange={setApprovalView}
           buildSrc={(v) => approvalUrl(v === "split" ? "3" : "1")}
           figureId="approval-queue"
-          designWidth={PORTAL_W}
-          heights={{
-            split: approvalSlotH,
-            ledger: approvalSlotH,
-          }}
+          designWidth={EMBED_W}
+          heights={approvalHeights}
           onEmbedHeight={bumpApprovalH}
-          caption="Over-limit orders in a split inbox, with credit math beside the ledger table."
+          captions={{
+            split: "Over-limit orders in a split inbox with credit math beside the list.",
+            ledger: "Ledger inbox with expandable rows and credit math per order.",
+          }}
         />
       </Section>
     </article>

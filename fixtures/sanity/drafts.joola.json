@@ -8,7 +8,7 @@
   "d1Heading": "[PLACEHOLDER: decision 1, search-first quick order. The first screen is a search box; NetSuite buries quick order inside the cart.]",
   "d1Label": "Decision",
   "d2Body": "[PLACEHOLDER: one short paragraph and a quantity-stepper screen. Mention the Use last reorder candidate and the stock line candidate here if Mudit wants them. One account price per distributor, no quantity price breaks.]",
-  "d2Heading": "[PLACEHOLDER: decision 2, quantities step by case pack so each line matches what the warehouse ships]",
+  "d2Heading": "[PLACEHOLDER: decision 2, quantity controls on the quick-order line so each row matches warehouse picks]",
   "d2Label": "Decision",
   "d3Body": "Review shows the account's Net 30 credit and how much of it this order uses, before the buyer places it. A buyer can see whether the order fits their limit without emailing anyone, and a rep only steps in when an order goes over. Ship dates stay pending until a rep confirms them, so nobody promises a date the warehouse can't hit.",
   "d3Heading": "Checkout opens on the distributor's own terms",
@@ -59,7 +59,7 @@
     {
       "_key": "0626f757",
       "id": "decision-2",
-      "label": "Case pack steps"
+      "label": "Line quantity"
     },
     {
       "_key": "adc8f016",

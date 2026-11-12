@@ -29,13 +29,26 @@ html.is-embed .review-grid {
 }
 
 html.is-embed .shell,
-html.is-embed .shell__sidebar,
 html.is-embed .app.shell,
 html.is-embed .buyer-shell,
 html.is-embed .admin-shell,
 html.is-embed .shell__main {
   min-height: 0 !important;
   height: auto !important;
+  min-width: 0 !important;
+}
+
+html.is-embed .buyer-shell,
+html.is-embed .admin-shell {
+  align-items: stretch;
+}
+
+html.is-embed .shell__sidebar {
+  position: relative !important;
+  top: auto !important;
+  min-height: 100% !important;
+  height: auto !important;
+  align-self: stretch !important;
 }
 
 html.is-embed .disclaimer-strip,

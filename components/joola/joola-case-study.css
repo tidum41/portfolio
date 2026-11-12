@@ -195,6 +195,10 @@
   z-index: 2;
 }
 
+.joola-hero-embed.cs-hero-media-frame {
+  border-radius: 8px;
+}
+
 .joola-hero-embed .joola-proto-figure {
   margin: 0;
 }

@@ -1,5 +1,8 @@
 export type JoolaProtoApp = "round5" | "qo";
 
+/** Layout width for every vendored embed iframe (hero, portal, row variants, approval). */
+export const JOOLA_EMBED_DESIGN_WIDTH = 1280;
+
 export function joolaProtoHashUrl(
   app: JoolaProtoApp,
   pathname: string,
@@ -39,7 +42,7 @@ export function qoRowUrl(v: QoVariant): string {
     clean: "1",
     v,
     line: "typed",
-    w: "1024",
+    w: String(JOOLA_EMBED_DESIGN_WIDTH),
     latency: "0",
   });
 }
@@ -76,8 +79,9 @@ export const JOOLA_EMBED_HEIGHT: Record<string, number> = {
   "quick-order-hero": 680,
   "quick-order-portal": 1000,
   "quick-order-row-search": 900,
-  /** Max across Reorder / Stock variants (no layout jump on toggle). */
-  "quick-order-row-compare": 1035,
+  "quick-order-row-compact": 760,
+  "quick-order-row-reorder": 950,
+  "quick-order-row-stock": 770,
   "review-checkout": 560,
   "approval-queue-split": 824,
   "approval-queue-ledger": 896,

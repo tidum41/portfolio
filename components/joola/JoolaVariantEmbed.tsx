@@ -15,7 +15,7 @@ export default function JoolaVariantEmbed<T extends string>({
   figureId,
   designWidth,
   heights,
-  caption,
+  captions,
   onEmbedHeight,
 }: {
   label: string;
@@ -26,8 +26,8 @@ export default function JoolaVariantEmbed<T extends string>({
   figureId: string;
   designWidth: number;
   heights: Partial<Record<T, number>> & Record<string, number>;
-  caption?: string;
-  onEmbedHeight?: (height: number) => void;
+  captions: Partial<Record<T, string>> & { default?: string };
+  onEmbedHeight?: (variant: T, height: number) => void;
 }) {
   const variantIds = options.map((o) => o.value);
   const { state, onIframeLoad, onEmbedMessage, retry, pick } = useEmbedVariants({
@@ -36,9 +36,7 @@ export default function JoolaVariantEmbed<T extends string>({
     onSelect: onChange,
   });
 
-  const slotHeight = Math.max(
-    ...variantIds.map((v) => heights[v as T] ?? heights[value] ?? 600),
-  );
+  const activeHeight = heights[value as T] ?? 600;
   const hostRef = useRef<HTMLDivElement>(null);
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const onEmbedHeightRef = useRef(onEmbedHeight);
@@ -64,7 +62,7 @@ export default function JoolaVariantEmbed<T extends string>({
             event.data?.type === "joola-embed-size" &&
             typeof event.data.height === "number"
           ) {
-            onEmbedHeightRef.current?.(Math.ceil(event.data.height));
+            onEmbedHeightRef.current?.(v as T, Math.ceil(event.data.height));
           }
           onEmbedMessageRef.current(v, event.data);
         }
@@ -93,7 +91,8 @@ export default function JoolaVariantEmbed<T extends string>({
     };
   }, [designWidth]);
 
-  const slotH = slotHeight * scale;
+  const slotH = activeHeight * scale;
+  const captionText = captions[value as T] ?? captions.default ?? "";
 
   return (
     <figure className="joola-proto-figure" data-joola-figure={figureId}>
@@ -121,7 +120,7 @@ export default function JoolaVariantEmbed<T extends string>({
             const active = v === value;
             const src = srcByVariant[v];
             const showSk = shouldShowSkeleton(state, v) && active;
-            const h = heights[v as T] ?? slotHeight;
+            const h = heights[v as T] ?? activeHeight;
             return (
               <div
                 key={v}
@@ -184,7 +183,9 @@ export default function JoolaVariantEmbed<T extends string>({
       <div className="joola-proto-figure__footer joola-proto-figure__footer--center">
         <JoolaFigureSeg label={label} value={value} options={options} onChange={pick} />
       </div>
-      {caption ? <figcaption className="cs-figcaption">{caption}</figcaption> : null}
+      {captionText ? (
+        <figcaption className="cs-figcaption">{captionText}</figcaption>
+      ) : null}
     </figure>
   );
 }

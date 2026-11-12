@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import JoolaProtoIframe from "./JoolaProtoIframe";
 import JoolaFigureSeg from "./JoolaFigureSeg";
 import {
+  JOOLA_EMBED_DESIGN_WIDTH,
   JOOLA_EMBED_HEIGHT,
   JOOLA_FIGURE_URLS,
   approvalUrl,
@@ -11,8 +12,7 @@ import {
   type QoVariant,
 } from "@/lib/joola/protoEmbed";
 
-const QO_W = 1024;
-const PORTAL_W = 1280;
+const EMBED_W = JOOLA_EMBED_DESIGN_WIDTH;
 
 export default function JoolaParityBench({
   figure,
@@ -29,7 +29,7 @@ export default function JoolaParityBench({
   const [approvalView, setApprovalView] = useState<"split" | "ledger">(
     tab === "ledger" ? "ledger" : "split",
   );
-  const [qoSlotH, setQoSlotH] = useState(JOOLA_EMBED_HEIGHT["quick-order-row-compare"]);
+  const [qoSlotH, setQoSlotH] = useState(JOOLA_EMBED_HEIGHT["quick-order-row-compact"]);
   const [approvalSlotH, setApprovalSlotH] = useState(
     Math.max(JOOLA_EMBED_HEIGHT["approval-queue-split"], JOOLA_EMBED_HEIGHT["approval-queue-ledger"]),
   );
@@ -44,20 +44,20 @@ export default function JoolaParityBench({
         <JoolaProtoIframe
           figureId="quick-order-portal"
           src={JOOLA_FIGURE_URLS["quick-order-portal"]}
-          designWidth={PORTAL_W}
+          designWidth={EMBED_W}
           designHeight={JOOLA_EMBED_HEIGHT["quick-order-portal"]}
         />,
-        PORTAL_W,
+        EMBED_W,
       );
     case "quick-order-row-search":
       return wrapper(
         <JoolaProtoIframe
           figureId="quick-order-row-search"
           src={qoRowUrl("1")}
-          designWidth={QO_W}
+          designWidth={EMBED_W}
           designHeight={JOOLA_EMBED_HEIGHT["quick-order-row-search"]}
         />,
-        QO_W,
+        EMBED_W,
       );
     case "quick-order-row-compare":
       return wrapper(
@@ -65,7 +65,7 @@ export default function JoolaParityBench({
           key={qoVariant}
           figureId="quick-order-row-compare"
           src={qoRowUrl(qoVariant)}
-          designWidth={QO_W}
+          designWidth={EMBED_W}
           designHeight={qoSlotH}
           onEmbedHeight={(h) => setQoSlotH((prev) => Math.max(prev, h))}
           footer={
@@ -81,17 +81,17 @@ export default function JoolaParityBench({
             />
           }
         />,
-        QO_W,
+        EMBED_W,
       );
     case "review-checkout":
       return wrapper(
         <JoolaProtoIframe
           figureId="review-checkout"
           src={JOOLA_FIGURE_URLS["review-checkout"]}
-          designWidth={PORTAL_W}
+          designWidth={EMBED_W}
           designHeight={JOOLA_EMBED_HEIGHT["review-checkout"]}
         />,
-        PORTAL_W,
+        EMBED_W,
       );
     case "approval-queue":
       return wrapper(
@@ -99,7 +99,7 @@ export default function JoolaParityBench({
           key={approvalView}
           figureId="approval-queue"
           src={approvalView === "split" ? approvalUrl("3") : approvalUrl("1")}
-          designWidth={PORTAL_W}
+          designWidth={EMBED_W}
           designHeight={approvalSlotH}
           onEmbedHeight={(h) => setApprovalSlotH((prev) => Math.max(prev, h))}
           footer={
@@ -114,7 +114,7 @@ export default function JoolaParityBench({
             />
           }
         />,
-        PORTAL_W,
+        EMBED_W,
       );
     default:
       return null;
