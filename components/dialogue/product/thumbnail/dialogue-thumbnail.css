@@ -40,9 +40,11 @@
   border-radius: var(--dp-radius);
   background: var(--dp-surface);
   box-shadow: var(--shadow-chat);
-  /* Paper project card answer panel is 16px; tighten the bottom so the
-     quote's own 12px pad does not stack into a heavier band than the top. */
-  padding: 16px 16px 12px;
+  /* The quote carries its own 12px bottom pad, so the card adds only 4px:
+     the audio card lands 16px from the bottom edge, matching the 16px
+     top and side insets. At 12px the bottom band measured 24px and read
+     heavier than every other edge. */
+  padding: 16px 16px 4px;
 }
 
 .dlg-thumb__panel.dlg-live .dp-chart-viz-card__inner,
@@ -227,6 +229,22 @@
   background: color-mix(in srgb, var(--dp-border-strong) 65%, var(--dp-ink));
 }
 
+/*
+ * The product's 150ms background ease is longer than the 120ms hover and
+ * 140ms press windows, so the fills were still in flight when each beat
+ * ended and the active state never landed. In the states cut the ease is
+ * 100ms, inside the hover window, and a press cuts instantly: the active
+ * fill is at full strength for the whole press, then eases back on
+ * release.
+ */
+.dlg-thumb[data-bar-style="states"] .dlg-live__bar .dp-chart-stack__seg {
+  transition: background-color 100ms ease;
+}
+
+.dlg-thumb[data-bar-style="states"] .dlg-live__bar[data-press] .dp-chart-stack__seg {
+  transition: none;
+}
+
 /* ---- Exploration: lift-and-marker (dev / case study only) ---- */
 .dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
 .dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
@@ -308,11 +326,15 @@
 /*
  * People swap lands whole at full opacity in the same frame as the side
  * flip. A fade from 0 left a blank beat and a collapsed-looking card.
+ * The region reserves the people's height (chips 34 + gap 12 + quote 70)
+ * in every state, so the panel surface is one constant size and nothing
+ * moves when a side opens or the loop returns to none.
  */
 .dlg-thumb__swap {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 116px;
 }
 
 .dlg-thumb .dp-clip-quote {

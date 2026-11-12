@@ -313,11 +313,12 @@ export default function DialogueThumbnailDemo({
               >
                 <ChartStackedBar lanes total={300} segments={THUMB_STACK} />
               </div>
-              {side !== "none" ? (
-                <div key={swapKey} className="dlg-thumb__swap">
-                  <ThumbPeople side={side} />
-                </div>
-              ) : null}
+              {/* The swap region is always mounted: it reserves the people's
+                  height in the none state, so the panel surface is the same
+                  size in every state. Only its contents wait for a side. */}
+              <div key={swapKey} className="dlg-thumb__swap">
+                {side !== "none" ? <ThumbPeople side={side} /> : null}
+              </div>
             </ChartVizCard>
           </div>
         </div>
