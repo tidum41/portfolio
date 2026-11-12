@@ -39,7 +39,7 @@ export default function CaseStudyLoadingSilhouette({
           <div style={{ height: 120 }} />
         </aside>
 
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+        <div className="cs-content" style={{ minWidth: 0 }}>
           <div className="cs-mobile-back" style={{ height: 28, marginBottom: "var(--space-1)" }} />
           {hero}
         </div>

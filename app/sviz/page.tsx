@@ -10,6 +10,7 @@ import InViewLoopVideo from "@/components/InViewLoopVideo";
 import { getCaseStudy } from "@/lib/sanity/queries";
 import type { Stat as StatData, TocItem } from "@/lib/sanity/queries";
 import { SITE_URL } from "@/lib/site";
+import { CASE_STUDY_MEDIA_SIZES } from "@/lib/caseStudyLayout";
 
 /** Day-long ISR fallback; Sanity webhook busts tagged caches on edit. */
 export const revalidate = 86400;
@@ -247,7 +248,7 @@ export default function SvizPage() {
           />
         </aside>
 
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+        <div className="cs-content" style={{ minWidth: 0 }}>
           <div className="cs-mobile-back">
             <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
           </div>
@@ -256,13 +257,13 @@ export default function SvizPage() {
             title={FB.heroTitle}
             metadata={METADATA}
           >
-            <MediaCard>
+            <MediaCard style={{ "--cs-hero-ar": 1596 / 1388 } as React.CSSProperties}>
               <Image
                 src={LOCAL_HERO_IMAGE}
                 alt="sviz YouTube channel"
                 width={1596}
                 height={1388}
-                sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+                sizes={CASE_STUDY_MEDIA_SIZES}
                 style={{ width: "100%", height: "auto", display: "block" }}
                 priority
               />

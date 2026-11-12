@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import CaseStudyLightbox from "@/components/CaseStudyLightbox";
 import { CASE_STUDY_BLUR_DATA_URL } from "@/lib/caseStudyBlur";
+import { CASE_STUDY_MEDIA_SIZES } from "@/lib/caseStudyLayout";
 
 type Base = {
   src: string;
@@ -35,7 +36,7 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
     alt,
     caption,
     priority = false,
-    sizes = "(max-width: 767px) calc(100vw - 48px), 750px",
+    sizes = CASE_STUDY_MEDIA_SIZES,
     zoomable = true,
     placeholder = "blur",
   } = props;

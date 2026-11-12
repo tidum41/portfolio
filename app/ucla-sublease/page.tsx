@@ -13,6 +13,7 @@ import { getCaseStudy } from "@/lib/sanity/queries";
 import type { CompRow as CompRowData, TocItem, PhonePos } from "@/lib/sanity/queries";
 import { CASE_STUDY_LCP } from "@/lib/caseStudyNav";
 import { SITE_URL } from "@/lib/site";
+import { CASE_STUDY_MEDIA_SIZES } from "@/lib/caseStudyLayout";
 
 /** Day-long ISR fallback; Sanity webhook busts tagged caches on edit. */
 export const revalidate = 86400;
@@ -431,7 +432,7 @@ export default function BruinLeasePage() {
           />
         </aside>
 
-        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+        <div className="cs-content" style={{ minWidth: 0 }}>
           <div className="cs-mobile-back">
             <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
           </div>
@@ -504,7 +505,7 @@ async function BruinLeaseContent() {
                     caption={cs.problemImageCaption}
                     fill
                     aspectRatio="16/7"
-                    sizes="(max-width: 767px) calc(100vw - 48px), 750px"
+                    sizes={CASE_STUDY_MEDIA_SIZES}
                   />
                 )
                 : (
