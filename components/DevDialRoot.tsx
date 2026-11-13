@@ -22,11 +22,14 @@ export default function DevDialRoot() {
   const pathname = usePathname();
   const top = useSyncExternalStore(subscribe, isTopWindow, () => true);
   if (!top) return null;
-  // Comparison labs have their own controls. An open DialKit panel
-  // would cover the thing being compared.
-  const openDials =
-    pathname.startsWith("/dev") &&
-    !pathname.startsWith("/dev/card-lab") &&
-    !pathname.startsWith("/dev/nav-morph");
+  // Comparison labs and archive-lab mount their own DialRoot.
+  if (
+    pathname.startsWith("/dev/card-lab") ||
+    pathname.startsWith("/dev/nav-morph") ||
+    pathname.startsWith("/dev/archive-lab")
+  ) {
+    return null;
+  }
+  const openDials = pathname.startsWith("/dev");
   return <DialRoot defaultOpen={openDials} />;
 }
