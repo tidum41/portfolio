@@ -14,7 +14,9 @@ import {
   THUMBNAIL_CURSOR_OUT_MS,
   THUMBNAIL_VARIANTS,
   THUMBNAIL_ENTER_TOTAL_MS,
+  THUMBNAIL_CLEAR_MS,
   thumbnailBarStyleForVariant,
+  thumbnailClearProgress,
   thumbnailEnterProgress,
   thumbnailStateAt,
   type ThumbnailTiming,
@@ -93,6 +95,7 @@ function ThumbQuote({ q }: { q: Quote }) {
 function ThumbPeople({
   side,
   enter,
+  exit,
 }: {
   side: Side;
   /**
@@ -101,17 +104,24 @@ function ThumbPeople({
    * carries data-enter), so it passes null here.
    */
   enter?: { chips: number; quote: number } | null;
+  /**
+   * Eased clearing progress 0..1 for the loop's end, in both modes: the
+   * people leave as one gesture along the entrance's path, reversed.
+   */
+  exit?: number | null;
 }) {
   const rows = side === "friday" ? FRIDAY_QUOTES : UNSURE_QUOTES;
   const [lead, next] = rows;
   const more = (side === "friday" ? 225 : 75) - rows.length;
   const rise = (p: number): React.CSSProperties =>
     p >= 1 ? {} : { opacity: p, transform: `translateY(${6 * (1 - p)}px)` };
+  const sink = (p: number): React.CSSProperties =>
+    p <= 0 ? {} : { opacity: 1 - p, transform: `translateY(${6 * p}px)` };
   return (
     <>
       <div
         className="dp-sources dlg-thumb__sources"
-        style={enter ? rise(enter.chips) : undefined}
+        style={enter ? rise(enter.chips) : exit != null ? sink(exit) : undefined}
       >
         <SourcePill name={lead.participant} time={startOf(lead.time)} selected />
         <SourcePill name={next.participant} time={startOf(next.time)} />
@@ -119,7 +129,7 @@ function ThumbPeople({
       </div>
       <div
         className="dp-clip-quotes dlg-thumb__quote"
-        style={enter ? rise(enter.quote) : undefined}
+        style={enter ? rise(enter.quote) : exit != null ? sink(exit) : undefined}
       >
         <ThumbQuote q={lead} />
       </div>
@@ -169,6 +179,9 @@ export default function DialogueThumbnailDemo({
   const [swapKey, setSwapKey] = useState(0);
   /** Autoplay: true only while the loop's first open is on screen. */
   const [enterFirst, setEnterFirst] = useState(false);
+  /** Autoplay: the loop's clearing, with its eased progress 0..1. */
+  const [clearing, setClearing] = useState(false);
+  const [exitP, setExitP] = useState(0);
   const enterArmedRef = useRef(true);
   const [scale, setScale] = useState(1);
   const [targets, setTargets] = useState<{ friday: Pt; unsure: Pt } | null>(null);
@@ -228,6 +241,8 @@ export default function DialogueThumbnailDemo({
       setCursorOn(false);
       setPressing(false);
       setBeat("poster");
+      setClearing(false);
+      setExitP(0);
       return;
     }
 
@@ -300,6 +315,22 @@ export default function DialogueThumbnailDemo({
       await wait(CURSOR_OUT_MS);
     };
 
+    /* The clearing, mirroring thumbnailStateAt: the bar's selection
+       releases at once (its frame eases out on the segment transition)
+       while the people fade over THUMBNAIL_CLEAR_MS on the entrance ease. */
+    const animateClear = () =>
+      new Promise<void>((resolve) => {
+        const started = performance.now();
+        const step = (now: number) => {
+          if (cancelled) return;
+          const p = Math.min(1, (now - started) / THUMBNAIL_CLEAR_MS);
+          setExitP(thumbnailClearProgress(p * THUMBNAIL_CLEAR_MS));
+          if (p < 1) rafs.push(requestAnimationFrame(step));
+          else resolve();
+        };
+        rafs.push(requestAnimationFrame(step));
+      });
+
     const openSide = (which: Side) => {
       setSide(which);
       setSwapKey((n) => n + 1);
@@ -364,8 +395,14 @@ export default function DialogueThumbnailDemo({
         setPressing(false);
         openSide("friday");
         setBeat("poster");
-        await wait(timing.payoffMs);
+        await wait(timing.payoffMs - THUMBNAIL_CLEAR_MS);
         if (cancelled) return;
+        setClearing(true);
+        await animateClear();
+        if (cancelled) return;
+        setSide("none");
+        setClearing(false);
+        setExitP(0);
         await fadeOut();
       }
     };
@@ -380,7 +417,24 @@ export default function DialogueThumbnailDemo({
 
   /* In scrub mode every rendered value comes from the frame state; in
      autoplay it comes from the loop's state, exactly as before. */
-  const rSide: Selection = frame ? frame.side : side;
+  /* The clearing splits the render in two: the bar already reads as
+     unselected (its frame is easing out) while the people are still on
+     screen, leaving. Both modes read the same split. */
+  const rClear: number | null = frame
+    ? frame.clearMs != null
+      ? thumbnailClearProgress(frame.clearMs)
+      : null
+    : clearing
+      ? exitP
+      : null;
+  const rBarSide: Selection = frame
+    ? frame.clearMs != null
+      ? "none"
+      : frame.side
+    : clearing
+      ? "none"
+      : side;
+  const rPeopleSide: Selection = frame ? frame.side : clearing ? "friday" : side;
   const rBeat = frame ? frame.beat : beat;
   const rHover = frame ? frame.hover : hover;
   const rPress = frame ? frame.press : press;
@@ -425,7 +479,7 @@ export default function DialogueThumbnailDemo({
       data-bar-style={barStyle}
       data-sel-variant={selVariant}
       data-beat={rBeat}
-      data-side={rSide}
+      data-side={rBarSide}
       data-scrub={scrubbing ? "" : undefined}
       data-cursor={rCursorOn ? "on" : undefined}
       style={{ "--thumb-scale": String(scale), ...cursorVars } as React.CSSProperties}
@@ -441,7 +495,7 @@ export default function DialogueThumbnailDemo({
                 className="dlg-live__bar dlg-thumb__bar"
                 data-hover={rHover || undefined}
                 data-press={rPress || undefined}
-                data-side={rSide}
+                data-side={rBarSide}
               >
                 <ChartStackedBar lanes total={300} segments={THUMB_STACK} />
               </div>
@@ -449,11 +503,13 @@ export default function DialogueThumbnailDemo({
                   height in the none state, so the panel surface is the same
                   size in every state. Only its contents wait for a side. */}
               <div
-                key={frame ? `scrub-${rSide}` : swapKey}
+                key={frame ? `scrub-${rPeopleSide}` : swapKey}
                 className="dlg-thumb__swap"
                 data-enter={!frame && enterFirst ? "" : undefined}
               >
-                {rSide !== "none" ? <ThumbPeople side={rSide} enter={rEnter} /> : null}
+                {rPeopleSide !== "none" ? (
+                  <ThumbPeople side={rPeopleSide} enter={rEnter} exit={rClear} />
+                ) : null}
               </div>
             </ChartVizCard>
           </div>

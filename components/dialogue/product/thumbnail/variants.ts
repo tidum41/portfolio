@@ -98,6 +98,12 @@ export type ThumbnailFrameState = {
    * The first open plays the answer's entrance; every later switch is a cut.
    */
   enterMs: number | null;
+  /**
+   * Milliseconds since the loop's clearing began, during the clear only.
+   * The clear takes the tail of the Friday hold: the people fade out and
+   * the selection releases, so the loop reads as ending before it restarts.
+   */
+  clearMs: number | null;
 };
 
 export type ThumbnailPhase = { beat: string; label: string; start: number; end: number };
@@ -155,7 +161,7 @@ export function thumbnailStateAt(timing: ThumbnailTiming, timeMs: number): Thumb
     t -= dur;
     return at >= 0 && at < dur ? at : -1;
   };
-  const base = { hover: null, press: null, pressing: false, enterMs: null } as const;
+  const base = { hover: null, press: null, pressing: false, enterMs: null, clearMs: null } as const;
   let p: number;
   if ((p = seg(rest)) >= 0)
     return { ...base, beat: "poster", side: "none", cursorOn: false, cursorMode: "off", cursorP: 0 };
@@ -166,7 +172,7 @@ export function thumbnailStateAt(timing: ThumbnailTiming, timeMs: number): Thumb
   if ((p = seg(hover)) >= 0)
     return { ...base, beat: "hover-unsure", side: "none", hover: "unsure", cursorOn: true, cursorMode: "at-unsure", cursorP: 1 };
   if ((p = seg(press)) >= 0)
-    return { beat: "press-unsure", side: "none", hover: "unsure", press: "unsure", pressing: true, cursorOn: true, cursorMode: "at-unsure", cursorP: 1, enterMs: null };
+    return { beat: "press-unsure", side: "none", hover: "unsure", press: "unsure", pressing: true, cursorOn: true, cursorMode: "at-unsure", cursorP: 1, enterMs: null, clearMs: null };
   if ((p = seg(payoff)) >= 0)
     return { ...base, beat: "unsure", side: "unsure", cursorOn: true, cursorMode: "at-unsure", cursorP: 1, enterMs: p };
   if ((p = seg(move)) >= 0)
@@ -174,10 +180,21 @@ export function thumbnailStateAt(timing: ThumbnailTiming, timeMs: number): Thumb
   if ((p = seg(hover)) >= 0)
     return { ...base, beat: "hover-friday", side: "unsure", hover: "friday", cursorOn: true, cursorMode: "at-friday", cursorP: 1 };
   if ((p = seg(press)) >= 0)
-    return { beat: "press-friday", side: "unsure", hover: "friday", press: "friday", pressing: true, cursorOn: true, cursorMode: "at-friday", cursorP: 1, enterMs: null };
-  if ((p = seg(payoff)) >= 0)
-    return { ...base, beat: "poster", side: "friday", cursorOn: true, cursorMode: "at-friday", cursorP: 1 };
-  return { ...base, beat: "poster", side: "friday", cursorOn: false, cursorMode: "at-friday", cursorP: 1 };
+    return { beat: "press-friday", side: "unsure", hover: "friday", press: "friday", pressing: true, cursorOn: true, cursorMode: "at-friday", cursorP: 1, enterMs: null, clearMs: null };
+  if ((p = seg(payoff)) >= 0) {
+    const clearAt = payoff - THUMBNAIL_CLEAR_MS;
+    return {
+      ...base,
+      beat: "poster",
+      side: "friday",
+      cursorOn: true,
+      cursorMode: "at-friday",
+      cursorP: 1,
+      clearMs: p >= clearAt ? p - clearAt : null,
+    };
+  }
+  /* The cursor-out beat: the clear has finished, the card sits empty. */
+  return { ...base, beat: "poster", side: "none", cursorOn: false, cursorMode: "at-friday", cursorP: 1 };
 }
 
 /**
@@ -213,4 +230,18 @@ export function thumbnailEnterProgress(enterMs: number): { chips: number; quote:
   const chips = dlgRiseEase(enterMs / THUMBNAIL_ENTER_RISE_MS);
   const quote = dlgRiseEase((enterMs - THUMBNAIL_ENTER_QUOTE_DELAY_MS) / THUMBNAIL_ENTER_RISE_MS);
   return { chips, quote };
+}
+
+/**
+ * The loop's clearing: at the end of the Friday hold the answer leaves the
+ * way it arrived, the entrance run backwards. The people fade and sink
+ * over 240ms on the same ease while the selection releases; the empty
+ * card then holds through the cursor-out beat and the rest, so the loop
+ * point reads as an ending, not a jump cut. No time is added.
+ */
+export const THUMBNAIL_CLEAR_MS = 240;
+
+/** Eased clearing progress 0..1 for the people block as one gesture. */
+export function thumbnailClearProgress(clearMs: number): number {
+  return dlgRiseEase(clearMs / THUMBNAIL_CLEAR_MS);
 }
