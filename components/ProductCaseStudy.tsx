@@ -61,7 +61,7 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
             <div className="cs-hero-media-frame" style={{ "--cs-hero-ar": 2400 / 1600 } as CSSProperties}>
               <Image
                 src={JOOLA_HERO_SRC}
-                alt="Quick order screen from the JOOLA wholesale prototype, with tier pricing, a saved order, Net 30 credit, and an order marked ship date pending."
+                alt="Quick order screen from the JOOLA wholesale prototype, with Net 30 credit and a ship date pending."
                 width={2400}
                 height={1600}
                 priority

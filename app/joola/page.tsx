@@ -1,7 +1,18 @@
 import type { Metadata } from "next";
 import ProductCaseStudy from "@/components/ProductCaseStudy";
+import CaseStudyOpen from "@/components/CaseStudyOpen";
+import CaseStudyPager from "@/components/CaseStudyPager";
+import CaseStudyRequest from "@/components/CaseStudyRequest";
+import CaseStudyTOC from "@/components/CaseStudyTOC";
+import {
+  getJoolaCaseStudyDraft,
+  joolaPreviewModeActive,
+} from "@/lib/sanity/caseStudyDraft";
 import { JOOLA_TITLE } from "@/lib/caseStudies/joola";
 import { SITE_URL } from "@/lib/site";
+import type { CaseStudyData, TocItem } from "@/lib/sanity/queries";
+import JoolaCaseStudyContent from "@/components/joola/JoolaCaseStudyContent";
+import JoolaPreviewHero from "@/components/joola/JoolaPreviewHero";
 
 const description = "B2B ordering for JOOLA. Product design internship, summer 2026.";
 
@@ -10,12 +21,116 @@ export const metadata: Metadata = {
   description,
   alternates: { canonical: `${SITE_URL}/joola` },
   openGraph: {
-    title: `${JOOLA_TITLE} — Mudit Mahajan`,
+    title: `${JOOLA_TITLE} | Mudit Mahajan`,
     description,
     url: `${SITE_URL}/joola`,
   },
 };
 
-export default function JoolaCaseStudyPage() {
-  return <ProductCaseStudy />;
+const TEAM = [
+  { name: "Vinay Bulusu", role: "PM", href: "https://www.linkedin.com/in/vinay-bulusu-442395b9/" },
+  { name: "Caroline Kajihara", role: "Head of Digital", href: "https://www.linkedin.com/in/carolinekajihara/" },
+  { name: "Rich Bloom", role: "Creative Director", href: "https://www.linkedin.com/in/richbbloom/" },
+  { name: "Kannan Mrithunjai", role: "Developer", href: "https://www.linkedin.com/in/kannan-mrithunjai-961b3a13a/" },
+  { name: "Sachin Girish", role: "Developer", href: "https://www.linkedin.com/in/sachin-girish1677/" },
+] as const;
+
+const FB: CaseStudyData = {
+  slug: "joola",
+  heroTitle: JOOLA_TITLE,
+  tocItems: [
+    { _key: "problem", id: "problem", label: "Problem" },
+    { _key: "solution", id: "solution", label: "Solution" },
+    { _key: "research", id: "research", label: "Research" },
+    { _key: "d1", id: "decision-1", label: "Search first" },
+    { _key: "d2", id: "decision-2", label: "Stock status sits on the same line." },
+    { _key: "d3", id: "decision-3", label: "Net 30 credit in use" },
+    { _key: "d4", id: "decision-4", label: "Split inbox approvals" },
+  ],
+};
+
+function mergeDraft(fallback: CaseStudyData, raw: CaseStudyData): CaseStudyData {
+  return {
+    ...fallback,
+    ...Object.fromEntries(
+      Object.entries(raw).filter(
+        ([, v]) => v != null && (Array.isArray(v) ? v.length > 0 : v !== ""),
+      ),
+    ),
+  };
+}
+
+function tocFrom(cs: CaseStudyData): { id: string; label: string }[] {
+  const items = (cs.tocItems ?? FB.tocItems ?? []) as TocItem[];
+  return items.map((t) => ({ id: t.id, label: t.label }));
+}
+
+export default async function JoolaCaseStudyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sanity_preview?: string }>;
+}) {
+  const sp = await searchParams;
+  const previewOn = await joolaPreviewModeActive(sp.sanity_preview);
+  const draft = previewOn ? await getJoolaCaseStudyDraft(sp.sanity_preview) : null;
+
+  if (!previewOn || !draft) {
+    return <ProductCaseStudy />;
+  }
+
+  const cs = mergeDraft(FB, draft);
+  const toc = tocFrom(cs);
+
+  return (
+    <div style={{ fontFamily: "var(--font-sans)" }}>
+      <div className="cs-layout">
+        <aside className="cs-aside">
+          <CaseStudyTOC items={toc} backHref="/" />
+        </aside>
+
+        <div className="cs-content" style={{ maxWidth: "var(--content-max-w)", minWidth: 0 }}>
+          <div className="cs-mobile-back">
+            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
+          </div>
+
+          <CaseStudyOpen
+            title={JOOLA_TITLE}
+            metadata={[
+              { _key: "role", label: "Role", values: ["Product design intern"] },
+              { _key: "timeline", label: "Timeline", values: ["10 weeks, Summer 2026"] },
+              {
+                _key: "team",
+                label: "Team",
+                wide: true,
+                values: TEAM.map((person) => (
+                  <span key={person.href}>
+                    <a className="cs-person-link" href={person.href} target="_blank" rel="noopener noreferrer">
+                      {person.name}
+                    </a>{" "}
+                    <span style={{ color: "var(--color-text-muted)" }}>{person.role}</span>
+                  </span>
+                )),
+              },
+              {
+                _key: "scope",
+                label: "Scope",
+                values: ["Product design", "Interaction design", "Prototyping"],
+              },
+            ]}
+          >
+            <div
+              className="cs-hero-media-frame joola-hero-embed"
+              data-joola-hero-live
+            >
+              <JoolaPreviewHero />
+            </div>
+          </CaseStudyOpen>
+
+          <JoolaCaseStudyContent cs={cs} />
+
+          <CaseStudyPager href="/joola" />
+        </div>
+      </div>
+    </div>
+  );
 }

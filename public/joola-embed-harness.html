@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>JOOLA embed harness</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #fff;
+        color-scheme: light;
+        overflow: hidden;
+      }
+      .chrome {
+        margin: 0 auto;
+        overflow: hidden;
+        box-shadow: 0 0 0 1px #e6e6e6;
+        background: #fff;
+      }
+      iframe {
+        border: 0;
+        display: block;
+        color-scheme: light;
+      }
+    </style>
+  </head>
+  <body>
+    <figure id="host" class="chrome" hidden>
+      <iframe id="frame" title="joola-proto" scrolling="no"></iframe>
+    </figure>
+    <script>
+      const H = {
+        heroCompact: 680,
+        portal: 1000,
+        qoSearch: 900,
+        qoCompare: 1035,
+        review: 560,
+        approvalSplit: 824,
+        approvalLedger: 896,
+      };
+      const q = new URLSearchParams(location.search);
+      const figure = q.get("figure") || "";
+      const variant = q.get("variant") || "1";
+      const tab = q.get("tab") || "split";
+
+      function hashUrl(app, path, params) {
+        const search = new URLSearchParams({ embed: "1", ...params });
+        return `/joola-proto/${app}/index.html#${path}?${search}`;
+      }
+
+      const configs = {
+        "quick-order-hero": {
+          w: 1280,
+          h: H.heroCompact,
+          src: hashUrl("qo", "/prototypes/quick-order-row", {
+            clean: "1",
+            v: "1",
+            line: "typed",
+            w: "1280",
+            rows: "5",
+            latency: "0",
+          }),
+          fid: "quick-order-hero",
+        },
+        "quick-order-portal": { w: 1280, h: H.portal, src: hashUrl("round5", "/quick-order", { clean: "1", view: "portal", screen: "quick-order", state: "default", latency: "0", account: "dicks" }), fid: "quick-order-portal" },
+        "quick-order-row-search": { w: 1024, h: H.qoSearch, src: hashUrl("qo", "/prototypes/quick-order-row", { clean: "1", v: "1", line: "typed", w: "1024", latency: "0" }), fid: "quick-order-row-search" },
+        "quick-order-row-compare": { w: 1024, h: H.qoCompare, src: hashUrl("qo", "/prototypes/quick-order-row", { clean: "1", v: variant, line: "typed", w: "1024", latency: "0" }), fid: "quick-order-row-compare" },
+        "review-checkout": { w: 1280, h: H.review, src: hashUrl("round5", "/review", { clean: "1", view: "portal", screen: "review", state: "default", latency: "0", account: "dicks" }), fid: "review-checkout" },
+        "approval-queue": {
+          w: 1280,
+          h: tab === "ledger" ? H.approvalLedger : H.approvalSplit,
+          src: hashUrl("round5", "/prototypes/approval-queue", { clean: "1", v: tab === "ledger" ? "1" : "3", protoState: "default", latency: "0" }),
+          fid: "approval-queue",
+        },
+      };
+
+      const cfg = configs[figure];
+      if (!cfg) {
+        document.body.textContent = "Unknown figure";
+      } else {
+        const host = document.getElementById("host");
+        const frame = document.getElementById("frame");
+        host.style.width = cfg.w + "px";
+        host.style.height = cfg.h + "px";
+        host.dataset.joolaFigure = cfg.fid;
+        frame.width = cfg.w;
+        frame.height = cfg.h;
+        frame.style.width = cfg.w + "px";
+        frame.style.height = cfg.h + "px";
+        frame.src = cfg.src;
+        host.hidden = false;
+      }
+    </script>
+  </body>
+</html>
