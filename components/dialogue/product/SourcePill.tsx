@@ -21,7 +21,7 @@ export default function SourcePill({ name, time, selected, disagree }: Props) {
         .join(" ")}
     >
       <span className="dp-source-pill__name">{name}</span>
-      <span className="dp-source-pill__time">{time}</span>
+      {time ? <span className="dp-source-pill__time">{time}</span> : null}
     </span>
   );
 }

@@ -1,0 +1,655 @@
+/* Homepage / dev thumbnail stage. Product tokens only; no Lucide, no kit. */
+
+.dlg-thumb {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--dp-warm);
+  color: var(--dp-ink);
+  user-select: none;
+}
+
+.dlg-thumb[data-cursor="on"] {
+  cursor: none;
+}
+
+.dlg-thumb__stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.dlg-thumb__scale {
+  width: 448px;
+  transform: scale(var(--thumb-scale, 1));
+  transform-origin: center center;
+}
+
+.dlg-thumb__panel.dialogue-product-root {
+  width: 448px;
+  overflow: visible;
+}
+
+/* Floating panel matches Paper option 3 chrome: 24 radius, chat shadow, no hairline. */
+.dlg-thumb__panel.dlg-live .dp-chart-viz-card,
+.dlg-thumb .dlg-live .dp-chart-viz-card {
+  overflow: visible;
+  border: 0;
+  border-radius: var(--dp-radius);
+  background: var(--dp-surface);
+  box-shadow: var(--shadow-chat);
+  /* The quote carries its own 12px bottom pad, so the card adds only 4px:
+     the audio card lands 16px from the bottom edge, matching the 16px
+     top and side insets. At 12px the bottom band measured 24px and read
+     heavier than every other edge. */
+  padding: 16px 16px 4px;
+}
+
+.dlg-thumb__panel.dlg-live .dp-chart-viz-card__inner,
+.dlg-thumb .dlg-live .dp-chart-viz-card__inner {
+  padding: 0;
+  /* Paper body gap is 12px; title keeps a 16px step to the bar. */
+  gap: 12px;
+}
+
+.dlg-thumb .dp-chart-title {
+  margin: 0 0 4px;
+}
+
+
+/* Token and Paper radius is --dp-radius-bar (2px). Beat the stale
+   .dlg-live calc(var(--ds-radius-xs) * 2) = 4px override for this demo only. */
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__bar {
+  border-radius: var(--dp-radius-bar);
+  overflow: visible;
+}
+
+.dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar .dp-chart-stack__bar {
+  margin-bottom: 8px;
+}
+
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar .dp-chart-stack__bar {
+  margin-bottom: calc(var(--dp-radius-bar) * 2);
+}
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg:first-child {
+  border-radius: var(--dp-radius-bar) 0 0 var(--dp-radius-bar);
+}
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg:last-child {
+  border-radius: 0 var(--dp-radius-bar) var(--dp-radius-bar) 0;
+}
+
+/* Stacked, left-aligned legend with swatches, as in Paper Product/Desktop Split. */
+.dlg-thumb .dp-chart-stack__lanes {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.dlg-thumb .dp-chart-stack__lane {
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  align-items: baseline;
+  gap: 8px;
+  text-align: left;
+}
+
+.dlg-thumb .dp-chart-stack__lane-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+}
+
+.dlg-thumb .dp-chart-stack__lane-value {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/*
+ * Homepage card (data-bar-style=states): fills are static ramp colors; bars
+ * never move and selection never recolors a segment. The legend rows carry
+ * the selection, and the pointer states below deepen the segment under the
+ * pointer. Exploration cut (data-bar-style=lift-explore) keeps its 1px lift
+ * plus marker for /dev only.
+ */
+.dlg-thumb .dlg-live__bar .dp-chart-stack__seg {
+  position: relative;
+  transform: none;
+  outline: none;
+  outline-offset: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live__bar .dp-chart-stack__seg {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dlg-thumb .dlg-live__bar .dp-chart-stack__seg:hover,
+.dlg-thumb .dlg-live__bar .dp-chart-stack__seg:focus,
+.dlg-thumb .dlg-live__bar .dp-chart-stack__seg:focus-visible,
+.dlg-thumb .dlg-live__bar .dp-chart-stack__seg:active,
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg,
+.dlg-thumb .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-focal],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg:not([data-focal]) {
+  outline: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg + .dp-chart-stack__seg {
+  box-shadow: none;
+}
+
+/*
+ * Beat .dlg-live stone recede (Round 18): fills follow data-tone only, in every
+ * data-side / hover / press state. Extra specificity vs [data-side][data-focal].
+ */
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-index][data-tone="focal"],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-index][data-tone="focal"] {
+  background: var(--dp-chart-focal);
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-index][data-tone="mid"],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-index][data-tone="mid"] {
+  background: var(--dp-chart-mid);
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-index][data-tone="soft"],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-index][data-tone="soft"] {
+  background: var(--dp-chart-soft);
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__seg[data-index][data-tone="neutral"],
+.dlg-thumb .dlg-live .dlg-live__bar[data-side] .dp-chart-stack__swatch[data-index][data-tone="neutral"] {
+  background: var(--dp-border-strong);
+}
+
+/* ---- Main card: legend carries the selection (no bar motion) ---- */
+/*
+ * Both legend rows are always present at the same size. The open row is
+ * ink at 500 with a full swatch; the closed row mutes to 400 in
+ * --dp-muted with a dimmed swatch, its count still showing. With nothing
+ * selected (data-side="none"), both rows sit at full strength.
+ */
+.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
+.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-value,
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-label,
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-value,
+.dlg-thumb .dlg-live__bar[data-side="none"] .dp-chart-stack__lane .dp-chart-stack__lane-label,
+.dlg-thumb .dlg-live__bar[data-side="none"] .dp-chart-stack__lane .dp-chart-stack__lane-value {
+  color: var(--dp-ink);
+  font-weight: 500;
+}
+
+.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-label,
+.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-value,
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-value {
+  color: var(--dp-muted);
+  font-weight: 400;
+}
+
+.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__swatch[data-index] {
+  background: color-mix(in srgb, var(--dp-chart-focal) 50%, var(--dp-surface));
+}
+
+.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__swatch[data-index] {
+  background: color-mix(in srgb, var(--dp-border-strong) 55%, var(--dp-surface));
+}
+
+/*
+ * Pointer states reuse the live bar's own steps (dialogue-product.css:
+ * hover 85% / 80%, press 70% / 65%, mixed toward ink): the segment under
+ * the pointer deepens, press one step deeper, and the fill returns to
+ * the ramp when the pointer state ends. The demo cursor's hover and
+ * press beats drive data-hover / data-press; a real pointer gets the
+ * same treatment through :hover.
+ */
+.dlg-thumb .dlg-live .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-index][data-focal]:hover {
+  background: color-mix(in srgb, var(--dp-chart-focal) var(--dlg-thumb-hover-focal, 85%), var(--dp-ink));
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb .dlg-live .dlg-live__bar .dp-chart-stack__seg[data-index]:not([data-focal]):hover {
+  background: color-mix(in srgb, var(--dp-border-strong) var(--dlg-thumb-hover-neutral, 80%), var(--dp-ink));
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal] {
+  background: color-mix(in srgb, var(--dp-chart-focal) var(--dlg-thumb-press-focal, 70%), var(--dp-ink));
+}
+
+.dlg-thumb .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  background: color-mix(in srgb, var(--dp-border-strong) var(--dlg-thumb-press-neutral, 65%), var(--dp-ink));
+}
+
+/*
+ * Hover previews the frame (Paper W2, approved with v2): the frame
+ * arrives at half strength on the hovered segment, so hover is a step on
+ * the same path as press and open, not a separate effect. The segment
+ * itself keeps the bar's radius in every state; only the frame appears
+ * around it. Press lands the frame at full strength instantly, via the
+ * transition: none rule for [data-press] below.
+ */
+.dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: 0 0 0 2px var(--dp-surface), 0 0 0 4px color-mix(in srgb, var(--dp-ink) 45%, transparent);
+  z-index: 1;
+}
+
+/*
+ * States cut, selected state v2 (Paper, approved 2026-11-12; see
+ * CHANGELOG.md next to this file): the active segment carries a detached
+ * frame, a 2px gap of panel and then a 2px ink ring, drawn over the bar
+ * (z-index) so it crosses the shared edge in full instead of passing
+ * under the neighbouring segment. The segment keeps the bar's own radius
+ * in every state (corrected 2026-11-13, see CHANGELOG.md): the frame's
+ * corners take their rounding from the segment's shape plus the spread.
+ * The frame sits on the open segment for as long as its side is open, and on
+ * the pressed segment while it is pressed; the legend rows still carry
+ * the selection in text, and the segment keeps its data color.
+ */
+.dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: 0 0 0 2px var(--dp-surface), 0 0 0 4px var(--dp-ink);
+  z-index: 1;
+}
+
+/* The quote's voice icon takes the open side's color, in the states cut. */
+.dlg-thumb[data-bar-style="states"][data-side="friday"] .dp-clip-quote__icon {
+  color: var(--dp-chart-focal);
+}
+
+.dlg-thumb[data-bar-style="states"][data-side="unsure"] .dp-clip-quote__icon {
+  color: var(--dp-muted);
+}
+
+/*
+ * States cut: the loop's first open plays the answer's entrance, in the
+ * product's own grammar. The sources rise the way dlg-rise brings an
+ * element in (fade, 6px rise, 240ms, cubic-bezier(0.2, 0, 0, 1)); the
+ * quote follows 100ms later, the way dlg-grow delays an answer's inner
+ * fade. It plays inside the swap region, which is always mounted, so the
+ * panel never changes size. Switches after the first open carry no
+ * data-enter and land whole. Scrub mode computes the same entrance from
+ * the frame state and passes inline styles instead of this animation.
+ */
+@keyframes dlg-thumb-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.dlg-thumb[data-bar-style="states"] .dlg-thumb__swap[data-enter] .dlg-thumb__sources {
+  animation: dlg-thumb-rise 240ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.dlg-thumb[data-bar-style="states"] .dlg-thumb__swap[data-enter] .dlg-thumb__quote {
+  animation: dlg-thumb-rise 240ms cubic-bezier(0.2, 0, 0, 1) 100ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dlg-thumb .dlg-thumb__swap[data-enter] .dlg-thumb__sources,
+  .dlg-thumb .dlg-thumb__swap[data-enter] .dlg-thumb__quote {
+    animation: none;
+  }
+}
+
+/*
+ * The product's 150ms background ease is longer than the 120ms hover and
+ * 140ms press windows, so the fills were still in flight when each beat
+ * ended and the active state never landed. In the states cut the ease is
+ * 100ms, inside the hover window, and a press cuts instantly: the active
+ * fill is at full strength for the whole press, then eases back on
+ * release.
+ */
+.dlg-thumb[data-bar-style="states"] .dlg-live__bar .dp-chart-stack__seg {
+  transition:
+    background-color var(--dlg-thumb-ease, 100ms) ease,
+    box-shadow 160ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.dlg-thumb[data-bar-style="states"] .dlg-live__bar[data-press] .dp-chart-stack__seg {
+  transition: none;
+}
+
+/*
+ * Scrub mode renders one exact instant, so transitions come off: a stepped
+ * frame shows its state in full, never a blend toward it. Autoplay and the
+ * homepage card never carry data-scrub.
+ */
+.dlg-thumb[data-scrub] .dp-chart-stack__seg,
+.dlg-thumb[data-scrub] .dlg-thumb__cursor,
+.dlg-thumb[data-scrub] .dlg-thumb__cursor svg,
+.dlg-thumb[data-scrub][data-bar-style="states"] .dlg-live__bar .dp-chart-stack__seg {
+  transition: none;
+}
+
+/* ---- Exploration: lift-and-marker (dev / case study only) ---- */
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  transform: translateY(-1px);
+}
+
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after,
+.dlg-thumb[data-bar-style="lift-explore"]:not([data-beat="poster"]) .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal]::after,
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal])::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * (var(--dp-radius-bar) + var(--dp-radius-bar)));
+  height: var(--dp-radius-bar);
+  border-radius: var(--dp-radius-bar);
+  background: color-mix(in srgb, var(--dp-ink) 60%, transparent);
+  pointer-events: none;
+}
+
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="lift-explore"]:not([data-beat="poster"]) .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="lift-explore"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  transform: translateY(-1px);
+}
+
+/* Project card must not swap legend counts for percents on hover. */
+.dlg-thumb .dp-chart-stack:hover .dp-chart-stack__lane-share,
+.dlg-thumb .dlg-live__bar:hover .dp-chart-stack__lane-share,
+.dlg-thumb .dp-chart-stack__lane-share {
+  opacity: 0;
+}
+
+.dlg-thumb .dp-chart-stack:hover .dp-chart-stack__lane-count,
+.dlg-thumb .dlg-live__bar:hover .dp-chart-stack__lane-count {
+  opacity: 1;
+}
+
+/*
+ * Paper project card people chips (Ana / Dev / More on Explorations /
+ * Project card, approved): 12/16, padding 2px 8px, pill radius, hug width.
+ * Not the 36px product source-pill specimen.
+ */
+.dlg-thumb .dp-source-pill {
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+  width: fit-content;
+  box-sizing: border-box;
+  align-items: center;
+  padding: 2px 8px;
+  gap: 6px;
+  border-radius: var(--dp-radius-pill);
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+  font-weight: 500;
+}
+
+.dlg-thumb .dp-source-pill__name,
+.dlg-thumb .dp-source-pill__time {
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-leading);
+}
+
+.dlg-thumb .dp-source-pill--selected {
+  background: var(--dp-warm);
+  border-color: var(--dp-border);
+}
+
+/* Hero C zeros the live sources' 8px top margin so the card's 16px gap is the only space. */
+.dlg-thumb .dp-sources {
+  margin-top: 0;
+  gap: 8px;
+}
+
+
+/*
+ * People swap lands whole at full opacity in the same frame as the side
+ * flip. A fade from 0 left a blank beat and a collapsed-looking card.
+ * The region reserves the people's height (chips 34 + gap 12 + quote 70)
+ * in every state, so the panel surface is one constant size and nothing
+ * moves when a side opens or the loop returns to none.
+ */
+.dlg-thumb__swap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 116px;
+}
+
+.dlg-thumb .dp-clip-quote {
+  pointer-events: none;
+}
+
+.dlg-thumb__dur {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--dp-muted-light);
+  font-size: var(--text-small-size);
+  line-height: 16px;
+}
+
+/* Exact #dlg-cursor motion chrome from dialogue-product.css, the case-study cursor asset, scaled to 24px (about 86% of the 28px demo size). */
+.dlg-thumb__cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  transform: translate(var(--cursor-x, 0px), var(--cursor-y, 0px));
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.dlg-thumb__cursor[data-on] {
+  opacity: 1;
+}
+
+.dlg-thumb__cursor svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: transform 120ms ease;
+  transform-origin: 2px 2px;
+}
+
+.dlg-thumb__cursor[data-down] svg {
+  transform: scale(0.92);
+}
+
+.dlg-thumb__preview {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--dp-radius-chip);
+  border: 1px solid var(--dp-border);
+  background: var(--dp-bg);
+  box-shadow: var(--shadow-app);
+  color: var(--dp-ink);
+  font-family: var(--dp-font-family);
+  font-weight: 500;
+  font-size: var(--text-body-size);
+  line-height: 20px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dlg-thumb__cursor,
+  .dlg-thumb__swap,
+  .dlg-thumb .dlg-live__bar .dp-chart-stack__seg {
+    animation: none;
+    transition: none;
+  }
+}
+
+/*
+ * Selection prototype variants (dev states playground, built with the
+ * /prototype method: numbered versions, one at a time at full size,
+ * behind an instant switcher). Every variant moves the outline to the
+ * segment's outer edge and colours the quote's voice icon with the open
+ * side; they differ in outline colour, row fill and hover behaviour.
+ * Unset on the homepage card, which keeps the shipped states treatment.
+ */
+
+/* Outer outline in place of the inset ring: open and pressed segments. */
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: 0 0 0 2px var(--dp-ink);
+}
+
+/* sel-2: the outline in each segment's own press tone. */
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-2"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-2"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal] {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dp-chart-focal) 70%, var(--dp-ink));
+}
+
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-2"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-2"] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dp-border-strong) 65%, var(--dp-ink));
+}
+
+/* sel-3: an offset ring, a surface gap before the ink (the focus-ring pattern). */
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-3"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-3"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-3"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-3"] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: 0 0 0 2px var(--dp-surface), 0 0 0 4px var(--dp-ink);
+}
+
+/*
+ * Row fill: in the fill variants both lanes take the same widened box, a
+ * 12px bleed past the text padding with 3px of air above and below, so
+ * switching sides never moves any text. Only the open lane paints.
+ */
+.dlg-thumb[data-sel-variant="sel-1"] .dp-chart-stack__lane,
+.dlg-thumb[data-sel-variant="sel-2"] .dp-chart-stack__lane,
+.dlg-thumb[data-sel-variant="sel-3"] .dp-chart-stack__lane,
+.dlg-thumb[data-sel-variant="sel-5"] .dp-chart-stack__lane {
+  margin: 0 -12px;
+  padding: 3px 12px;
+  border-radius: var(--ds-radius-md);
+}
+
+.dlg-thumb[data-sel-variant="sel-1"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal],
+.dlg-thumb[data-sel-variant="sel-2"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal],
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] {
+  background: color-mix(in srgb, var(--dp-chart-focal) 14%, var(--dp-surface));
+}
+
+.dlg-thumb[data-sel-variant="sel-1"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]),
+.dlg-thumb[data-sel-variant="sel-2"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]),
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) {
+  background: color-mix(in srgb, var(--dp-muted) 14%, var(--dp-surface));
+}
+
+.dlg-thumb[data-sel-variant="sel-3"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal],
+.dlg-thumb[data-sel-variant="sel-3"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) {
+  background: var(--dp-warm);
+}
+
+/* The quote's voice icon takes the open side's colour, in every variant. */
+.dlg-thumb[data-sel-variant][data-side="friday"] .dp-clip-quote__icon {
+  color: var(--dp-chart-focal);
+}
+
+.dlg-thumb[data-sel-variant][data-side="unsure"] .dp-clip-quote__icon {
+  color: var(--dp-muted);
+}
+
+/*
+ * sel-5: the product's own hover swap (count for share) switched on for
+ * this variant only, driven by the demo's hover state so it also fires
+ * inside the loop's hover beats. The project card keeps it off, per the
+ * rule above.
+ */
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar[data-hover="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-count,
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-count,
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar .dp-chart-stack__lane:hover .dp-chart-stack__lane-count {
+  opacity: 0;
+}
+
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar[data-hover="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-share,
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__lane-share,
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar .dp-chart-stack__lane:hover .dp-chart-stack__lane-share {
+  opacity: 1;
+}
+
+/* sel-5 with a real pointer over the bar: both lanes swap, as the product's
+   own Round 18 rule does. The demo's 120ms hover beats are shorter than the
+   swap's 150ms fade, so inside the loop the swap only begins; a held hover
+   completes it. */
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar:hover .dp-chart-stack__lane-count {
+  opacity: 0;
+}
+
+.dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar:hover .dp-chart-stack__lane-share {
+  opacity: 1;
+}
+
+/*
+ * Detached surrounds (sel-6, sel-7): the outline leaves the segment
+ * entirely, a gap of panel first and then the ring, so the mark reads as
+ * a rounded frame floating around the segment instead of a part of it.
+ * The open and pressed segments lift above their neighbour so the frame
+ * draws in full on the shared edge too.
+ */
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  z-index: 1;
+}
+
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-6"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-6"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-6"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-6"] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: 0 0 0 3px var(--dp-surface), 0 0 0 5px var(--dp-ink);
+}
+
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-7"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-7"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-7"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-7"] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: 0 0 0 4px var(--dp-surface), 0 0 0 7px var(--dp-ink);
+}
+
+/* The detached surrounds keep the tinted, bleeding row from sel-1. */
+.dlg-thumb[data-sel-variant="sel-6"] .dp-chart-stack__lane,
+.dlg-thumb[data-sel-variant="sel-7"] .dp-chart-stack__lane {
+  margin: 0 -12px;
+  padding: 3px 12px;
+  border-radius: var(--ds-radius-md);
+}
+
+.dlg-thumb[data-sel-variant="sel-6"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal],
+.dlg-thumb[data-sel-variant="sel-7"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] {
+  background: color-mix(in srgb, var(--dp-chart-focal) 14%, var(--dp-surface));
+}
+
+.dlg-thumb[data-sel-variant="sel-6"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]),
+.dlg-thumb[data-sel-variant="sel-7"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) {
+  background: color-mix(in srgb, var(--dp-muted) 14%, var(--dp-surface));
+}
