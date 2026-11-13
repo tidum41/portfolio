@@ -172,6 +172,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
         <link rel="icon" type="image/png" href="/favicon-32-light.png" sizes="32x32" media="(prefers-color-scheme: light)" />
         <link rel="icon" type="image/png" href="/favicon-32-dark.png" sizes="32x32" media="(prefers-color-scheme: dark)" />
+        {/* Site type is self-hosted Helvetica Neue (see globals.css).
+            Preload both weights: nearly every page sets its hero and body
+            text in this family, so the files are render-critical. */}
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/helvetica-neue-400-v1.woff2" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/helvetica-neue-500-v1.woff2" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://image.mux.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://stream.mux.com" crossOrigin="anonymous" />
         {muxWarm.preconnect.map((origin) => (

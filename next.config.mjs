@@ -86,6 +86,17 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Font files are versioned by filename (-v1, -v2, ...), so they
+        // can be cached forever; a changed font ships under a new name.
+        source: "/fonts/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
         source: "/resume.pdf",
         headers: [
           {
