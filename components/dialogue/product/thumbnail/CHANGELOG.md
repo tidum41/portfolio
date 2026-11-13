@@ -4,6 +4,26 @@ Changes to the Dialogue homepage card demo (the `states` bar treatment),
 newest first. Each entry lists exactly what changed and how to revert it,
 so any agent can undo a round without reconstructing intent.
 
+## 2026-11-13 — Correction: segments keep the bar's radius
+
+Mudit, reviewing the v7 recording: the state rules changed the bars'
+radius in states where the design only calls for the frame. The 6px
+segment rounding came from the hover system's stills; in motion it
+reshaped the bar itself, including when a segment was hovered while the
+other side was open, a combination the Paper study never covered.
+
+- `dialogue-thumbnail.css`: removed
+  `border-radius: calc(var(--ds-radius-md) - 0.125rem);` from both the
+  hover rule and the open/press rule, and removed `border-radius` from
+  the states segment transition. Segments now keep the bar's radius in
+  every state; the frame's corners take their rounding from the
+  segment's shape plus the shadow spread. Everything else in v2 is
+  unchanged (frame geometry, hover strength, press landing, icon color,
+  the clearing).
+- Recording: `main-card-demo-v8.mp4` supersedes v7 with this fix.
+- Revert: restore the two removed declarations and the transition line
+  (all quoted in the 2026-11-12 entry, item 1 and 4).
+
 ## 2026-11-12 — Selected-state system v2 and the loop clearing
 
 Approved in Paper first (file `01M58MSRB3KSVHQR7762JKXVX7`, Project card

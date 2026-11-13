@@ -230,16 +230,16 @@
 }
 
 /*
- * Hover previews the frame (Paper W2, approved with v2): the hovered
- * segment rounds the same 6px and the frame arrives at half strength, so
- * hover is a step on the same path as press and open, not a separate
- * effect. Press lands the frame at full strength instantly, via the
+ * Hover previews the frame (Paper W2, approved with v2): the frame
+ * arrives at half strength on the hovered segment, so hover is a step on
+ * the same path as press and open, not a separate effect. The segment
+ * itself keeps the bar's radius in every state; only the frame appears
+ * around it. Press lands the frame at full strength instantly, via the
  * transition: none rule for [data-press] below.
  */
 .dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
 .dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
   box-shadow: 0 0 0 2px var(--dp-surface), 0 0 0 4px color-mix(in srgb, var(--dp-ink) 45%, transparent);
-  border-radius: calc(var(--ds-radius-md) - 0.125rem);
   z-index: 1;
 }
 
@@ -248,9 +248,10 @@
  * CHANGELOG.md next to this file): the active segment carries a detached
  * frame, a 2px gap of panel and then a 2px ink ring, drawn over the bar
  * (z-index) so it crosses the shared edge in full instead of passing
- * under the neighbouring segment. The segment rounds on all four corners
- * to 6px, concentric with the frame: segment radius plus its gap. The
- * frame sits on the open segment for as long as its side is open, and on
+ * under the neighbouring segment. The segment keeps the bar's own radius
+ * in every state (corrected 2026-11-13, see CHANGELOG.md): the frame's
+ * corners take their rounding from the segment's shape plus the spread.
+ * The frame sits on the open segment for as long as its side is open, and on
  * the pressed segment while it is pressed; the legend rows still carry
  * the selection in text, and the segment keeps its data color.
  */
@@ -259,7 +260,6 @@
 .dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
 .dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
   box-shadow: 0 0 0 2px var(--dp-surface), 0 0 0 4px var(--dp-ink);
-  border-radius: calc(var(--ds-radius-md) - 0.125rem);
   z-index: 1;
 }
 
@@ -319,7 +319,6 @@
 .dlg-thumb[data-bar-style="states"] .dlg-live__bar .dp-chart-stack__seg {
   transition:
     background-color var(--dlg-thumb-ease, 100ms) ease,
-    border-radius 160ms cubic-bezier(0.2, 0, 0, 1),
     box-shadow 160ms cubic-bezier(0.2, 0, 0, 1);
 }
 
