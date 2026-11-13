@@ -145,7 +145,7 @@ export default function DialogueThumbnailDemo({
    * /prototype method: numbered versions behind a switcher). Unset keeps
    * the shipped states treatment.
    */
-  selVariant?: "sel-1" | "sel-2" | "sel-3" | "sel-4" | "sel-5";
+  selVariant?: "sel-1" | "sel-2" | "sel-3" | "sel-4" | "sel-5" | "sel-6" | "sel-7";
   /**
    * Scrub mode: when set, the demo renders the exact state at this loop time
    * (see thumbnailStateAt) and the autoplay loop never runs. Null = autoplay.

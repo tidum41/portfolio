@@ -576,3 +576,49 @@
 .dlg-thumb[data-sel-variant="sel-5"] .dlg-live__bar:hover .dp-chart-stack__lane-share {
   opacity: 1;
 }
+
+/*
+ * Detached surrounds (sel-6, sel-7): the outline leaves the segment
+ * entirely, a gap of panel first and then the ring, so the mark reads as
+ * a rounded frame floating around the segment instead of a part of it.
+ * The open and pressed segments lift above their neighbour so the frame
+ * draws in full on the shared edge too.
+ */
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  z-index: 1;
+}
+
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-6"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-6"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-6"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-6"] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: 0 0 0 3px var(--dp-surface), 0 0 0 5px var(--dp-ink);
+}
+
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-7"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-7"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-7"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-variant="sel-7"] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: 0 0 0 4px var(--dp-surface), 0 0 0 7px var(--dp-ink);
+}
+
+/* The detached surrounds keep the tinted, bleeding row from sel-1. */
+.dlg-thumb[data-sel-variant="sel-6"] .dp-chart-stack__lane,
+.dlg-thumb[data-sel-variant="sel-7"] .dp-chart-stack__lane {
+  margin: 0 -12px;
+  padding: 3px 12px;
+  border-radius: var(--ds-radius-md);
+}
+
+.dlg-thumb[data-sel-variant="sel-6"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal],
+.dlg-thumb[data-sel-variant="sel-7"] .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] {
+  background: color-mix(in srgb, var(--dp-chart-focal) 14%, var(--dp-surface));
+}
+
+.dlg-thumb[data-sel-variant="sel-6"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]),
+.dlg-thumb[data-sel-variant="sel-7"] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane:not([data-focal]) {
+  background: color-mix(in srgb, var(--dp-muted) 14%, var(--dp-surface));
+}

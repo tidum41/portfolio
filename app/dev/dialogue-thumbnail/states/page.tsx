@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import DialogueThumbnailDemo from "@/components/dialogue/product/thumbnail/DialogueThumbnailDemo";
 
-type SelVariant = "sel-1" | "sel-2" | "sel-3" | "sel-4" | "sel-5";
+type SelVariant = "sel-1" | "sel-2" | "sel-3" | "sel-4" | "sel-5" | "sel-6" | "sel-7";
 
 const VARIANTS: {
   id: SelVariant;
@@ -45,6 +45,20 @@ const VARIANTS: {
     recipe:
       "Variant 1, plus the product's own hover swap switched on here only: hovering a segment shows its share in place of its count, in the loop's hover beats and under your own cursor.",
     watch: "Whether the swap fights the selected row's fill, the conflict the counts rule exists to avoid on the card.",
+  },
+  {
+    id: "sel-6",
+    name: "Detached surround",
+    recipe:
+      "The outline leaves the segment entirely: a 3px gap of panel, then a 2px ink ring floating around it, so the mark reads as a rounded frame around the segment instead of a part of it. The tinted row and coloured icon stay.",
+    watch: "Whether the float makes the selection clearer, or makes the ring feel unrelated to the bar.",
+  },
+  {
+    id: "sel-7",
+    name: "Detached surround, heavy",
+    recipe:
+      "The gap grows to 4px and the ring to 3px, the most noticeable version. The segment sits inside a clear frame with air on every side.",
+    watch: "Whether it still sits calmly beside the other segment, or starts to shout over the data.",
   },
 ];
 
@@ -102,9 +116,9 @@ export default function ThumbnailStatesPlaygroundPage() {
       </p>
       <h1 style={{ margin: "0 0 16px", fontSize: 24, fontWeight: 500 }}>Thumbnail selection prototypes</h1>
       <p style={{ margin: "0 0 24px", maxWidth: 640, lineHeight: 1.5, color: "var(--color-text-secondary)" }}>
-        Five versions of the selected state, one at a time at full size, switched instantly. Every version
-        moves the outline to the segment&apos;s outer edge and colours the quote&apos;s voice icon with the
-        open side. Keys 1 to 5 switch, R replays the loop, space pauses. The pick rides in the URL.
+        Seven versions of the selected state, one at a time at full size, switched instantly. Every version
+        moves the outline off the segment and colours the quote&apos;s voice icon with the open side.
+        Keys 1 to 7 switch, R replays the loop, space pauses. The pick rides in the URL.
       </p>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
