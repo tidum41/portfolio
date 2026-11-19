@@ -483,8 +483,13 @@ function generatePortfolioHtml(config) {
       window.addEventListener('resize', resize);
       resize();
 
-      const prerollDelay = isReduced ? 0 : 180;
-      const fadeDuration = isReduced ? 250 : 2400;
+      // "Fast cinematic" (Nov 18 2026): no black hold, 900ms ease-out swell
+      // from a 0.4 floor; hero starts at 150ms over 800ms. Mirrors lib/introTimings.ts.
+      const prerollDelay = 0;
+      const fadeDuration = isReduced ? ${SPEC_TIMINGS.reducedMotionDurationMs} : ${SPEC_TIMINGS.targetSilkFadeSec * 1000};
+      const silkFloor = isReduced ? 0 : ${SPEC_TIMINGS.silkFloor};
+      const heroDelayMs = ${SPEC_TIMINGS.heroDelayMs};
+      const heroDurationMs = ${SPEC_TIMINGS.heroDurationMs};
       let introStarted = false;
       let fadeStart = 0;
 
@@ -530,7 +535,9 @@ function generatePortfolioHtml(config) {
 
         const elapsed = now - fadeStart;
         const progress = Math.min(1.0, elapsed / fadeDuration);
-        window.__ps3_metrics.uOpacity = progress;
+        window.__ps3_metrics.uOpacity = isReduced
+          ? progress
+          : silkFloor + (1 - silkFloor) * (1 - Math.pow(1 - progress, 3));
         if (!isReduced) window.__ps3_metrics.uTime += 0.016;
 
         // Clear and draw WebGL
@@ -539,11 +546,11 @@ function generatePortfolioHtml(config) {
           gl.clear(gl.COLOR_BUFFER_BIT);
         }
 
-        // Stagger hero text when silk is mostly in (spec >= 800ms)
+        // Hero text starts at heroDelayMs while the silk is already visible
         if (isReduced) {
           hero.style.opacity = '1';
-        } else if (elapsed >= 800) {
-          hero.style.opacity = Math.min(1.0, (elapsed - 800) / 800);
+        } else if (elapsed >= heroDelayMs) {
+          hero.style.opacity = Math.min(1.0, (elapsed - heroDelayMs) / heroDurationMs);
         }
 
         // Complete intro

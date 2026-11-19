@@ -1,14 +1,14 @@
 /**
- * HOM-01: PS3 Silk Pre-roll & Uniform Fade-in Verification
- * 
- * Authoritative Source:
- * - ORIGINAL_REQUEST.md: "Restore cinematic PS3 boot-length intro: deliberate pre-roll before
- *   silk starts (150ms or longer), lengthen silk fade-in to roughly PS3-boot pacing
- *   (approx. 2–3s total; document final numbers). Keep fade driven from first actually drawn
- *   frame via shader uniform."
- * - PROJECT.md: Features F1.1 (180ms deliberate pre-roll), F1.2 (2.4s silk uniform-driven fade-in via uOpacity).
+ * HOM-01: PS3 Silk Start & Uniform Swell Verification
+ *
+ * Authoritative Source (updated Nov 18, 2026, "Fast cinematic" intro; see design/RULES.md):
+ * - Supersedes the Oct spec (180ms black pre-roll, 2.4s smoothstep fade).
+ * - No black hold: the first drawn silk frame is already at the 0.4 uOpacity floor,
+ *   then an ease-out cubic reaches 1.0 over ~0.9s. Fade is still driven from the first
+ *   actually drawn frame via the shader uniform; silk stays at 30fps.
+ * - lib/introTimings.ts + tests/e2e/helpers/env.mjs SPEC_TIMINGS hold the numbers.
  */
-import { assert, assertGreaterThanOrEqual, assertInRange, assertEqual } from "../helpers/assertions.mjs";
+import { assert, assertGreaterThanOrEqual, assertLessThanOrEqual, assertInRange } from "../helpers/assertions.mjs";
 import { SPEC_TIMINGS } from "../helpers/env.mjs";
 import fs from "fs";
 import path from "path";
@@ -19,7 +19,7 @@ export const tier = "tier1-features";
 
 export const tests = [
   {
-    name: "HOM-01.1: Pre-roll delay before silk drawing begins is >= 150ms",
+    name: "HOM-01.1: No black pre-roll hold: first silk draw happens within 50ms of start",
     fn: async (ctx) => {
       const page = await ctx.createPage();
       await page.goto(ctx.targetUrl);
@@ -32,15 +32,16 @@ export const tests = [
       const metrics = await page.evaluate(() => window.__ps3_metrics);
       const measuredPreroll = metrics.firstDrawTime - metrics.prerollStart;
       
-      assertGreaterThanOrEqual(
+      // Allow one 30fps frame (~33ms) of scheduling jitter on top of the budget.
+      assertLessThanOrEqual(
         measuredPreroll,
-        SPEC_TIMINGS.minPrerollMs - 20, // allow 20ms timer jitter tolerance
-        `Pre-roll delay was ${measuredPreroll.toFixed(1)}ms, expected >= ${SPEC_TIMINGS.minPrerollMs}ms`
+        SPEC_TIMINGS.maxPrerollMs + 34,
+        `Time to first silk draw was ${measuredPreroll.toFixed(1)}ms, expected <= ${SPEC_TIMINGS.maxPrerollMs}ms (+1 frame)`
       );
     },
   },
   {
-    name: "HOM-01.2: Total silk fade duration is between 2.0s and 3.0s (PS3 boot pacing)",
+    name: "HOM-01.2: Total silk swell duration is ~0.9s (0.7s to 1.2s, fast cinematic pacing)",
     fn: async (ctx) => {
       const page = await ctx.createPage();
       await page.goto(ctx.targetUrl);
@@ -53,8 +54,8 @@ export const tests = [
 
       assertInRange(
         fadeDurationSec,
-        SPEC_TIMINGS.minSilkFadeSec - 0.2,
-        SPEC_TIMINGS.maxSilkFadeSec + 0.5,
+        SPEC_TIMINGS.minSilkFadeSec - 0.1,
+        SPEC_TIMINGS.maxSilkFadeSec + 0.3,
         `Silk fade duration was ${fadeDurationSec.toFixed(2)}s, expected between ${SPEC_TIMINGS.minSilkFadeSec}s and ${SPEC_TIMINGS.maxSilkFadeSec}s`
       );
     },
@@ -99,7 +100,19 @@ export const tests = [
     },
   },
   {
-    name: "HOM-01.5: Opacity begins at 0.0 and increases monotonically without jumping",
+    name: "HOM-01.6: PS3Silk has no black pre-roll hold and starts at INTRO_SILK_FLOOR (code contract)",
+    fn: async () => {
+      const src = fs.readFileSync(path.join(process.cwd(), "components/PS3Silk.tsx"), "utf8");
+      const timings = fs.readFileSync(path.join(process.cwd(), "lib/introTimings.ts"), "utf8");
+      assert(!src.includes("preRollMs") && !src.includes("fadeNotBefore"), "PS3Silk.tsx must not hold black before the fade (pre-roll removed)");
+      assert(src.includes("INTRO_SILK_FLOOR"), "PS3Silk.tsx must start the intro at INTRO_SILK_FLOOR");
+      assert(src.includes("KHR_parallel_shader_compile"), "PS3Silk.tsx must use KHR_parallel_shader_compile when available");
+      assert(/INTRO_SILK_FLOOR\s*=\s*0\.4/.test(timings), "INTRO_SILK_FLOOR must be 0.4");
+      assert(/patternDuration:\s*0\.9/.test(timings), "patternDuration must be 0.9s");
+    },
+  },
+  {
+    name: "HOM-01.5: Opacity starts at or below the 0.4 floor, is bright by ~300ms, and increases monotonically",
     fn: async (ctx) => {
       const page = await ctx.createPage();
       await page.goto(ctx.targetUrl);
@@ -113,7 +126,16 @@ export const tests = [
       }
 
       assert(samples.length >= 10, "Need at least 10 opacity samples");
-      assertEqual(samples[0], 0, "Initial opacity must start at 0.0");
+      // The first drawn frame sits at the floor (never black); a sample taken
+      // before the first draw may still read 0.
+      assertLessThanOrEqual(
+        samples[0],
+        SPEC_TIMINGS.silkFloor + 0.05,
+        `Initial opacity must not exceed the ${SPEC_TIMINGS.silkFloor} floor, got ${samples[0]}`
+      );
+      // Samples are ~50ms apart: index 7 is roughly 350ms in. Ease-out cubic
+      // should already be well above the floor (~0.8+).
+      assertGreaterThanOrEqual(samples[7], 0.7, `Silk should be bright by ~350ms, was ${samples[7]}`);
 
       for (let i = 1; i < samples.length; i++) {
         assertGreaterThanOrEqual(

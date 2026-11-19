@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, startTransition } from "react";
 import { useDialKit } from "dialkit";
-import { introTimings } from "@/lib/introTimings";
+import { introTimings, INTRO_SILK_FLOOR, INTRO_REDUCED_MS } from "@/lib/introTimings";
 
 // Module-level flag: persists during client-side nav, resets on page reload
 let _hasMounted = false;
@@ -224,18 +224,22 @@ export default function PS3Silk({
     let glProg: WebGLProgram | null = null;
     let running = false;
 
-    // Intro fade-in: smoothstep from 0 → START_OPACITY over patternDuration,
-    // first load only. Starts on the first *drawn* frame (not at mount) and
-    // advances per rendered frame with clamped dt so stalled frames delay the
-    // fade rather than skipping ahead on wall-clock time.
-    // Reduced-motion uses a gentle 350ms opacity fade with static ribbons.
-    let introDuration = isFirstLoad ? (reducedMotion ? 350 : introTimings.patternDuration * 1000) : 0;
+    // Intro swell ("Fast cinematic", Nov 18 2026): first load only. The first
+    // drawn frame is already at INTRO_SILK_FLOOR of resting opacity, then an
+    // ease-out cubic rises to full over patternDuration (900ms), so it is
+    // bright immediately instead of easing up from black. The clock starts on
+    // the first *drawn* frame (after the program has linked) and advances per
+    // rendered frame with clamped dt so stalled frames delay the swell rather
+    // than skipping ahead on wall-clock time.
+    // Reduced-motion is unchanged: a gentle 350ms smoothstep from 0 with
+    // static ribbons.
+    let introDuration = isFirstLoad ? (reducedMotion ? INTRO_REDUCED_MS : introTimings.patternDuration * 1000) : 0;
     let introElapsed = 0;
     let lastFadeMs: number | null = null;
     let introActive = introDuration > 0;
 
     function onReplay() {
-      introDuration = reducedMotion ? 350 : introTimings.patternDuration * 1000;
+      introDuration = reducedMotion ? INTRO_REDUCED_MS : introTimings.patternDuration * 1000;
       introElapsed = 0;
       lastFadeMs = null;
       introActive = introDuration > 0;
@@ -243,13 +247,11 @@ export default function PS3Silk({
     }
     window.addEventListener("intro-replay", onReplay);
 
-    // Cinematic hold stays 180ms of black before the fade clock starts.
-    // GL is created on the next task, inside that hold, so shader compile
-    // and the first invisible draws don't land on the opening visible frames.
-    // Reduced motion and later mounts skip the hold.
-    const preRollMs = isFirstLoad && !reducedMotion ? 180 : 0;
-    const fadeNotBefore = performance.now() + preRollMs;
-    const initTimer = setTimeout(() => {
+    // No black hold any more: GL is created on the next task, the program
+    // compiles (non-blocking where KHR_parallel_shader_compile exists), and
+    // the first drawn frame is already visible at INTRO_SILK_FLOOR.
+    let disposed = false;
+    const initTimer = setTimeout(async () => {
       const _glNullable = canvas.getContext("webgl", { alpha: true, preserveDrawingBuffer: false });
       if (!_glNullable) return;
       const gl = _glNullable as WebGLRenderingContext;
@@ -476,19 +478,49 @@ void main() {
   gl_FragColor = vec4(darkWave * alpha, alpha);
 }`;
 
+      // Querying COMPILE_STATUS here would block on the compile, so shader
+      // info logs are only read below, once the program has finished linking.
       function compile(src: string, type: number) {
         const s = gl.createShader(type)!;
         gl.shaderSource(s, src); gl.compileShader(s);
-        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
         return s;
       }
 
+      const parallelExt = gl.getExtension("KHR_parallel_shader_compile");
+      const vShader = compile(VS, gl.VERTEX_SHADER);
+      const fShader = compile(FS, gl.FRAGMENT_SHADER);
       const prog = gl.createProgram()!;
-      gl.attachShader(prog, compile(VS, gl.VERTEX_SHADER));
-      gl.attachShader(prog, compile(FS, gl.FRAGMENT_SHADER));
+      gl.attachShader(prog, vShader);
+      gl.attachShader(prog, fShader);
       gl.linkProgram(prog);
-      gl.useProgram(prog);
       glProg = prog;
+
+      // With the extension the compile/link runs off the main thread; poll its
+      // completion flag (capped at 2s, then fall through to the blocking path)
+      // so hydration is never stalled behind the shader. Without it the next
+      // call simply blocks, as the old path did.
+      if (parallelExt) {
+        await new Promise<void>((resolve) => {
+          const t0 = performance.now();
+          const poll = () => {
+            if (
+              disposed ||
+              gl.getProgramParameter(prog, parallelExt.COMPLETION_STATUS_KHR) ||
+              performance.now() - t0 > 2000
+            ) {
+              resolve();
+              return;
+            }
+            setTimeout(poll, 8);
+          };
+          poll();
+        });
+        if (disposed) return;
+      }
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        console.error(gl.getShaderInfoLog(vShader), gl.getShaderInfoLog(fShader), gl.getProgramInfoLog(prog));
+      }
+      gl.useProgram(prog);
 
       posLoc                  = gl.getAttribLocation(prog, "aPos");
       const uTimeLoc          = gl.getUniformLocation(prog, "uTime");
@@ -592,23 +624,23 @@ void main() {
         mouse.y += (mouse.ty - mouse.y) * 0.042;
 
         updateScrollTarget();
-        if (introActive && introDuration > 0 && ms < fadeNotBefore) {
-          currentOpacity = 0;
-          draw(ms);
-          return;
-        }
         if (introActive && introDuration > 0) {
           if (lastFadeMs === null) {
+            // First drawn frame: the fade clock starts here, at the floor.
             lastFadeMs = ms;
-            introElapsed = FRAME_MS;
+            introElapsed = reducedMotion ? FRAME_MS : 0;
           } else {
             const dt = Math.min(Math.max(0, ms - lastFadeMs), MAX_FADE_DT_MS);
             lastFadeMs = ms;
             introElapsed += dt;
           }
           const t = Math.min(introElapsed / introDuration, 1);
-          const eased = t * t * (3 - 2 * t); // smoothstep
-          currentOpacity = eased * START_OPACITY;
+          // Reduced motion keeps its smoothstep from 0; the full intro starts
+          // at INTRO_SILK_FLOOR and eases out (cubic) so it reads bright at once.
+          const shaderOp = reducedMotion
+            ? t * t * (3 - 2 * t)
+            : INTRO_SILK_FLOOR + (1 - INTRO_SILK_FLOOR) * (1 - Math.pow(1 - t, 3));
+          currentOpacity = shaderOp * START_OPACITY;
           if (t >= 1) {
             introActive = false;
             if (typeof window !== "undefined") {
@@ -633,6 +665,7 @@ void main() {
 
     return () => {
       _hasMounted = hadMountedBefore;
+      disposed = true;
       window.removeEventListener("intro-replay", onReplay);
       clearTimeout(initTimer);
       lifecycleRef.current = null;

@@ -1,3 +1,5 @@
+import { INTRO_POST_GATE_SETTLE_MS } from "@/lib/introTimings";
+
 /** Intro gate helpers — first load on "/" sets data-intro="playing" until
  *  `intro-done`. Other routes (and post-intro) are already released. */
 
@@ -59,13 +61,13 @@ export function afterIntroIdle(cb: () => void, timeout = 6000): () => void {
     }
   };
   const start = () => {
-    // `intro-done` fires at visual completion (2.4s), while the grid reveal (0.7s)
-    // finishes around ~3.1s. When armed during the first-load intro, wait until the
-    // 3s startup window has cleared before requesting an idle callback (since 30fps
-    // silk leaves alternate 16ms frames looking idle to requestIdleCallback).
+    // `intro-done` fires at visual completion (~0.9s), then the grid reveal
+    // (stagger spread + card duration) runs ~1.3s. When armed during the
+    // first-load intro, wait that long after `intro-done` (relative, not an
+    // absolute page time) before requesting an idle callback — 30fps silk
+    // leaves alternate 16ms frames looking idle to requestIdleCallback.
     if (wasIntroPlaying) {
-      const waitMs = Math.max(900, 3150 - performance.now());
-      settleId = window.setTimeout(scheduleIdle, waitMs);
+      settleId = window.setTimeout(scheduleIdle, INTRO_POST_GATE_SETTLE_MS);
     } else {
       scheduleIdle();
     }

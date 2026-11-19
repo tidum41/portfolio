@@ -6,6 +6,7 @@ import { useReducedMotion } from "framer-motion";
 import { useDialKit } from "dialkit";
 import { ENTRANCE_DEFAULTS, EASE_OPACITY, EASE_EXPAND, type CubicBezier } from "@/lib/motion";
 import { onIntroDone } from "@/lib/introReady";
+import { INTRO_ENTRANCE_DEFAULTS } from "@/lib/introTimings";
 
 // Module-level: persists across client-side nav, resets on page reload
 let _ps3cpHasLoaded = false;
@@ -30,6 +31,8 @@ const OPEN_EASE = cssCubic(EASE_EXPAND);
 const CLOSE_EASE = cssCubic(EASE_EXPAND);
 // Same fade-up as EntranceItem / work grid (ENTRANCE_DEFAULTS + EASE_OPACITY).
 const REVEAL_MS = Math.round(ENTRANCE_DEFAULTS.duration * 1000);
+// First-load reveal (after intro-done) is shorter: "Fast cinematic" intro.
+const REVEAL_MS_FIRST = Math.round(INTRO_ENTRANCE_DEFAULTS.duration * 1000);
 const REVEAL_EASE = cssCubic(EASE_OPACITY);
 const REVEAL_Y = ENTRANCE_DEFAULTS.y;
 // This portal stays mounted across soft-nav (`visible` toggles it). First
@@ -722,7 +725,10 @@ export default function PS3ControlPanel({
           setShown(true);
         }));
       });
-      clearTimer = setTimeout(() => startTransition(() => setShowTransition(false)), REVEAL_MS + 200);
+      clearTimer = setTimeout(
+        () => startTransition(() => setShowTransition(false)),
+        (revealKindRef.current === "first" ? REVEAL_MS_FIRST : REVEAL_MS) + 200,
+      );
     };
     if (instantReturn) {
       revealKindRef.current = "instant";
@@ -917,10 +923,11 @@ export default function PS3ControlPanel({
     "background-color 200ms ease",
     "border-color 200ms ease",
   ];
+  const revealMs = revealKindRef.current === "first" ? REVEAL_MS_FIRST : REVEAL_MS;
   const morphT = !positionSettled ? "none" : isDragging ? "none" : !shown
-    ? (showTransition ? `opacity ${REVEAL_MS}ms ${REVEAL_EASE}, transform ${REVEAL_MS}ms ${REVEAL_EASE}` : "none")
+    ? (showTransition ? `opacity ${revealMs}ms ${REVEAL_EASE}, transform ${revealMs}ms ${REVEAL_EASE}` : "none")
     : (showTransition
-      ? [...baseMorphParts, `opacity ${REVEAL_MS}ms ${REVEAL_EASE}`, `transform ${REVEAL_MS}ms ${REVEAL_EASE}`].join(", ")
+      ? [...baseMorphParts, `opacity ${revealMs}ms ${REVEAL_EASE}`, `transform ${revealMs}ms ${REVEAL_EASE}`].join(", ")
       : baseMorphParts.join(", "));
 
   const contentBodyH = measuredBodyH > 80 ? measuredBodyH : estimateBodyH(mode);

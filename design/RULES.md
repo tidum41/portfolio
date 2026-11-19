@@ -6,6 +6,16 @@ Standing rules for the portfolio. Builders read this with `design/OPEN-ASKS.md` 
 
 - Intro elements that start hidden must have a fail-safe reveal so a missed `intro-done` (or equivalent gate) cannot leave them stuck at opacity 0 with controls inert forever (HOM-01). Prefer the same fade as the normal path; clear the timer when the normal reveal runs and on unmount so the reveal never runs twice.
 
+## Home intro: fast cinematic (Nov 18, 2026, Mudit picked option A)
+
+- Supersedes the Oct HOM-01 spec (180ms black pre-roll, 2.4s smoothstep silk fade, H1 at 1.6s, subtitle at 2.4s, intro-done at ~2.6s). The intro must never start on a dim/black screen: the first drawn silk frame is already visible.
+- Silk: no pre-roll hold. The fade clock starts on the first drawn frame, after the shader program has linked (waits on `KHR_parallel_shader_compile` where available). First frame at `INTRO_SILK_FLOOR` 0.40 of resting opacity, then ease-out cubic (`1-(1-t)^3`) to full over 900ms. Pattern, shader, uniforms, the 30fps cap and the cursor pull are unchanged; no ripples, intersecting points still shift toward the cursor.
+- Hero: H1 starts at 150ms, 0.8s (`EASE_OPACITY`); subtitle at 500ms, 0.8s; `intro-done` at ~900ms (the silk swell finishing). Nav/footer fade 0.45s. First-load grid cards 0.7s with 0.1s stagger (spread cap 0.6s) and the control panel reveal 0.7s.
+- Fail-safe (HOM-01 rule above still applies): `IntroOrchestrator` completes the gate at 1800ms if the silk never signals. Idle prefetch and HLS warm-up start 1300ms after `intro-done`, not at an absolute page time.
+- Reduced motion unchanged: 350ms smoothstep from 0, static ribbons, no cursor pull, hero visible at once; the gate fires at ~350ms.
+- All numbers live in `lib/introTimings.ts` as intro-specific constants. Global `ENTRANCE_DEFAULTS` (`lib/motion.ts`) is not changed and still drives every non-intro entrance. First-load sessions use the intro values for later grid/panel replays in that session too (the dial config is fixed per mount).
+- The first three grid posters are preloaded (`next/image` `preload`, Mux poster `fetchPriority="high"`) because the grid now reveals ~1.7s sooner. Tests: `tests/e2e/helpers/env.mjs` `SPEC_TIMINGS` and the HOM-01/02 assertions carry the new numbers.
+
 ## Site grid (Nov 11, 2026, shared outer edges)
 
 - One shared grid for Nav, Footer, the home grid (hero + masonry) and case studies: 12 columns, gap `--grid-gutter` (24), side margin `--page-px` (24, constant at every width), band capped at `--site-max-w: 2200px` and centred beyond that. Tokens in `app/globals.css`: `--site-cols: 12`, `--site-max-w: 2200px`. Callers use `--site-max-w`; `--grid-max-w` (1440) stays only for the Archive `BentoGallery` canvas and the dev nav-morph page. Do not repoint it.

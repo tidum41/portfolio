@@ -388,21 +388,21 @@ a           { text-underline-offset: 3px; text-decoration-skip-ink: auto; transi
 /* data-intro="playing" is unconditionally present in the server-rendered
    HTML (app/layout.tsx) on every route, removed by an inline script off the
    homepage. IntroOrchestrator swaps it to "done" after introTimings.gateDuration
-   (default 1.9s) triggering the fade-in above, then removes it entirely. */
+   (default 0.9s) triggering the fade-in above, then removes it entirely. */
 html[data-intro="playing"] .intro-hide {
   opacity: 0 !important;
   pointer-events: none !important;
   /* Keep transition defined in both states so the browser can use it
      when switching "playing" → "done". transition:none would cause a snap. */
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 html[data-intro="done"] .intro-hide {
   opacity: 1 !important;
   pointer-events: auto !important;
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
-/* Work grid owns its enter via EntranceItem. A second 0.7s CSS fade on
-   the same wrapper stacked with the 1.14s card tween and read as a pop. */
+/* Work grid owns its enter via EntranceItem. A second CSS fade on
+   the same wrapper stacked with the card tween and read as a pop. */
 html[data-intro="playing"] .intro-hide--snap,
 html[data-intro="done"] .intro-hide--snap {
   transition: none !important;

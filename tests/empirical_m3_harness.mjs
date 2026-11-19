@@ -29,18 +29,21 @@ function runTest(name, fn) {
 // ---------------------------------------------------------
 console.log("\n[Group 1] WebGL Startup Timing & Pre-roll");
 
-runTest("1.1: PS3Silk.tsx keeps a 180ms first-load pre-roll and skips it for reduced-motion or soft nav", () => {
+runTest("1.1: PS3Silk.tsx has no black pre-roll hold; first drawn frame starts at INTRO_SILK_FLOOR (Nov 18 2026 fast cinematic)", () => {
   const silkSrc = fs.readFileSync(path.join(repoRoot, "components/PS3Silk.tsx"), "utf8");
+  const timingsSrc = fs.readFileSync(path.join(repoRoot, "lib/introTimings.ts"), "utf8");
 
-  const match = silkSrc.match(/const\s+preRollMs\s*=\s*(isFirstLoad\s*&&\s*!reducedMotion\s*\?\s*180\s*:\s*0)/);
-  assert(match, "Could not find preRollMs = isFirstLoad && !reducedMotion ? 180 : 0 in components/PS3Silk.tsx");
-  assert(silkSrc.includes("ms < fadeNotBefore"), "Fade clock must stay held until the pre-roll ends");
+  assert(!silkSrc.includes("preRollMs"), "preRollMs hold must be gone");
+  assert(!silkSrc.includes("fadeNotBefore"), "Fade clock must not be held behind a pre-roll");
+  assert(silkSrc.includes("INTRO_SILK_FLOOR + (1 - INTRO_SILK_FLOOR) * (1 - Math.pow(1 - t, 3))"), "Missing floor + ease-out cubic swell");
+  assert(silkSrc.includes("KHR_parallel_shader_compile"), "Missing KHR_parallel_shader_compile gating");
+  assert(/INTRO_SILK_FLOOR\s*=\s*0\.4/.test(timingsSrc), "INTRO_SILK_FLOOR must be 0.4");
 
-  const calcDelay = (isFirstLoad, reducedMotion) => (isFirstLoad && !reducedMotion ? 180 : 0);
-  assert.strictEqual(calcDelay(true, false), 180, "First load without reduced motion must delay 180ms");
-  assert.strictEqual(calcDelay(true, true), 0, "First load with reduced motion must delay 0ms");
-  assert.strictEqual(calcDelay(false, false), 0, "Subsequent navigation must delay 0ms");
-  assert.strictEqual(calcDelay(false, true), 0, "Subsequent navigation with reduced motion must delay 0ms");
+  // Mirror of the swell: bright on frame 1, ~82% by 300ms, 100% at 900ms
+  const op = (ms) => 0.4 + 0.6 * (1 - Math.pow(1 - Math.min(ms / 900, 1), 3));
+  assert.strictEqual(op(0), 0.4, "First frame must sit at the 0.4 floor");
+  assert(op(300) > 0.8, `Expected >80% opacity at 300ms, got ${op(300)}`);
+  assert.strictEqual(op(900), 1, "Swell must reach 1.0 at 900ms");
 });
 
 runTest("1.2: React 19 StrictMode idempotency guard preserves isFirstLoad state", () => {
@@ -112,7 +115,7 @@ runTest("2.3: Simulation of 120Hz rAF displays strict 30fps throttling", () => {
 
 runTest("2.4: Simulation of frame stall clamps dt to MAX_FADE_DT_MS", () => {
   const MAX_FADE_DT_MS = 50;
-  const introDuration = 2400;
+  const introDuration = 900;
 
   let lastFadeMs = 100;
   let introElapsed = 0;
@@ -125,7 +128,7 @@ runTest("2.4: Simulation of frame stall clamps dt to MAX_FADE_DT_MS", () => {
   assert.strictEqual(dt, 50, `Expected stalled dt to be clamped to 50ms, got ${dt}`);
   assert.strictEqual(introElapsed, 50, `introElapsed should only advance by clamped 50ms`);
   const t = Math.min(introElapsed / introDuration, 1);
-  assert(t < 0.05, `Fade progression should not jump ahead during freeze: t=${t}`);
+  assert(t < 0.1, `Fade progression should not jump ahead during freeze: t=${t}`);
 });
 
 // ---------------------------------------------------------
@@ -133,19 +136,21 @@ runTest("2.4: Simulation of frame stall clamps dt to MAX_FADE_DT_MS", () => {
 // ---------------------------------------------------------
 console.log("\n[Group 3] IntroOrchestrator Event Wiring & Fallback Contract");
 
-runTest("3.1: IntroOrchestrator ties fallback to introTimings.gateDuration with 3500ms minimum", () => {
+runTest("3.1: IntroOrchestrator ties fallback to introTimings.gateDuration with a 1800ms minimum", () => {
   const orchSrc = fs.readFileSync(path.join(repoRoot, "components/IntroOrchestrator.tsx"), "utf8");
-  
-  assert(orchSrc.includes('import { introTimings } from "@/lib/introTimings";'), "Missing introTimings import");
+  const timingsSrc = fs.readFileSync(path.join(repoRoot, "lib/introTimings.ts"), "utf8");
+
+  assert(orchSrc.includes('import { introTimings, INTRO_FAILSAFE_MS } from "@/lib/introTimings";'), "Missing introTimings import");
   assert(
-    orchSrc.includes("const fallbackDelay = Math.max(3500, introTimings.gateDuration * 1000);"),
-    "Missing `Math.max(3500, introTimings.gateDuration * 1000)` fallback calculation"
+    orchSrc.includes("const fallbackDelay = Math.max(INTRO_FAILSAFE_MS, introTimings.gateDuration * 1000);"),
+    "Missing `Math.max(INTRO_FAILSAFE_MS, introTimings.gateDuration * 1000)` fallback calculation"
   );
+  assert(/INTRO_FAILSAFE_MS\s*=\s*1800/.test(timingsSrc), "INTRO_FAILSAFE_MS must be 1800");
 
   // Test mathematical behavior
-  const calcFallback = (gateDuration) => Math.max(3500, gateDuration * 1000);
-  assert.strictEqual(calcFallback(2.4), 3500, "For gateDuration=2.4s, fallback should be 3500ms");
-  assert.strictEqual(calcFallback(1.5), 3500, "For gateDuration=1.5s, fallback should clamp to 3500ms min");
+  const calcFallback = (gateDuration) => Math.max(1800, gateDuration * 1000);
+  assert.strictEqual(calcFallback(0.9), 1800, "For gateDuration=0.9s, fallback should be 1800ms");
+  assert.strictEqual(calcFallback(1.5), 1800, "For gateDuration=1.5s, fallback should clamp to 1800ms min");
   assert.strictEqual(calcFallback(4.0), 4000, "For gateDuration=4.0s, fallback should scale up to 4000ms");
 });
 

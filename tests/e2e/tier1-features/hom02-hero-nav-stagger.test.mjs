@@ -39,28 +39,28 @@ export const tests = [
     },
   },
   {
-    name: "HOM-02.3: Hero text reveal begins only after stagger delay (>= 800ms into intro)",
+    name: "HOM-02.3: Hero text reveal begins at ~150ms and is well underway by 600ms",
     fn: async (ctx) => {
       const page = await ctx.createPage();
       await page.goto(ctx.targetUrl);
 
-      // Check opacity at 500ms (still before stagger threshold 800ms)
+      // Hero starts at 150ms (introTimings.heroDelay), 0.8s long: still hidden at 100ms
+      await page.waitForTimeout(100);
+      const opacityAt100 = await page.evaluate(() => {
+        const h = document.getElementById("hero") || document.querySelector("h1");
+        return h ? parseFloat(window.getComputedStyle(h).opacity) : 0;
+      });
+
+      assertLessThanOrEqual(opacityAt100, 0.1, `Hero opacity was ${opacityAt100} at 100ms, should still be hidden`);
+
+      // By ~600ms the reveal is actively in progress
       await page.waitForTimeout(500);
-      const opacityAt500 = await page.evaluate(() => {
+      const opacityAt600 = await page.evaluate(() => {
         const h = document.getElementById("hero") || document.querySelector("h1");
         return h ? parseFloat(window.getComputedStyle(h).opacity) : 0;
       });
 
-      assertLessThanOrEqual(opacityAt500, 0.2, `Hero opacity was ${opacityAt500} at 500ms, should still be mostly hidden`);
-
-      // Check opacity at 1800ms (hero reveal in progress)
-      await page.waitForTimeout(1300);
-      const opacityAt1800 = await page.evaluate(() => {
-        const h = document.getElementById("hero") || document.querySelector("h1");
-        return h ? parseFloat(window.getComputedStyle(h).opacity) : 0;
-      });
-
-      assertGreaterThanOrEqual(opacityAt1800, 0.3, `Hero opacity was ${opacityAt1800} at 1800ms, should be actively revealing`);
+      assertGreaterThanOrEqual(opacityAt600, 0.3, `Hero opacity was ${opacityAt600} at 600ms, should be actively revealing`);
     },
   },
   {
