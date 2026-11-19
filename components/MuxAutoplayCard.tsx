@@ -254,7 +254,7 @@ export default function MuxAutoplayCard({
           alt=""
           aria-hidden
           decoding="async"
-          fetchPriority={mountOrder <= 1 ? "high" : "auto"}
+          fetchPriority={mountOrder <= 2 ? "high" : "auto"}
           style={{
             position: "absolute",
             inset: 0,

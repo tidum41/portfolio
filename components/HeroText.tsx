@@ -35,7 +35,7 @@ export default function HeroText() {
       // compositor. This entrance fires at the busiest possible moment
       // (page load/hydration), so it's the one place that matters most.
       const fromY = `translateY(${ENTRANCE_DEFAULTS.y}px)`;
-      const fadeDur = reduced ? 0 : ENTRANCE_DEFAULTS.duration;
+      const fadeDur = reduced ? 0 : introTimings.heroDuration;
       h1Controls.set({ opacity: reduced ? 1 : 0, transform: reduced ? "translateY(0px)" : fromY });
       // Tween is armed immediately at opacity 0 — the delay is part of the
       // playing animation, not a hold then a separate slide.
@@ -78,12 +78,12 @@ export default function HeroText() {
 
   const fromY = `translateY(${ENTRANCE_DEFAULTS.y}px)`;
   const h1Initial = instant ? { opacity: 1, transform: "translateY(0px)" } : { opacity: 0, transform: fromY };
-  const subDelay = instant || reduced ? 0 : introTimings.gateDuration;
+  const subDelay = instant || reduced ? 0 : introTimings.subDelay;
   const subTx = instant || reduced
     ? { duration: 0 }
     : {
-        opacity:   { duration: ENTRANCE_DEFAULTS.duration, ease: EASE_OPACITY, delay: subDelay },
-        transform: { duration: ENTRANCE_DEFAULTS.duration, ease: EASE_OPACITY, delay: subDelay },
+        opacity:   { duration: introTimings.heroDuration, ease: EASE_OPACITY, delay: subDelay },
+        transform: { duration: introTimings.heroDuration, ease: EASE_OPACITY, delay: subDelay },
       };
 
   return (

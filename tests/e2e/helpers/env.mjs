@@ -41,11 +41,18 @@ export const CANONICAL_COPY = {
 };
 
 export const SPEC_TIMINGS = {
-  minPrerollMs: 150,
-  targetPrerollMs: 180,
-  minSilkFadeSec: 2.0,
-  maxSilkFadeSec: 3.0,
-  targetSilkFadeSec: 2.4,
+  // "Fast cinematic" intro (Nov 18, 2026) supersedes the Oct HOM-01 spec of a
+  // 180ms pre-roll + 2.4s smoothstep fade. Source of truth: lib/introTimings.ts.
+  maxPrerollMs: 50,        // no black hold; first drawn frame is already visible
+  targetPrerollMs: 0,
+  silkFloor: 0.4,          // uOpacity on the first drawn frame (non-reduced)
+  minSilkFadeSec: 0.7,
+  maxSilkFadeSec: 1.2,
+  targetSilkFadeSec: 0.9,  // ease-out cubic
+  heroDelayMs: 150,
+  heroDurationMs: 800,
+  subDelayMs: 500,
+  failSafeMs: 1800,
   reducedMotionDurationMs: 350,
   targetFps: 30,
   frameDurationMs: 1000 / 30, // 33.33ms
