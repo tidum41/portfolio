@@ -1,4 +1,4 @@
-import { FOOTER_LINKS } from "@/lib/site";
+import { ABOUT_LINKS } from "@/lib/site";
 
 /** Shared about-page content. */
 
@@ -88,4 +88,4 @@ export const ABOUT_INTERESTS = [
 export const ABOUT_BIO =
   "I'm a designer because I love connecting people through thoughtful interactions. I grew up on the internet, shaped by communities and rabbit holes that taught me thoughtful craft turns ordinary moments into ones worth returning to. What I make is meant to be beautiful and functional, but mostly it's meant to give people a moment of joy they didn't expect.";
 
-export const SOCIALS = FOOTER_LINKS;
+export const SOCIALS = ABOUT_LINKS;

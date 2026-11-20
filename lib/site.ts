@@ -33,6 +33,11 @@ export const FOOTER_LINKS: readonly FooterLinkItem[] = [
   { label: "LinkedIn", href: "https://www.linkedin.com/in/muditmahajan14/" },
   { label: "X", href: "https://x.com/muditm14" },
   { label: "Email", copyEmail: true },
+];
+
+/** About page socials: footer links plus the resume (the footer leaves it out). */
+export const ABOUT_LINKS: readonly FooterLinkItem[] = [
+  ...FOOTER_LINKS,
   { label: "Resume", href: RESUME_PATH },
 ];
 
