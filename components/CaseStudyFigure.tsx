@@ -30,6 +30,13 @@ type Fill = Base & {
   height?: never;
 };
 
+/** "16 / 10" or "1.6" to a number; falls back to 16:10. */
+function ratioFromCss(value: string): number {
+  const [w, h = "1"] = value.split("/").map((part) => part.trim());
+  const ratio = Number(w) / Number(h);
+  return Number.isFinite(ratio) && ratio > 0 ? ratio : 1.6;
+}
+
 export default function CaseStudyFigure(props: Fixed | Fill) {
   const {
     src,
@@ -42,6 +49,7 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
   } = props;
 
   const [open, setOpen] = useState(false);
+  const aspectRatio = props.fill ? ratioFromCss(props.aspectRatio ?? "16 / 10") : props.width / props.height;
   const blurProps =
     placeholder === "blur" ? { placeholder: "blur" as const, blurDataURL: CASE_STUDY_BLUR_DATA_URL } : {};
 
@@ -85,7 +93,7 @@ export default function CaseStudyFigure(props: Fixed | Fill) {
       {inner}
       {caption ? <figcaption className="cs-figcaption">{caption}</figcaption> : null}
       {zoomable && (
-        <CaseStudyLightbox src={src} alt={alt} open={open} onClose={() => setOpen(false)} />
+        <CaseStudyLightbox src={src} alt={alt} open={open} onClose={() => setOpen(false)} aspectRatio={aspectRatio} caption={caption} />
       )}
     </figure>
   );

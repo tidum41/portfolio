@@ -1812,6 +1812,7 @@ html[data-theme="dark"] .project-image {
   cursor: zoom-in;
   text-align: left;
   border-radius: var(--radius-control);
+  -webkit-tap-highlight-color: transparent;
 }
 .cs-figure-zoom-trigger:focus-visible {
   outline: 2px solid var(--color-text-tertiary);
@@ -1986,41 +1987,101 @@ html[data-theme="dark"] .project-image {
   }
 }
 
-.cs-lightbox-backdrop {
+/* Case study lightbox (Paper "JOOLA lightbox redesign 2026-11-21").
+   The page background fills the window; Close mirrors the Back link; the image
+   fits under a 76px band (the nav's height) with no scroll. */
+.cs-lightbox {
+  --cs-lightbox-band: 76px;
+  --cs-lightbox-meta-h: 28px; /* 8px gap + one 20px caption line */
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 999998; /* under GlobalCustomCursor, same as ProjectPopup */
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  opacity: 0;
+  transition: opacity 120ms var(--spring-panel); /* EASE_OPACITY */
+  -webkit-tap-highlight-color: transparent;
+}
+.cs-lightbox[data-visible] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-lightbox { transition: none; }
+}
+.cs-lightbox-bar {
+  flex-shrink: 0;
+  height: var(--cs-lightbox-band);
+  padding: 0 var(--page-px);
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(0, 0, 0, 0.72);
-}
-.cs-lightbox-dialog {
-  position: relative;
-  max-width: min(1200px, 100%);
-  max-height: 100%;
-  overflow: auto;
+  justify-content: flex-end;
 }
 .cs-lightbox-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 1;
-  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   min-width: 44px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--color-border-subtle);
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  font-size: 14px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 20px;
+  letter-spacing: var(--ls-meta);
+  color: var(--color-text-tertiary);
   cursor: pointer;
+  transition: color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cs-lightbox-close:hover { color: var(--color-text-primary); }
+}
+.cs-lightbox-close-glyph {
+  display: block;
+  flex-shrink: 0;
+}
+.cs-lightbox-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 var(--page-px);
+}
+.cs-lightbox-frame {
+  /* Widest of: the 1200px cap, the window minus margins, or what the height allows. */
+  width: min(
+    1200px,
+    100%,
+    calc((100dvh - var(--cs-lightbox-band) - var(--cs-lightbox-meta-h) - var(--space-5)) * var(--cs-lightbox-ar, 1.6))
+  );
 }
 .cs-lightbox-media {
   border-radius: var(--radius-control);
   overflow: hidden;
-  background: var(--color-bg-primary);
+  box-shadow: 0 0 0 1px var(--color-border-subtle);
+  background: var(--color-placeholder);
+}
+.cs-lightbox-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.cs-lightbox-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  font-family: var(--font-sans);
+  font-size: var(--fs-caption);
+  line-height: 20px;
+  color: var(--color-text-muted);
+}
+/* No keyboard on touch screens, so no Esc hint there. */
+@media (hover: none) {
+  .cs-lightbox-hint { display: none; }
 }
 
 /* No section nav: same lane (cols 3-10) with the TOC columns left empty;
