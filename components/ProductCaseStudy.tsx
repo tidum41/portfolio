@@ -4,6 +4,7 @@ import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyRequest from "@/components/CaseStudyRequest";
 import CaseStudyTOC from "@/components/CaseStudyTOC";
 import CaseStudyPager from "@/components/CaseStudyPager";
+import JoolaPartialBody, { JOOLA_PARTIAL_TOC } from "@/components/JoolaPartialBody";
 import { JOOLA_HERO_SRC, JOOLA_TITLE } from "@/lib/caseStudies/joola";
 import { CASE_STUDY_MEDIA_SIZES } from "@/lib/caseStudyLayout";
 
@@ -24,7 +25,7 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
     <div style={{ fontFamily: "var(--font-sans)" }}>
       <div className="cs-layout">
         <aside className="cs-aside">
-          <CaseStudyTOC items={[]} backHref="/" />
+          <CaseStudyTOC items={JOOLA_PARTIAL_TOC} backHref="/" />
         </aside>
 
         <div className="cs-content" style={{ minWidth: 0 }}>
@@ -72,7 +73,7 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
             </div>
           </CaseStudyOpen>
 
-          {body}
+          {body ?? <JoolaPartialBody />}
 
           <CaseStudyRequest />
 
