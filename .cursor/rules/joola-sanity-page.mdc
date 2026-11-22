@@ -1,0 +1,133 @@
+---
+description: JOOLA /joola Sanity preview case study — full builder brief (inlined from work/docs/joola-sanity-page.md). Keep this file in sync when humans edit work/docs/joola-sanity-page.md.
+globs:
+  - "**/joola/**"
+  - "**/fixtures/sanity/drafts.joola.json"
+  - "**/lib/sanity/caseStudyDraft.ts"
+  - "**/scripts/joola-*.mjs"
+  - "**/artifacts/joola-sanity/**"
+  - "**/vendor/joola-b2b-live/**"
+  - "**/scripts/joola-vendor-overlay/**"
+  - "work/**"
+alwaysApply: false
+---
+
+# JOOLA Sanity preview case study
+
+## Reference layout (see `work/rules/joola-reference.mdc`)
+
+- **Human-updated brief:** `work/docs/joola-sanity-page.md` — Mudit edits here; sync the inlined body below into this rule after changes.
+- **Agent rule mirror:** `work/rules/joola-sanity-page.mdc` ↔ `.cursor/rules/joola-sanity-page.mdc` (this file).
+- **Workflow:** one PR per deliverable; always push to origin (never local-only). Draft case study work on `review/joola-sanity` (**PR #192**); **do not merge** unless Mudit asks.
+- **Vercel preview builds:** commit message must include `[preview]` (`vercel.json` `ignoreCommand`).
+- **Related human docs:** `work/docs/sanity-map.md` (BruinLease Sanity patterns), `design/RULES.md` and `TASTE.md` (taste). Draft fixture: `fixtures/sanity/drafts.joola.json` (Sanity doc `drafts.joola`).
+
+---
+
+## Builder brief (inlined from `work/docs/joola-sanity-page.md`)
+
+Build Mudit's JOOLA case study page on a **review branch**, following this brief exactly.
+
+### Goal
+
+Ship a **full-case-study preview** at `/joola` that reads the unpublished Sanity draft **`drafts.joola`** (slug `joola`), renders BruinLease-style case-study primitives, and mounts **1:1 interactive prototype embeds** from `tidum41/joola-b2b-casestudy`. **Production** `/joola` stays the NDA gate only until the case study launches.
+
+### Branch and PR
+
+- Branch: **`review/joola-sanity`**
+- Open a **draft PR**; **never merge** unless Mudit explicitly asks
+- Report each shipped pass with: commit SHA, preview URL, verification commands run, artifact paths, and open gaps
+
+### Sanity content
+
+- Sanity project **`9vl5qk61`**, dataset **`production`**
+- Draft document id **`drafts.joola`** (`caseStudy` type, slug `joola`)
+- Map fields the same way as BruinLease (`app/ucla-sublease/page.tsx`, `lib/sanity/queries.ts`, `components/CaseStudy*`)
+- Mudit approves all case-study copy. Use `[PLACEHOLDER: …]` styling for unfilled gaps (`JoolaSanityText`). Do not invent facts, metrics, or quotes (see `design/briefs/case-study-copy.md`).
+
+### Draft loading (token + fixture)
+
+Cloud agents often have **no** `SANITY_API_WRITE_TOKEN`.
+
+1. **With token** (Mudit's `.env.local`): fetch draft via Sanity client with `previewDrafts` perspective and `SANITY_API_WRITE_TOKEN`.
+2. **Without token:** when `SANITY_PREVIEW_DRAFTS=1`, load committed **`fixtures/sanity/drafts.joola.json`** (same shape as live draft). Keep fixture updated when draft structure changes.
+
+Implementation: `lib/sanity/caseStudyDraft.ts`.
+
+### Preview vs production
+
+| Mode | How to enable | Page behavior |
+|------|----------------|---------------|
+| **Production** | Default on muditm.com | `ProductCaseStudy`: hero, metadata, NDA request only |
+| **Local preview** | `SANITY_PREVIEW_DRAFTS=1` in dev | Full case study from draft/fixture |
+| **Vercel preview** | `?sanity_preview=1` or header `x-joola-sanity-preview: 1` on preview deployments | Full case study without restarting with env |
+
+### Section order and figures
+
+Preview section order (TOC): **Problem → Solution → Research → Decision 1–4**.
+
+| Section | Embeds / UI |
+|---------|-------------|
+| Problem | Copy only (before/after figure lives at **start of Solution** per Mudit) |
+| Solution | Live quick-order portal iframe; before/after figure at top of section |
+| Research | Copy |
+| D1 | Quick-order line iframe |
+| D2 | Row variant toggles (Compact / Reorder / Stock — product harness indexes `v=1,2,3`) |
+| D3 | Review / checkout iframe |
+| D4 | Approval toggles (Split inbox / Ledger) |
+
+Use shared case-study chrome from BruinLease patterns. Hero embed chrome radius **8px**. Mock disclaimer above first interactive figure in preview.
+
+### Prototype source (1:1 visuals)
+
+- Product repo: **https://github.com/tidum41/joola-b2b-casestudy** (`live/` app)
+- **Do not** ship CSS-cascade mocks from old PR #181 when product source is available
+- Vendor product at a pinned SHA: `PRODUCT_ROOT=<path-to-live> npm run joola:revendor -- <sha>` (`scripts/joola-revendor.mjs`)
+- Overlay patches: `scripts/joola-vendor-overlay/` — drop overlay copies of routes that now exist in the product harness (quick-order row variants, approval `Frame.tsx` exports, etc.)
+- Build static embeds: `npm run joola:build-proto` → `public/joola-proto/round5/`, `public/joola-proto/qo/`
+- Figures: same-origin **iframes** (`components/joola/JoolaProtoIframe.tsx`, `JoolaVariantEmbed.tsx`), uniform scale (`JOOLA_EMBED_DESIGN_WIDTH = 1280`), reserved height, URL/postMessage toggles without layout jump; no inner scrollbars; no cutoff at 390px
+- Embed mode: `embed=1`, `HashRouter`, seeded buyer/admin state, no login
+- **Pixel parity:** `npm run joola:pixel-diff` vs standalone proto; target **<0.5%** diff per figure; document in `artifacts/joola-sanity/`
+- Dev single-figure bench: `/joola/parity?figure=…` with `SANITY_PREVIEW_DRAFTS=1`
+
+Historical prototype refs (tarballs / branches): `cursor/round5-states-hierarchy-6235`, `cursor/qo-line-playground` — superseded by vendored `live/` at pinned SHAs when re-vendoring.
+
+### Commands
+
+```bash
+# Default (production-like /joola)
+npm run dev
+
+# Full draft preview locally
+SANITY_PREVIEW_DRAFTS=1 npm run dev
+
+# Optional .env.local
+# NEXT_PUBLIC_SANITY_PROJECT_ID=9vl5qk61
+# NEXT_PUBLIC_SANITY_DATASET=production
+# SANITY_API_WRITE_TOKEN=<Editor token>
+# SANITY_PREVIEW_DRAFTS=1
+
+npm run joola:build-proto
+npm run typecheck && npm run build
+SANITY_PREVIEW_DRAFTS=1 npm run dev
+npm run joola:pixel-diff
+```
+
+Lint may be broken on Next 16; use `npm run typecheck` as the gate (`AGENTS.md`).
+
+### Verification report
+
+Update `artifacts/joola-sanity/REPORT.md` when architecture or diff results change. Commit capture assets under `artifacts/joola-sanity/` (pixel-diff triplets, preview screenshots).
+
+For each delivery note:
+
+- SHA and preview URL (Vercel portfolio **READY**)
+- Whether hosted `drafts.joola` was patched or only fixture
+- Pixel-diff table or per-iframe DOM grep when embeds change
+- Screenshot paths
+
+### Product content constraints (case study + embeds)
+
+Follow Mudit's product decisions unless brief says otherwise: **Dick's Sporting Goods** account in hero, status lifecycle, **no cases / no tiers** in approved copy, **Saved for reorder** naming. Single account price per SKU in line UI. Do not reintroduce tier/volume or case-pack UI removed from approved builds unless Mudit asks.
+
+When re-vendoring, verify embed DOM across **9 iframes** at **1440** and **1024** (chips, Upload CSV, warehouse names, template, middle dot, case/tier strings, nav icon **x=20** / label **x=44**). Some strings may remain in **product source** (not overlay); report honestly.
