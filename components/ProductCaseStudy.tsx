@@ -5,7 +5,7 @@ import CaseStudyRequest from "@/components/CaseStudyRequest";
 import CaseStudyTOC from "@/components/CaseStudyTOC";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import JoolaPartialBody, { JOOLA_PARTIAL_TOC } from "@/components/JoolaPartialBody";
-import { JOOLA_HERO_SRC, JOOLA_TITLE } from "@/lib/caseStudies/joola";
+import { JOOLA_HERO_HEIGHT, JOOLA_HERO_SRC, JOOLA_HERO_WIDTH, JOOLA_TITLE } from "@/lib/caseStudies/joola";
 import { CASE_STUDY_MEDIA_SIZES } from "@/lib/caseStudyLayout";
 
 const TEAM = [
@@ -59,12 +59,12 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
               },
             ]}
           >
-            <div className="cs-hero-media-frame" style={{ "--cs-hero-ar": 2400 / 1600 } as CSSProperties}>
+            <div className="cs-hero-media-frame" style={{ "--cs-hero-ar": JOOLA_HERO_WIDTH / JOOLA_HERO_HEIGHT } as CSSProperties}>
               <Image
                 src={JOOLA_HERO_SRC}
-                alt="Quick order screen from the JOOLA wholesale prototype, with tier pricing, a saved order, Net 30 credit, and an order marked ship date pending."
-                width={2400}
-                height={1600}
+                alt="New order screen from the JOOLA wholesale prototype: Maya Collins at Dick's Sporting Goods has a draft of 6 lines, each with product, SKU, account price, quantity stepper and line total."
+                width={JOOLA_HERO_WIDTH}
+                height={JOOLA_HERO_HEIGHT}
                 priority
                 fetchPriority="high"
                 sizes={CASE_STUDY_MEDIA_SIZES}
