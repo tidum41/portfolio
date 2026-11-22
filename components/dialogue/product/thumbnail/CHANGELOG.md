@@ -4,6 +4,91 @@ Changes to the Dialogue homepage card demo (the `states` bar treatment),
 newest first. Each entry lists exactly what changed and how to revert it,
 so any agent can undo a round without reconstructing intent.
 
+## 2026-11-22: One full frame on switch, travel exploration, swatches match bars, card gate
+
+Round r1 against a realtime recording of `010ecd2` (product variant).
+
+1. **One full frame on switch** (`dialogue-thumbnail.css`). While the
+   press landed on the 225 with the 75 open, both segments carried the
+   full frame (`data-side="unsure"` plus `data-press="friday"`), then the
+   75's frame eased out over 160ms: about 0.3s that read as one frame
+   stretched over the whole bar. New rule after the open/press block:
+   `[data-side="friday"][data-press="unsure"]` on the 225 and
+   `[data-side="unsure"][data-press="friday"]` on the 75 set
+   `box-shadow: none`. The `[data-press]` rule already sets
+   `transition: none`, so the drop is instant. It is scoped
+   `:not([data-sel-variant])` so the sel-* prototypes stay as recorded.
+   The scrub path renders the same attributes, so `thumbnailStateAt`
+   frames follow. Hover previews on the target are unchanged.
+   Revert: delete the block headed "One full frame at a time".
+2. **`selMotion: "cut" | "travel"`** (`variants.ts`,
+   `DialogueThumbnailDemo.tsx`, `dialogue-thumbnail.css`, dev pages). The
+   default is `"cut"` everywhere; the homepage does not pass it. `"travel"`
+   renders one `.dlg-thumb__sel-frame` element and takes the selected frame
+   off the segments. On a switch it moves from the old segment's box to
+   the new one over `THUMBNAIL_SEL_TRAVEL_MS` (180ms) on
+   `cubic-bezier(0.2, 0, 0, 1)`. `thumbnailStateAt` gains `switchMs` and
+   `switchFrom`, so scrub frames are a pure function of time; autoplay runs
+   a small rAF only when travel is on. While a press is down, the target's
+   hover preview steps aside, so the travelling frame is the only frame.
+   Exposed as `?sel=travel` and a "Selection travels" button on
+   `/dev/dialogue-thumbnail`, and a DialKit select on the playground.
+   Revert: remove the `selMotion` prop, overlay, travel state and rAF from
+   the demo, the travel CSS block and the `.dlg-thumb__sel-frame` rules,
+   and the `switchMs`/`switchFrom` fields and travel exports in
+   `variants.ts`.
+3. **Legend swatches match their bars** (`dialogue-thumbnail.css`). The
+   closed side's swatch was mixed paler
+   (`color-mix(in srgb, var(--dp-chart-focal) 50%, var(--dp-surface))` on
+   the 225 when the 75 is open, and
+   `color-mix(in srgb, var(--dp-border-strong) 55%, var(--dp-surface))` on
+   the 75 when the 225 is open) while the bar kept the full ramp colour.
+   TASTE Round 10 says a swatch always shows its own segment's colour.
+   Both rules are removed; the `[data-tone]` ramp rules now paint swatches
+   in every state, and the text muting stays. Revert: restore the two rules
+   quoted here after the legend text rules.
+4. **Dev copy** (`app/dev/dialogue-thumbnail/page.tsx`). The page said
+   Mei's quote lands on the 75 and the poster is the 225 with Ana's quote.
+   The 75 leads with Owen, the 225 with Dev, and the poster is the empty
+   state. The text now names Owen and Dev and describes the empty poster.
+   No other dev copy named the wrong people. Revert: restore the two
+   sentences from `010ecd2`.
+5. **Frame-locked dev previews.** New optional `loopEpoch` prop on
+   `DialogueThumbnailDemo` and `DialogueThumbnailCard`. When it is set, each
+   loop's rest beat absorbs the drift from the epoch's loop grid. The dev
+   page passes one epoch to both previews; measured over 20s, their beats
+   coincide within one animation frame. The homepage leaves it unset and
+   runs as before. Revert: drop the prop and use `timing.restMs` again in
+   the loop.
+6. **Recorder.** `scripts/shoot-thumbnail-demo.mjs` takes `--base`/
+   `THUMB_BASE`, `--out`/`THUMB_OUT`, `--paper`, `--side-mp4` and
+   `--channel`, derives the homepage URL from the base, and skips the
+   Paper compare and the live-side cursor crop when their files are
+   absent. The Mac defaults are unchanged. New
+   `scripts/record-thumbnail-loop.mjs` records one loop deterministically
+   through the dev page's `?t=` scrub hook (`window.__dlgThumbSeek`): 40ms
+   steps, 2x screenshots of `[data-demo-frame]`, h264 yuv420p with
+   faststart. `[data-demo-frame]` now hugs its 4:3 panel (`align-self:
+   start`) and carries `data-loop-ms`. Revert: delete the new script and
+   the `t` handling on the dev page.
+7. **The card system in code.** Role tokens `--dlg-thumb-selected-frame`
+   and `--dlg-thumb-hover-frame` are defined once on the panel root, where
+   the `--dp-*` tokens resolve, and replace the raw shadow stacks in the
+   hover and open/press rules. `thumbnailBarRamp.ts` adds
+   `THUMBNAIL_BAR_TONE_TOKEN` (`as const satisfies
+   Record<ThumbnailBarTone, ...>`) and `ThumbnailSegmentInput`, which
+   rejects caller tones and colours. New gate
+   `scripts/check-thumbnail-card.mjs` (`npm run check:thumbnail-card`,
+   also run by `check:dialogue-system`) with a `--self-test` that runs on
+   every invocation. New `README.md`. Revert: inline the two stacks back
+   into their rules, remove the gate script, its `package.json` line and
+   section 4 of `check-dialogue-system.mjs`, and the map and input type
+   from the ramp file.
+
+Recordings: `main-card-cut.mp4`, `main-card-travel.mp4` and
+`lift-explore.mp4` (161, 161 and 108 frames at 40ms), plus
+`main-card-cut-still.png` (the 225 open), from the new recorder.
+
 ## 2026-11-13 — Correction: segments keep the bar's radius
 
 Mudit, reviewing the v7 recording: the state rules changed the bars'

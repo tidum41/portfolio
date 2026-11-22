@@ -75,6 +75,7 @@ export default function DialogueThumbnailCard({
   playing = true,
   variant = DEFAULT_THUMBNAIL_VARIANT,
   annotate = "home-card/dialogue",
+  loopEpoch,
 }: {
   href?: string;
   title: string;
@@ -84,6 +85,8 @@ export default function DialogueThumbnailCard({
   playing?: boolean;
   variant?: ThumbnailVariantId;
   annotate?: string;
+  /** Dev only: shared loop clock (see DialogueThumbnailDemo). The homepage leaves it unset. */
+  loopEpoch?: number;
 }) {
   const router = useRouter();
   const mediaRef = useRef<HTMLDivElement>(null);
@@ -130,7 +133,7 @@ export default function DialogueThumbnailCard({
               position: "relative",
             }}
           >
-            <DialogueThumbnailDemo variant={variant} playing={live} showPreview />
+            <DialogueThumbnailDemo variant={variant} playing={live} showPreview loopEpoch={loopEpoch} />
           </div>
         </div>
         <CardLabel title={title} label={label} external={Boolean(href && /^(https?:|mailto:|tel:)/i.test(href))} />

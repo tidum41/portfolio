@@ -30,6 +30,15 @@
 .dlg-thumb__panel.dialogue-product-root {
   width: 448px;
   overflow: visible;
+  /*
+   * Card role tokens (selected-state system v2). Defined once here, on the
+   * panel root where the --dp-* tokens they reference resolve; the
+   * states rules use only these, and check:thumbnail-card fails a segment
+   * box-shadow that is anything else. The selected frame is a 2px gap of
+   * panel, then a 2px ink ring; hover previews the same frame at 45% ink.
+   */
+  --dlg-thumb-selected-frame: 0 0 0 2px var(--dp-surface), 0 0 0 4px var(--dp-ink);
+  --dlg-thumb-hover-frame: 0 0 0 2px var(--dp-surface), 0 0 0 4px color-mix(in srgb, var(--dp-ink) 45%, transparent);
 }
 
 /* Floating panel matches Paper option 3 chrome: 24 radius, chat shadow, no hairline. */
@@ -173,9 +182,10 @@
 /* ---- Main card: legend carries the selection (no bar motion) ---- */
 /*
  * Both legend rows are always present at the same size. The open row is
- * ink at 500 with a full swatch; the closed row mutes to 400 in
- * --dp-muted with a dimmed swatch, its count still showing. With nothing
- * selected (data-side="none"), both rows sit at full strength.
+ * ink at 500; the closed row mutes to 400 in --dp-muted, its count still
+ * showing. Swatches never mute: a swatch always shows its own segment's
+ * colour (TASTE Round 10), so it matches its bar in every state. With
+ * nothing selected (data-side="none"), both rows sit at full strength.
  */
 .dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-label,
 .dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-value,
@@ -193,14 +203,6 @@
 .dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-value {
   color: var(--dp-muted);
   font-weight: 400;
-}
-
-.dlg-thumb .dlg-live__bar[data-side="unsure"] .dp-chart-stack__lane[data-focal] .dp-chart-stack__swatch[data-index] {
-  background: color-mix(in srgb, var(--dp-chart-focal) 50%, var(--dp-surface));
-}
-
-.dlg-thumb .dlg-live__bar[data-side="friday"] .dp-chart-stack__lane:not([data-focal]) .dp-chart-stack__swatch[data-index] {
-  background: color-mix(in srgb, var(--dp-border-strong) 55%, var(--dp-surface));
 }
 
 /*
@@ -239,7 +241,7 @@
  */
 .dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-hover="friday"] .dp-chart-stack__seg[data-index][data-focal],
 .dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-hover="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
-  box-shadow: 0 0 0 2px var(--dp-surface), 0 0 0 4px color-mix(in srgb, var(--dp-ink) 45%, transparent);
+  box-shadow: var(--dlg-thumb-hover-frame);
   z-index: 1;
 }
 
@@ -259,8 +261,58 @@
 .dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
 .dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-press="friday"] .dp-chart-stack__seg[data-index][data-focal],
 .dlg-thumb[data-bar-style="states"] .dlg-live .dlg-live__bar[data-press="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
-  box-shadow: 0 0 0 2px var(--dp-surface), 0 0 0 4px var(--dp-ink);
+  box-shadow: var(--dlg-thumb-selected-frame);
   z-index: 1;
+}
+
+/*
+ * One full frame at a time (2026-11-22): the instant a press lands on the
+ * other segment, the open segment drops its frame. The [data-press] rule
+ * below sets transition: none, so the drop is instant, not a 160ms ease
+ * that read as one frame stretched over both segments. Hover previews on
+ * the target while the old side is open are unchanged. Specificity beats
+ * the open/press rule above; the sel-* prototypes keep their own rules.
+ */
+.dlg-thumb[data-bar-style="states"]:not([data-sel-variant]) .dlg-live .dlg-live__bar[data-side="friday"][data-press="unsure"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"]:not([data-sel-variant]) .dlg-live .dlg-live__bar[data-side="unsure"][data-press="friday"] .dp-chart-stack__seg[data-index]:not([data-focal]) {
+  box-shadow: none;
+}
+
+/*
+ * Selection motion "travel" (dev exploration, ?sel=travel): segments never
+ * carry the selected frame; one frame element (.dlg-thumb__sel-frame) does,
+ * and its position comes from the switch time. While a press is down the
+ * target's hover preview steps aside, so the travelling frame is the only
+ * frame on the bar.
+ */
+.dlg-thumb[data-bar-style="states"][data-sel-motion="travel"] .dlg-live .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index][data-focal],
+.dlg-thumb[data-bar-style="states"][data-sel-motion="travel"] .dlg-live .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index]:not([data-focal]),
+.dlg-thumb[data-bar-style="states"][data-sel-motion="travel"] .dlg-live .dlg-live__bar[data-press] .dp-chart-stack__seg[data-index] {
+  box-shadow: none;
+}
+
+.dlg-thumb__sel-frame {
+  position: absolute;
+  left: var(--dlg-thumb-sel-x);
+  top: var(--dlg-thumb-sel-y);
+  width: var(--dlg-thumb-sel-w);
+  height: var(--dlg-thumb-sel-h);
+  border-radius: var(--dp-radius-bar) 0 0 var(--dp-radius-bar);
+  box-shadow: var(--dlg-thumb-selected-frame);
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  /* Releasing eases out like the cut's frame; landing is instant. */
+  transition: opacity 160ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.dlg-thumb__sel-frame[data-at="unsure"] {
+  border-radius: 0 var(--dp-radius-bar) var(--dp-radius-bar) 0;
+}
+
+.dlg-thumb__sel-frame[data-on] {
+  opacity: 1;
+  transition: none;
 }
 
 /* The quote's voice icon takes the open side's color, in the states cut. */
@@ -333,6 +385,7 @@
  */
 .dlg-thumb[data-scrub] .dp-chart-stack__seg,
 .dlg-thumb[data-scrub] .dlg-thumb__cursor,
+.dlg-thumb[data-scrub] .dlg-thumb__sel-frame,
 .dlg-thumb[data-scrub] .dlg-thumb__cursor svg,
 .dlg-thumb[data-scrub][data-bar-style="states"] .dlg-live__bar .dp-chart-stack__seg {
   transition: none;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ChartStackedBar from "@/components/dialogue/product/chart/ChartStackedBar";
 import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
 import SourcePill from "@/components/dialogue/product/SourcePill";
@@ -9,16 +9,21 @@ import { dialogueProductFontClassName } from "@/components/dialogue/product/font
 import DlgDemoCursor from "@/components/DlgDemoCursor";
 import { QUOTE_LIST, QUOTE_LIST_FRIDAY } from "@/lib/dialogue/product/sampleData";
 import {
+  DEFAULT_THUMBNAIL_SEL_MOTION,
   DEFAULT_THUMBNAIL_VARIANT,
   THUMBNAIL_CURSOR_LEAD_MS,
   THUMBNAIL_CURSOR_OUT_MS,
   THUMBNAIL_VARIANTS,
   THUMBNAIL_ENTER_TOTAL_MS,
   THUMBNAIL_CLEAR_MS,
+  THUMBNAIL_SEL_TRAVEL_MS,
   thumbnailBarStyleForVariant,
   thumbnailClearProgress,
   thumbnailEnterProgress,
+  thumbnailLoopDuration,
   thumbnailStateAt,
+  thumbnailTravelProgress,
+  type ThumbnailSelMotion,
   type ThumbnailTiming,
   type ThumbnailVariantId,
 } from "@/components/dialogue/product/thumbnail/variants";
@@ -138,6 +143,8 @@ function ThumbPeople({
 }
 
 type Pt = { x: number; y: number };
+/** A segment's box inside the bar wrapper, in unscaled px. */
+type Box = { x: number; y: number; w: number; h: number };
 
 export default function DialogueThumbnailDemo({
   variant = DEFAULT_THUMBNAIL_VARIANT,
@@ -146,6 +153,8 @@ export default function DialogueThumbnailDemo({
   timeMs = null,
   timingOverride,
   selVariant,
+  selMotion = DEFAULT_THUMBNAIL_SEL_MOTION,
+  loopEpoch,
 }: {
   variant?: ThumbnailVariantId;
   playing?: boolean;
@@ -163,6 +172,18 @@ export default function DialogueThumbnailDemo({
   timeMs?: number | null;
   /** Partial timing overrides over the variant's beats, for tuning tools. */
   timingOverride?: Partial<ThumbnailTiming>;
+  /**
+   * How the selection frame moves on a switch (see ThumbnailSelMotion).
+   * "cut" everywhere by default; "travel" is a dev exploration.
+   */
+  selMotion?: ThumbnailSelMotion;
+  /**
+   * Dev only: a shared performance.now() origin. When set, each autoplay
+   * loop starts on the loop-length grid counted from this instant, so two
+   * demos given the same epoch stay frame-locked. Unset (the homepage) keeps
+   * the free-running loop.
+   */
+  loopEpoch?: number;
 }) {
   const timing = useMemo<ThumbnailTiming>(
     () => ({ ...THUMBNAIL_VARIANTS[variant], ...(timingOverride ?? {}) }),
@@ -185,6 +206,12 @@ export default function DialogueThumbnailDemo({
   const enterArmedRef = useRef(true);
   const [scale, setScale] = useState(1);
   const [targets, setTargets] = useState<{ friday: Pt; unsure: Pt } | null>(null);
+  /** Travel motion: the switch's start side and ms since the press landed. */
+  const [travelFrom, setTravelFrom] = useState<Side | null>(null);
+  const [travelMs, setTravelMs] = useState<number | null>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const [segBoxes, setSegBoxes] = useState<{ friday: Box; unsure: Box } | null>(null);
+  const traveling = selMotion === "travel" && barStyle === "states";
 
   const scrubbing = timeMs != null;
   const frame = scrubbing ? thumbnailStateAt(timing, timeMs) : null;
@@ -229,6 +256,27 @@ export default function DialogueThumbnailDemo({
     return () => window.clearTimeout(id);
   }, [scrubbing, scale]);
 
+  /* Travel motion only: the segment boxes as data, so the one frame's
+     position is a pure function of the switch time. The bar's geometry is
+     fixed (the panel is always 448px, scaled as a whole), so one layout
+     measurement before paint holds for every frame. */
+  useLayoutEffect(() => {
+    if (!traveling) return;
+    const wrap = barRef.current;
+    if (!wrap || wrap.offsetWidth === 0) return;
+    const wr = wrap.getBoundingClientRect();
+    const k = wr.width / wrap.offsetWidth || 1;
+    const box = (sel: string): Box | null => {
+      const el = wrap.querySelector<HTMLElement>(sel);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: (r.left - wr.left) / k, y: (r.top - wr.top) / k, w: r.width / k, h: r.height / k };
+    };
+    const friday = box(".dp-chart-stack__seg[data-focal]");
+    const unsure = box(".dp-chart-stack__seg:not([data-focal])");
+    if (friday && unsure) setSegBoxes({ friday, unsure });
+  }, [traveling]);
+
   useEffect(() => {
     if (scrubbing) return;
     const reduced =
@@ -243,6 +291,8 @@ export default function DialogueThumbnailDemo({
       setBeat("poster");
       setClearing(false);
       setExitP(0);
+      setTravelFrom(null);
+      setTravelMs(null);
       return;
     }
 
@@ -331,6 +381,39 @@ export default function DialogueThumbnailDemo({
         rafs.push(requestAnimationFrame(step));
       });
 
+    /* Travel motion only: the frame leaves the open side the instant the
+       press lands and slides to the pressed segment, mirroring switchMs in
+       thumbnailStateAt. Cut never starts it, so the homepage never runs it. */
+    const animateTravel = (from: Side) => {
+      if (!traveling) return;
+      const started = performance.now();
+      setTravelFrom(from);
+      setTravelMs(0);
+      const step = (now: number) => {
+        if (cancelled) return;
+        const ms = now - started;
+        if (ms >= THUMBNAIL_SEL_TRAVEL_MS) {
+          setTravelFrom(null);
+          setTravelMs(null);
+          return;
+        }
+        setTravelMs(ms);
+        rafs.push(requestAnimationFrame(step));
+      };
+      rafs.push(requestAnimationFrame(step));
+    };
+
+    /* Dev frame lock: the rest beat absorbs this loop's offset from the
+       shared epoch's grid (timer drift is a few ms, well inside the rest).
+       A loop that starts far off the grid waits for the next slot. */
+    const total = thumbnailLoopDuration(timing);
+    const restFor = () => {
+      if (loopEpoch == null) return timing.restMs;
+      const into = (((performance.now() - loopEpoch) % total) + total) % total;
+      const late = into > total / 2 ? into - total : into;
+      return late <= timing.restMs ? timing.restMs - late : total - into + timing.restMs;
+    };
+
     const openSide = (which: Side) => {
       setSide(which);
       setSwapKey((n) => n + 1);
@@ -355,7 +438,7 @@ export default function DialogueThumbnailDemo({
         setCursorOn(false);
         enterArmedRef.current = true;
         setEnterFirst(false);
-        await wait(timing.restMs);
+        await wait(restFor());
         if (cancelled) return;
         setBeat("move-unsure");
         await fadeInNear("unsure");
@@ -388,6 +471,7 @@ export default function DialogueThumbnailDemo({
         setBeat("press-friday");
         setPress("friday");
         setPressing(true);
+        animateTravel("unsure");
         await wait(timing.pressMs);
         if (cancelled) return;
         setPress(null);
@@ -413,7 +497,9 @@ export default function DialogueThumbnailDemo({
       waits.forEach(clearTimeout);
       rafs.forEach(cancelAnimationFrame);
     };
-  }, [playing, timing, scrubbing]);
+    // barStyle derives from variant, which timing already tracks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playing, timing, scrubbing, traveling, loopEpoch]);
 
   /* In scrub mode every rendered value comes from the frame state; in
      autoplay it comes from the loop's state, exactly as before. */
@@ -447,6 +533,38 @@ export default function DialogueThumbnailDemo({
       ? thumbnailEnterProgress(frame.enterMs)
       : null;
 
+  /* Travel motion: the one selection frame. It sits on the pressed or open
+     segment; during a switch both its edges ease from the old segment's box
+     to the new one on the same curve. With nothing selected it stays where
+     it was and fades (autoplay) or drops (scrub), as the cut's frame does. */
+  let selFrame: { on: boolean; at: Side; style: React.CSSProperties } | null = null;
+  if (traveling && segBoxes) {
+    const to: Side | null = rPress ?? (rBarSide !== "none" ? rBarSide : null);
+    const sMs = frame ? frame.switchMs : travelMs;
+    const sFrom = frame ? frame.switchFrom : travelFrom;
+    const rest: Side = to ?? (rPeopleSide !== "none" ? rPeopleSide : "friday");
+    let b = segBoxes[rest];
+    let at: Side = rest;
+    if (to && sFrom && sFrom !== to && sMs != null && sMs < THUMBNAIL_SEL_TRAVEL_MS) {
+      const e = thumbnailTravelProgress(sMs);
+      const a = segBoxes[sFrom];
+      const z = segBoxes[to];
+      const mix = (u: number, v: number) => u + (v - u) * e;
+      b = { x: mix(a.x, z.x), y: mix(a.y, z.y), w: mix(a.w, z.w), h: mix(a.h, z.h) };
+      at = e < 0.5 ? sFrom : to;
+    }
+    selFrame = {
+      on: to != null,
+      at,
+      style: {
+        "--dlg-thumb-sel-x": `${b.x}px`,
+        "--dlg-thumb-sel-y": `${b.y}px`,
+        "--dlg-thumb-sel-w": `${b.w}px`,
+        "--dlg-thumb-sel-h": `${b.h}px`,
+      } as React.CSSProperties,
+    };
+  }
+
   const bowTo = (a: Pt, b: Pt, p: number): Pt => {
     const e = EASE_IO(p);
     const dx = b.x - a.x;
@@ -478,6 +596,7 @@ export default function DialogueThumbnailDemo({
       data-variant={variant}
       data-bar-style={barStyle}
       data-sel-variant={selVariant}
+      data-sel-motion={selMotion}
       data-beat={rBeat}
       data-side={rBarSide}
       data-scrub={scrubbing ? "" : undefined}
@@ -492,12 +611,22 @@ export default function DialogueThumbnailDemo({
           >
             <ChartVizCard title={FINDING}>
               <div
+                ref={barRef}
                 className="dlg-live__bar dlg-thumb__bar"
                 data-hover={rHover || undefined}
                 data-press={rPress || undefined}
                 data-side={rBarSide}
               >
                 <ChartStackedBar lanes total={300} segments={THUMB_STACK} />
+                {selFrame ? (
+                  <span
+                    className="dlg-thumb__sel-frame"
+                    data-on={selFrame.on ? "" : undefined}
+                    data-at={selFrame.at}
+                    style={selFrame.style}
+                    aria-hidden
+                  />
+                ) : null}
               </div>
               {/* The swap region is always mounted: it reserves the people's
                   height in the none state, so the panel surface is the same

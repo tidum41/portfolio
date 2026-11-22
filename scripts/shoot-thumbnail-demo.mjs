@@ -1,19 +1,30 @@
 import { chromium } from "playwright";
 import { mkdir, readdir, rename, copyFile, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import sharp from "sharp";
 
 const exec = promisify(execFile);
-const OUT = "/Users/m/portfolio-review/.paper-tmp/thumbnail-demo";
-const BASE = "http://localhost:3107/dev/dialogue-thumbnail";
+// Overrides: --base <url> / THUMB_BASE, --out <dir> / THUMB_OUT, --paper <png> / THUMB_PAPER,
+// --side-mp4 <mp4> / THUMB_SIDE_MP4, --channel <chrome|chromium> / THUMB_CHANNEL.
+// Defaults keep the Mac setup. Steps whose input file is absent are skipped.
+const argv = process.argv.slice(2);
+const opt = (name, env, fallback) => {
+  const i = argv.indexOf(`--${name}`);
+  return i >= 0 && argv[i + 1] ? argv[i + 1] : process.env[env] || fallback;
+};
+const OUT = opt("out", "THUMB_OUT", "/Users/m/portfolio-review/.paper-tmp/thumbnail-demo");
+const BASE = opt("base", "THUMB_BASE", "http://localhost:3107/dev/dialogue-thumbnail");
+const HOME_URL = new URL("/", BASE).href;
 const IDS = ["product", "story", "tight"];
-const PAPER = "/Users/m/portfolio-review/.paper-tmp/exports/card3/option-3@2x.png";
-const SIDE_MP4 = "/Users/m/portfolio-review/public/dialogue/motion/live-side.mp4";
+const PAPER = opt("paper", "THUMB_PAPER", "/Users/m/portfolio-review/.paper-tmp/exports/card3/option-3@2x.png");
+const SIDE_MP4 = opt("side-mp4", "THUMB_SIDE_MP4", "/Users/m/portfolio-review/public/dialogue/motion/live-side.mp4");
+const CHANNEL = opt("channel", "THUMB_CHANNEL", "chrome");
 
 await mkdir(OUT, { recursive: true });
-const browser = await chromium.launch({ channel: "chrome", headless: true });
+const browser = await chromium.launch({ ...(CHANNEL === "chromium" ? {} : { channel: CHANNEL }), headless: true });
 
 async function decorate(page, theme = "light") {
   await page.evaluate((t) => {
@@ -150,7 +161,7 @@ const home = await browser.newPage({
   colorScheme: "light",
 });
 await home.addInitScript(() => { try { localStorage.setItem("theme", "light"); } catch {} });
-await home.goto("http://localhost:3107/", { waitUntil: "networkidle" });
+await home.goto(HOME_URL, { waitUntil: "networkidle" });
 await home.waitForTimeout(5500);
 await decorate(home, "light");
 const card = home.locator('[data-grid-card="project-dialogue"]');
@@ -218,8 +229,11 @@ await cropCursor(hoverPath, path.join(OUT, "cursor-thumbnail-crop-v2.png"));
 
 // Case-study cursor from the live-side take (a mid frame where the pointer is on the bar).
 const sideFrame = path.join(OUT, "live-side-frame-v2.png");
-await exec("ffmpeg", ["-y", "-ss", "1.2", "-i", SIDE_MP4, "-frames:v", "1", sideFrame]);
-try {
+if (!existsSync(SIDE_MP4)) {
+  console.log("skip live-side cursor crop: no", SIDE_MP4);
+  await copyFile(path.join(OUT, "cursor-casestudy-asset-v2.png"), path.join(OUT, "cursor-casestudy-crop-v2.png"));
+} else try {
+  await exec("ffmpeg", ["-y", "-ss", "1.2", "-i", SIDE_MP4, "-frames:v", "1", sideFrame]);
   await cropCursor(sideFrame, path.join(OUT, "cursor-casestudy-crop-v2.png"));
 } catch (err) {
   // Try a few more timestamps if the first miss lands on a still without the pointer.
@@ -273,7 +287,13 @@ await labelSheet(
   180,
 );
 
-// Paper vs code side-by-side of the panel field.
+// Paper vs code side-by-side of the panel field (Mac only: needs the Paper export).
+if (!existsSync(PAPER)) {
+  console.log("skip paper-vs-code: no", PAPER);
+  await browser.close();
+  console.log("shot ok (no paper compare)");
+  process.exit(0);
+}
 const paper = sharp(PAPER);
 const paperMeta = await paper.metadata();
 const codePanel = sharp(path.join(OUT, "poster-nopreview-v2.png"));

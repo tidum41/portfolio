@@ -4,9 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useDialKit } from "dialkit";
 import DialogueThumbnailDemo from "@/components/dialogue/product/thumbnail/DialogueThumbnailDemo";
 import {
+  THUMBNAIL_SEL_MOTIONS,
   THUMBNAIL_VARIANTS,
   thumbnailLoopDuration,
   thumbnailPhases,
+  type ThumbnailSelMotion,
   type ThumbnailTiming,
 } from "@/components/dialogue/product/thumbnail/variants";
 
@@ -40,6 +42,7 @@ export default function DialogueThumbnailPlaygroundPage() {
       speed: [1, 0.1, 2, 0.05],
       loop: true,
       stage: { type: "select", options: ["dark", "warm", "paper"], default: "dark" },
+      selMotion: { type: "select", options: ["cut", "travel"], default: "cut" },
     },
   });
 
@@ -119,6 +122,9 @@ export default function DialogueThumbnailPlaygroundPage() {
   const frameTotal = Math.ceil(duration / FRAME_MS);
   const current = phases.find((p) => shown >= p.start && shown < p.end) ?? phases[0];
   const stageBg = STAGE_BG[dk.view.stage] ?? STAGE_BG.dark;
+  const selMotion: ThumbnailSelMotion = THUMBNAIL_SEL_MOTIONS.includes(dk.view.selMotion as ThumbnailSelMotion)
+    ? (dk.view.selMotion as ThumbnailSelMotion)
+    : "cut";
 
   const btnStyle: React.CSSProperties = {
     height: 32,
@@ -146,7 +152,7 @@ export default function DialogueThumbnailPlaygroundPage() {
 
       <div style={{ ...dialVars, background: stageBg, borderRadius: 16, padding: "28px 16px 20px", transition: "background 200ms" }}>
         <div style={{ width: 520, maxWidth: "92%", height: 360, margin: "0 auto", borderRadius: 12, overflow: "hidden" }}>
-          <DialogueThumbnailDemo variant="tight" timingOverride={timingOverride} timeMs={shown} />
+          <DialogueThumbnailDemo variant="tight" timingOverride={timingOverride} timeMs={shown} selMotion={selMotion} />
         </div>
 
         <div style={{ width: 520, maxWidth: "92%", margin: "18px auto 0" }}>
@@ -226,7 +232,13 @@ export default function DialogueThumbnailPlaygroundPage() {
               }}
             >
               <span style={{ display: "block", height: 150, borderRadius: 8, overflow: "hidden" }}>
-                <DialogueThumbnailDemo variant="tight" timingOverride={timingOverride} timeMs={mid} showPreview={false} />
+                <DialogueThumbnailDemo
+                  variant="tight"
+                  timingOverride={timingOverride}
+                  timeMs={mid}
+                  showPreview={false}
+                  selMotion={selMotion}
+                />
               </span>
               <span style={{ display: "block", marginTop: 8, fontSize: 12, fontWeight: 500 }}>
                 {p.label}

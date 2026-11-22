@@ -18,6 +18,7 @@
     "check:annotate": "node scripts/check-annotate.mjs",
     "check:dialogue-tokens": "node scripts/check-dialogue-tokens.mjs",
     "check:dialogue-system": "node scripts/check-dialogue-system.mjs",
+    "check:thumbnail-card": "node scripts/check-thumbnail-card.mjs",
     "audit:dialogue-ui": "node scripts/audit-dialogue-ui.mjs",
     "audit:dialogue-clip": "node scripts/audit-dialogue-clip.mjs"
   },

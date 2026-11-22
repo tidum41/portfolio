@@ -73,6 +73,17 @@ export const THUMBNAIL_CURSOR_LEAD_MS = 200;
 export const THUMBNAIL_CURSOR_OUT_MS = 300;
 
 export type ThumbnailSide = "friday" | "unsure";
+
+/**
+ * How the selection frame gets from one segment to the next when a press
+ * lands on the other side. "cut" (shipped, homepage): the old segment drops
+ * its frame and the pressed one takes it in the same instant. "travel" (dev
+ * exploration, Mudit's open question): one frame slides from the old
+ * segment to the new one over THUMBNAIL_SEL_TRAVEL_MS.
+ */
+export type ThumbnailSelMotion = "cut" | "travel";
+export const DEFAULT_THUMBNAIL_SEL_MOTION: ThumbnailSelMotion = "cut";
+export const THUMBNAIL_SEL_MOTIONS: readonly ThumbnailSelMotion[] = ["cut", "travel"];
 export type ThumbnailSelection = ThumbnailSide | "none";
 export type ThumbnailCursorMode =
   | "off"
@@ -104,6 +115,14 @@ export type ThumbnailFrameState = {
    * the selection releases, so the loop reads as ending before it restarts.
    */
   clearMs: number | null;
+  /**
+   * Milliseconds since a press landed on one segment while the other side
+   * was open (a switch), from the press through the following hold. Only the
+   * "travel" selection motion reads it; null outside a switch.
+   */
+  switchMs: number | null;
+  /** The side that was open when the current switch began. */
+  switchFrom: ThumbnailSide | null;
 };
 
 export type ThumbnailPhase = { beat: string; label: string; start: number; end: number };
@@ -161,7 +180,15 @@ export function thumbnailStateAt(timing: ThumbnailTiming, timeMs: number): Thumb
     t -= dur;
     return at >= 0 && at < dur ? at : -1;
   };
-  const base = { hover: null, press: null, pressing: false, enterMs: null, clearMs: null } as const;
+  const base = {
+    hover: null,
+    press: null,
+    pressing: false,
+    enterMs: null,
+    clearMs: null,
+    switchMs: null,
+    switchFrom: null,
+  } as const;
   let p: number;
   if ((p = seg(rest)) >= 0)
     return { ...base, beat: "poster", side: "none", cursorOn: false, cursorMode: "off", cursorP: 0 };
@@ -172,7 +199,7 @@ export function thumbnailStateAt(timing: ThumbnailTiming, timeMs: number): Thumb
   if ((p = seg(hover)) >= 0)
     return { ...base, beat: "hover-unsure", side: "none", hover: "unsure", cursorOn: true, cursorMode: "at-unsure", cursorP: 1 };
   if ((p = seg(press)) >= 0)
-    return { beat: "press-unsure", side: "none", hover: "unsure", press: "unsure", pressing: true, cursorOn: true, cursorMode: "at-unsure", cursorP: 1, enterMs: null, clearMs: null };
+    return { ...base, beat: "press-unsure", side: "none", hover: "unsure", press: "unsure", pressing: true, cursorOn: true, cursorMode: "at-unsure", cursorP: 1 };
   if ((p = seg(payoff)) >= 0)
     return { ...base, beat: "unsure", side: "unsure", cursorOn: true, cursorMode: "at-unsure", cursorP: 1, enterMs: p };
   if ((p = seg(move)) >= 0)
@@ -180,7 +207,7 @@ export function thumbnailStateAt(timing: ThumbnailTiming, timeMs: number): Thumb
   if ((p = seg(hover)) >= 0)
     return { ...base, beat: "hover-friday", side: "unsure", hover: "friday", cursorOn: true, cursorMode: "at-friday", cursorP: 1 };
   if ((p = seg(press)) >= 0)
-    return { beat: "press-friday", side: "unsure", hover: "friday", press: "friday", pressing: true, cursorOn: true, cursorMode: "at-friday", cursorP: 1, enterMs: null, clearMs: null };
+    return { ...base, beat: "press-friday", side: "unsure", hover: "friday", press: "friday", pressing: true, cursorOn: true, cursorMode: "at-friday", cursorP: 1, switchMs: p, switchFrom: "unsure" };
   if ((p = seg(payoff)) >= 0) {
     const clearAt = payoff - THUMBNAIL_CLEAR_MS;
     return {
@@ -191,6 +218,9 @@ export function thumbnailStateAt(timing: ThumbnailTiming, timeMs: number): Thumb
       cursorMode: "at-friday",
       cursorP: 1,
       clearMs: p >= clearAt ? p - clearAt : null,
+      /* The switch began when the press landed, one press window ago. */
+      switchMs: press + p,
+      switchFrom: "unsure",
     };
   }
   /* The cursor-out beat: the clear has finished, the card sits empty. */
@@ -244,4 +274,17 @@ export const THUMBNAIL_CLEAR_MS = 240;
 /** Eased clearing progress 0..1 for the people block as one gesture. */
 export function thumbnailClearProgress(clearMs: number): number {
   return dlgRiseEase(clearMs / THUMBNAIL_CLEAR_MS);
+}
+
+/**
+ * The "travel" selection motion: one frame slides from the old segment to
+ * the new one when the press lands, on the entrance ease
+ * (cubic-bezier(0.2, 0, 0, 1)), which never overshoots. Both edges move on
+ * the same curve, so the frame never spans the two segments at once.
+ */
+export const THUMBNAIL_SEL_TRAVEL_MS = 180;
+
+/** Eased travel progress 0..1 for the selection frame, from ms since the press landed. */
+export function thumbnailTravelProgress(switchMs: number): number {
+  return dlgRiseEase(switchMs / THUMBNAIL_SEL_TRAVEL_MS);
 }
