@@ -13,7 +13,9 @@
 //   dup-selector   same selector defined in globals.css and dialogue-product.css
 //   figure-class   a figure wrapper in DialogueCaseStudyContent without cs-figure
 //   allowlist      DialogueCaseStudyContent imports a component missing from design/SYSTEM-COMPONENTS.md
+//   thumbnail-card scripts/check-thumbnail-card.mjs (homepage card states cut, incl. its self-test) failed
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { join, extname, basename } from "node:path";
 
 const ROOT = process.argv[2] || ".";
@@ -165,6 +167,16 @@ if (existsSync(join(ROOT, PAGE))) {
   page.split("\n").forEach((l, i) => {
     if (/<figure\b/.test(l) && !/cs-figure/.test(l)) report(PAGE, i + 1, "figure-class", l);
   });
+}
+
+// 4. The homepage card's own gate (states cut, ramp tokens, role tokens), self-test included.
+const THUMB_GATE = new URL("./check-thumbnail-card.mjs", import.meta.url).pathname;
+if (existsSync(THUMB_GATE)) {
+  const r = spawnSync(process.execPath, [THUMB_GATE, ROOT], { encoding: "utf8" });
+  if (r.status !== 0) {
+    const lines = `${r.stdout}${r.stderr}`.split("\n").filter((l) => /\s(seg-|fill|tone-token|raw-color|travel-dev-only)|FAILED|did not fire/.test(l));
+    for (const l of lines.length ? lines : ["check:thumbnail-card failed"]) report("scripts/check-thumbnail-card.mjs", 0, "thumbnail-card", l);
+  }
 }
 
 const byRule = {};

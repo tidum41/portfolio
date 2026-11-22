@@ -188,10 +188,26 @@ const JOOLA_B2B_PROJECT: SanityProject = {
   featured: true,
 };
 
+export const DIALOGUE_PROJECT_ID = "project-dialogue";
+
+/** Local Dialogue card. Title and label match the live homepage card on
+ *  www.muditm.com (origin/main). Media is the live thumbnail demo; the
+ *  case study lives at /dialogue on this branch. */
+export const DIALOGUE_PROJECT: SanityProject = {
+  _id: DIALOGUE_PROJECT_ID,
+  title: "Generative answers for UX research",
+  label: "Contract 2026",
+  href: "/dialogue",
+  mediaType: "image",
+  aspectRatio: "4 / 3",
+  order: 1,
+  featured: true,
+};
+
 async function loadProjects(): Promise<SanityProject[]> {
   const projects = await sanityClient.fetch<SanityProject[]>(PROJECTS_QUERY);
   const mapped = projects
-    .filter((p) => p._id !== JOOLA_B2B_PROJECT._id)
+    .filter((p) => p._id !== JOOLA_B2B_PROJECT._id && p._id !== DIALOGUE_PROJECT._id)
     .map((p) => {
       const copy = PROJECT_CARD_COPY[p._id];
       return {
@@ -202,11 +218,11 @@ async function loadProjects(): Promise<SanityProject[]> {
         href: PROJECT_HREF_OVERRIDES[p._id] ?? p.href,
       };
     });
-  return [JOOLA_B2B_PROJECT, ...mapped];
+  return [JOOLA_B2B_PROJECT, DIALOGUE_PROJECT, ...mapped];
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v9-case-links"], {
+  unstable_cache(loadProjects, ["projects-v12-dialogue-card-copy"], {
     revalidate: 86400,
     tags: ["sanity", "projects"],
   }),
