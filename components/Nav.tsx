@@ -183,6 +183,19 @@ export default function Nav({
         <nav
           className="site-nav flex items-center justify-end"
           aria-label="Main navigation"
+          // Leaving the bar always clears the hovered word. Words only skip
+          // their own clear while the pointer is in the flat gap between
+          // words (see HalftoneNavLink); without this backstop, exiting from
+          // that gap left the last word's dots on until another hover.
+          onMouseLeave={() => setHoveredHref(null)}
+          // Pointer moved onto the theme/volume controls: not on a word and
+          // not in a gap, so no word should stay lit.
+          onMouseOver={(e) => {
+            const t = e.target as Element;
+            if (t !== e.currentTarget && !t.closest("[data-nav-word]")) {
+              setHoveredHref(null);
+            }
+          }}
         >
           <VolumeControl dk={dk} />
           <ThemeToggle dk={dk} />
