@@ -2,10 +2,10 @@
  * Tier 4 Journey 1: First Cold Visit Desktop (1440x900)
  * 
  * Comprehensive end-to-end user journey on desktop:
- * Cold start -> Pre-roll delay -> 2.4s uniform fade -> Hero stagger ->
+ * Cold start -> bright silk at once (no hold) -> 0.9s ease-out swell -> Hero stagger ->
  * Cursor pull without ripples -> Controls inspection -> Soft navigation to /dialogue and back.
  */
-import { assert, assertEqual, assertGreaterThanOrEqual, assertInRange } from "../helpers/assertions.mjs";
+import { assert, assertEqual, assertLessThanOrEqual, assertInRange } from "../helpers/assertions.mjs";
 import { VIEWPORTS, CANONICAL_COPY, SPEC_TIMINGS } from "../helpers/env.mjs";
 
 export const id = "JOURNEY-01";
@@ -27,19 +27,19 @@ export const tests = [
       const initialIntro = await page.evaluate(() => document.documentElement.getAttribute("data-intro"));
       assertEqual(initialIntro, "playing", "Step 1: Expected data-intro='playing' on cold start");
 
-      // 3. Pre-roll delay observation (>=150ms)
+      // 3. No black hold: first silk draw within 50ms (+1 frame)
       await page.waitForFunction(() => window.__ps3_metrics && window.__ps3_metrics.firstDrawTime !== null, {
         timeout: 5000,
       });
       const metrics = await page.evaluate(() => window.__ps3_metrics);
       const prerollMs = metrics.firstDrawTime - metrics.prerollStart;
-      assertGreaterThanOrEqual(prerollMs, SPEC_TIMINGS.minPrerollMs - 20, "Step 2: Pre-roll delay was too short");
+      assertLessThanOrEqual(prerollMs, SPEC_TIMINGS.maxPrerollMs + 34, "Step 2: First silk draw was too late (black hold)");
 
-      // 4. Wait for full intro completion (~2.4s)
-      await page.waitForFunction(() => window.__introCompleted === true, { timeout: 7000 });
+      // 4. Wait for full intro completion (~0.9s)
+      await page.waitForFunction(() => window.__introCompleted === true, { timeout: 4000 });
       const metricsAfter = await page.evaluate(() => window.__ps3_metrics);
       const fadeSec = (metricsAfter.fadeEndTime - metricsAfter.fadeStartTime) / 1000;
-      assertInRange(fadeSec, 1.8, 3.5, "Step 3: Silk fade duration out of PS3 boot pacing range");
+      assertInRange(fadeSec, SPEC_TIMINGS.minSilkFadeSec - 0.1, SPEC_TIMINGS.maxSilkFadeSec + 0.3, "Step 3: Silk swell duration out of fast-cinematic range");
 
       // 5. Hero text fully revealed and copy verified
       const heroText = await page.evaluate(() => {

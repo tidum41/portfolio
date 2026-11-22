@@ -24,6 +24,8 @@ import { isCaseStudyHref, warmCaseStudyNav, commitCaseStudyNav } from "@/lib/cas
 import { CASE_STUDY_PAGES } from "@/lib/caseStudyRegistry";
 import { useIntroReleased } from "@/lib/useIntroReleased";
 import { completeIntro, onIntroDone } from "@/lib/introReady";
+import { INTRO_ENTRANCE_DEFAULTS } from "@/lib/introTimings";
+import type { EntranceDefaults } from "@/lib/motion";
 import { ALLINONE_APP_URL, DIALOGUE_PROJECT_ID, type SanityProject } from "@/lib/sanity/queries";
 import DialogueCardMedia from "@/components/DialogueCard";
 import DialogueCardTap, {
@@ -366,7 +368,15 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     introPlaying ||
     (Boolean(isFirstLoadIntroRef.current) && !gridGateOpen);
 
-  const dk = useEntranceDials();
+  // Sessions that open on the home intro use the shorter "Fast cinematic" grid
+  // reveal (0.7s cards, 0.1s stagger). Chosen once per mount from the ref above
+  // so the dial config never changes between renders; global ENTRANCE_DEFAULTS
+  // are untouched and every other session keeps them.
+  const gridEntrance: { dialKitName?: string; defaults?: Partial<EntranceDefaults> } =
+    isFirstLoadIntroRef.current
+      ? { dialKitName: "Entrance (intro)", defaults: INTRO_ENTRANCE_DEFAULTS }
+      : {};
+  const dk = useEntranceDials(gridEntrance.dialKitName, gridEntrance.defaults);
 
   // Pause Mux on leave. Reclaim after a long idle off-route — never on
   // the About click frame.
@@ -691,6 +701,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
               instant={instant}
               replayToken={epoch}
               delay={rankDelay(HABIT_RANK)}
+              {...gridEntrance}
               className="project-card portfolio-grid-card"
               data-grid-card="habit"
               role="button"
@@ -727,7 +738,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     const aspect = gridAspect(p._id).css;
     if (p._id === DIALOGUE_PROJECT_ID) {
       return (
-        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={gridCardStyle(rank, { gap: 6 })}>
+        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} {...gridEntrance} className="project-card portfolio-grid-card" data-grid-card={p._id} aria-describedby="grid-pill-desc-dialogue" style={gridCardStyle(rank, { gap: 6 })}>
           <ProjectCardLift style={{ gap: 6 }}>
             <DialogueCardTap
               media={
@@ -746,7 +757,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     }
     if (p.mediaType === "video" && p.muxPlaybackId) {
       return (
-        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="portfolio-grid-card" data-grid-card={p._id} style={gridCardStyle(rank)}>
+        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} {...gridEntrance} className="portfolio-grid-card" data-grid-card={p._id} style={gridCardStyle(rank)}>
           {hasEverBeenActive && (
             <MuxAutoplayCard
               playbackId={p.muxPlaybackId}
@@ -766,7 +777,7 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
     }
     if (p.image?.asset?.url && p.href) {
       return (
-        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} className="project-card portfolio-grid-card" data-grid-card={p._id} style={gridCardStyle(rank, { gap: 8 })}>
+        <EntranceItem key={p._id} active={gridActive} instant={instant} replayToken={epoch} delay={rankDelay(rank)} {...gridEntrance} className="project-card portfolio-grid-card" data-grid-card={p._id} style={gridCardStyle(rank, { gap: 8 })}>
           <ProjectCardLift style={{ gap: 8 }}>
             <Link
               href={p.href}
@@ -784,6 +795,9 @@ const WorkKeepAlive = memo(function WorkKeepAlive({
                     alt={p.title}
                     fill
                     className="project-image"
+                    // First three grid cards reveal ~0.9s into the intro now,
+                    // so their posters are preloaded (fetchpriority high).
+                    preload={rank < 3}
                     style={{ objectFit: "contain" }}
                     sizes="(max-width: 767px) calc(100vw - 48px), 55vw"
                   />

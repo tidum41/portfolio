@@ -3,14 +3,14 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { completeIntro, isIntroComplete } from "@/lib/introReady";
-import { introTimings } from "@/lib/introTimings";
+import { introTimings, INTRO_FAILSAFE_MS } from "@/lib/introTimings";
 
 /** Drop this anywhere on the home page. Manages the first-load intro sequence:
  *  - BootScripts injects the theme/intro gate script before first paint
  *    (via useServerInsertedHTML) so data-intro="playing" is cleared off-home
  *  - Listens for "ps3-silk-intro-complete" from PS3Silk when the shader fade
  *    completes, invoking completeIntro() to broadcast "intro-done"
- *  - Maintains a 3500ms safety fallback timeout tied to introTimings.gateDuration
+ *  - Maintains a 1800ms safety fallback timeout tied to introTimings.gateDuration
  *    in case WebGL context fails
  *  - Also listens for "intro-replay" to restart the sequence in-place
  *  - Early project-card clicks call completeIntro() directly; completeIntro()
@@ -94,8 +94,8 @@ export function IntroOrchestrator() {
       window.addEventListener("ps3-silk-intro-complete", onSilkComplete, { once: true });
       window.addEventListener("soft-nav-start", onSoftNav, { once: true });
 
-      // Backed by 3500ms safety timeout fallback tied to introTimings.gateDuration
-      const fallbackDelay = Math.max(3500, introTimings.gateDuration * 1000);
+      // Backed by a safety timeout (INTRO_FAILSAFE_MS, 1800ms) tied to introTimings.gateDuration
+      const fallbackDelay = Math.max(INTRO_FAILSAFE_MS, introTimings.gateDuration * 1000);
       fallbackTimerRef.current = setTimeout(() => {
         hasCompletedOrDepartedRef.current = true;
         completeIntro();
