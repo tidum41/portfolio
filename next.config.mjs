@@ -14,14 +14,23 @@ if (fs.existsSync(hlsLightSrc)) {
 }
 
 // `next build` runs with NODE_ENV=production. `next dev` does not, so local
-// tuning still loads the real DialKit package.
-const dialkitAlias =
-  process.env.NODE_ENV === "production"
-    ? { dialkit: "./lib/dialkit-prod.tsx" }
-    : undefined;
+// tuning still loads the real DialKit package. Vercel preview also keeps the
+// real package so DialKit's version gallery is available there; production
+// (and local `next build`) still swap in the stub.
+const dialkitLive =
+  process.env.NODE_ENV !== "production" ||
+  process.env.VERCEL_ENV === "preview";
+const dialkitAlias = dialkitLive
+  ? undefined
+  : { dialkit: "./lib/dialkit-prod.tsx" };
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Compile-time flag so DevChrome can dead-code-eliminate the DialRoot
+  // require from production client bundles (runtime VERCEL_ENV checks cannot).
+  env: {
+    NEXT_PUBLIC_DIALKIT: dialkitLive ? "1" : "",
+  },
   // Pin the Turbopack/project root to this package so a parent-directory
   // package-lock.json (e.g. ~/package-lock.json) can't make Next resolve
   // modules relative to the wrong folder — that was surfacing as
@@ -31,7 +40,7 @@ const nextConfig = {
     ...(dialkitAlias ? { resolveAlias: dialkitAlias } : {}),
   },
   webpack: (config, { dev }) => {
-    if (!dev) {
+    if (!dev && !dialkitLive) {
       config.resolve.alias = {
         ...config.resolve.alias,
         // Exact match only, so `dialkit/store` still resolves to the real

@@ -8,7 +8,7 @@ import { resolveDialValues } from "dialkit/store";
  * visitors never see it. The numbers in each component are the design, and
  * `resolveDialValues` (from DialKit's store, with no saved overrides) is the
  * same function the panel uses to turn those configs into values. Local
- * `next dev` keeps the real package (see next.config.mjs).
+ * `next dev` (and Vercel preview) keep the real package (see next.config.mjs).
  */
 
 function resolve(config: unknown): unknown {
@@ -40,6 +40,8 @@ export function useDialKitController(name: string, config: unknown, options?: un
     setValue: (path: string, value: unknown) => void;
     setValues: (next: unknown) => void;
     resetValues: () => void;
+    setOpen: (open: boolean) => void;
+    getOpen: () => boolean | undefined;
     getValues: () => unknown;
   } | null>(null);
   if (!api.current || api.current.values !== values) {
@@ -48,12 +50,22 @@ export function useDialKitController(name: string, config: unknown, options?: un
       setValue: () => {},
       setValues: () => {},
       resetValues: () => {},
+      setOpen: () => {},
+      getOpen: () => undefined,
       getValues: () => values,
     };
   }
   return api.current;
 }
 
-export function DialRoot(_props: { defaultOpen?: boolean }) {
+export function DialRoot(_props: {
+  defaultOpen?: boolean;
+  position?: string;
+  mode?: string;
+  theme?: string;
+  productionEnabled?: boolean;
+  versions?: "menu" | "thumbnails";
+  onOpenChange?: (open: boolean) => void;
+}) {
   return null;
 }

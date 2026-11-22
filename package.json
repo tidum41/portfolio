@@ -24,7 +24,7 @@
     "@sanity/vision": "^6.2.0",
     "@vercel/analytics": "^2.0.1",
     "agentation": "^3.0.2",
-    "dialkit": "^1.4.3",
+    "dialkit": "2.2.0",
     "framer-motion": "^12.38.0",
     "hls.js": "^1.7.1",
     "motion": "^12.43.0",
