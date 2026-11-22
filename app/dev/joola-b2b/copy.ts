@@ -10,7 +10,7 @@
 export const copy = {
   brand: {
     wholesale: "Wholesale",
-    accountName: "Engage Pickleball",
+    accountName: "Dick's Sporting Goods",
     buyerName: "Anna Bright",
     repName: "Collin Johns",
     repRole: "Your JOOLA sales rep",
@@ -65,9 +65,9 @@ export const copy = {
       optional: "Optional",
       helper:
         "Add one if your club needs a PO number on the invoice. Leave it blank if you don't use POs.",
-      placeholder: "e.g. ENG-9812",
+      placeholder: "e.g. PO-9812",
       errorFormat:
-        "That PO number doesn't look right. Use letters, numbers and hyphens, like ENG-9812.",
+        "That PO number doesn't look right. Use letters, numbers and hyphens, like PO-9812.",
     },
     shipBy: {
       label: "Preferred ship-by",
@@ -89,9 +89,9 @@ export const copy = {
     },
     credit: {
       label: "Credit line",
-      title: "$50,000 credit line",
-      /** Approved prototype string — keep verbatim */
-      meter: "$25,693.50 left of $50,000",
+      title: "$25,000 credit line",
+      /** Keep in sync with JOOLA_CREDIT.limit */
+      meter: "$20,800.00 left of $25,000",
       body: "Available credit updates as open invoices and new orders post. Cart shows how much of this order will use.",
     },
     shipDate: {
@@ -155,7 +155,7 @@ export const copy = {
     /** Approved prototype control label — keep verbatim */
     uploadCsv: "Upload CSV",
     savedOrders: "Saved order",
-    creditLeft: "$25,693.50 left of $50,000",
+    creditLeft: "$20,800.00 left of $25,000",
     placingOrder: "Placing order",
     shipDatePending: "Ship date pending",
     onboardingLink: "Replay onboarding",
@@ -163,14 +163,14 @@ export const copy = {
 
   shipTos: [
     {
-      id: "engage-main",
-      name: "Engage Pickleball",
+      id: "dsg-main",
+      name: "Dick's Sporting Goods",
       site: "Main warehouse",
       detail: "1847 Industrial Blvd, Austin TX",
     },
     {
-      id: "engage-north",
-      name: "Engage Pickleball",
+      id: "dsg-north",
+      name: "Dick's Sporting Goods",
       site: "North warehouse",
       detail: "2200 Research Park, Round Rock TX",
     },

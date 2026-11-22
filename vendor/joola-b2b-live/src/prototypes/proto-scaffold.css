@@ -1,0 +1,126 @@
+/* Prototype harness chrome — realistic product context, not picker styles. */
+.proto-root {
+  min-height: 100vh;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-ui);
+}
+
+.proto-stage {
+  min-height: 100vh;
+}
+
+.proto-awaiting {
+  margin: 48px auto;
+  max-width: 560px;
+  padding: 28px 32px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--band);
+  text-align: left;
+}
+
+.proto-awaiting h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.proto-awaiting p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.proto-awaiting code {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+/* Mini admin / buyer shells for full-size context */
+.proto-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  min-height: 100vh;
+  background: #fff;
+}
+
+.proto-shell__side {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--line);
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.proto-shell__logo {
+  width: 80px;
+  height: auto;
+}
+
+.proto-shell__chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  width: fit-content;
+  border-radius: var(--radius-pill);
+  background: var(--blue-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.proto-shell__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.proto-shell__nav span {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.proto-shell__nav span.is-active {
+  background: var(--band);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.proto-shell__main {
+  padding: 28px 32px 96px;
+  min-width: 0;
+}
+
+.proto-shell__main h1 {
+  margin: 0 0 4px;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.proto-shell__lede {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.proto-shell__top {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}

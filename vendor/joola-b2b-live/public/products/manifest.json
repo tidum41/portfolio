@@ -1,0 +1,68 @@
+{
+  "fetchedAt": "2026-11-11T23:17:02.523Z",
+  "assets": [
+    {
+      "id": "perseus",
+      "file": "perseus.webp",
+      "shopifyTitle": "JOOLA Perseus Pro V Pickleball Paddle",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0685/6943/2278/files/p-bhIbyC-JOOLA-Perseus-Pro-V-16mm-Piackleball-Paddle-Red-2.jpg?v=1788376862",
+      "productUrl": "https://joola.com/products/joola-perseus-pro-v-pickleball-paddle-1"
+    },
+    {
+      "id": "hyperion",
+      "file": "hyperion.webp",
+      "shopifyTitle": "JOOLA Hyperion Pro IV 14mm Pickleball Paddle - Tropical Blue/Green",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0685/6943/2278/files/p-yZuzcX-3_0025_2025-07-2306616-250.jpg?v=1788379705",
+      "productUrl": "https://joola.com/products/joola-ben-johns-perseus-pro-iv-14mm-pickleball-paddle-16"
+    },
+    {
+      "id": "scorpeus",
+      "file": "scorpeus.webp",
+      "shopifyTitle": "JOOLA Scorpeus Pro V Pickleball Paddle",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0685/6943/2278/files/p-MbX0g3-3_0008_2R1A9829-94.jpg?v=1788376884",
+      "productUrl": "https://joola.com/products/joola-scorpeus-pro-v-pickleball-paddle"
+    },
+    {
+      "id": "magnus",
+      "file": "magnus.webp",
+      "shopifyTitle": "JOOLA Magnus Pro IV 14mm Pickleball Paddle",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0685/6943/2278/files/JOOLA_WBG_2025_ProIV_Magnus-Magnus14mm-01.jpg?v=1788364358",
+      "productUrl": "https://joola.com/products/joola-magnus-iv-14mm-pickleball-paddle"
+    },
+    {
+      "id": "hc40",
+      "file": "hc40.webp",
+      "shopifyTitle": "JOOLA HC-40 Ball",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0685/6943/2278/files/3_0017_2R1A5283-5.jpg?v=1788368514",
+      "productUrl": "https://joola.com/products/joola-hc-40-ball"
+    },
+    {
+      "id": "overgrip",
+      "file": "overgrip.webp",
+      "shopifyTitle": "JOOLA Premium Pickleball Paddle Overgrip (4 Count)",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0685/6943/2278/files/DSC09173-2.jpg?v=1788380654",
+      "productUrl": "https://joola.com/products/joola-premium-pickleball-paddle-overgrip-4-count"
+    },
+    {
+      "id": "netset",
+      "file": "netset.webp",
+      "shopifyTitle": "JOOLA Compact Pickleball Practice Net",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0685/6943/2278/files/17100_JOOLACompactPickleballPracticeNet_WBG-01.jpg?v=1788364893",
+      "productUrl": "https://joola.com/products/pro-dink-net"
+    },
+    {
+      "id": "tourbag",
+      "file": "tourbag.webp",
+      "shopifyTitle": "JOOLA Tour Elite Pickleball Bag",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0685/6943/2278/files/600333_FW_25_TOUR_ELITE_BLACK_JOOLA_YELLOW_004.jpg?v=1788369625",
+      "productUrl": "https://joola.com/products/joola-tour-elite-pickleball-bag"
+    },
+    {
+      "id": "edgetape",
+      "file": "edgetape.webp",
+      "shopifyTitle": "JOOLA Pro V Pickleball Protective Edge Guard Tape",
+      "sourceUrl": "https://cdn.shopify.com/s/files/1/0685/6943/2278/files/p-KFQfoZ-3_0004_2R1A6937-1.jpg?v=1788377194",
+      "productUrl": "https://joola.com/products/joola-pro-v-pickleball-protective-edge-guard-tape"
+    }
+  ]
+}

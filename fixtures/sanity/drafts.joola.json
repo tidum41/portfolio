@@ -1,0 +1,81 @@
+{
+  "_createdAt": "2026-11-11T18:55:05Z",
+  "_id": "drafts.joola",
+  "_rev": "t1hnxHUiLJEyCZZMloNUuz",
+  "_type": "caseStudy",
+  "_updatedAt": "2026-11-11T18:55:05Z",
+  "d1Body": "Quick Order is for a buyer who already knows the SKUs. It searches by name, category, or SKU, and it takes a CSV for a big order. The order total is the largest number on the screen, because it's the number the buyer is checking.",
+  "d1Heading": "Distributors know what they want, so the first screen is a search box.",
+  "d1Label": "Design decision",
+  "d2Body": "[PLACEHOLDER: one short paragraph and a quantity-stepper screen. Mention the Use last reorder candidate and the stock line candidate here if Mudit wants them. One account price per distributor, no quantity price breaks.]",
+  "d2Heading": "[PLACEHOLDER: decision 2, quantity controls on the quick-order line so each row matches warehouse picks]",
+  "d2Label": "Decision",
+  "d3Body": "This account's standing terms are Net 30, so checkout starts there and shows how much of the credit line is used. The PO number a buyer enters is the one they'll see on the invoice. If an order goes over the remaining credit, checkout says a rep needs to approve it before it ships.",
+  "d3Heading": "Checkout opens on Net 30 and shows the credit in use.",
+  "d3Label": "Design decision",
+  "d4Body": "I designed the rep's side of the same portal, starting from the notice a buyer sees at checkout. Orders over an account's Net 30 credit wait in an approval queue. A rep who overrides one has to give a reason, so the next person on the account can see why it went through. Replacements get their own review screen, since NetSuite tracks them as their own order type. Each distributor's account is on one screen. Like the buyer side, this hasn't shipped.",
+  "d4Heading": "A rep needs a place to approve an over-limit order.",
+  "d4Label": "Design decision",
+  "heroTagline": "JOOLA case study, summer 2026",
+  "heroTitle": "B2B ordering for JOOLA",
+  "pageType": "product-design",
+  "painPoints": [
+    "[PLACEHOLDER: pain point from sales interviews and the NetSuite process review, one sentence]",
+    "[PLACEHOLDER: pain point 2, one sentence, only facts from the brief]"
+  ],
+  "problemBody": "JOOLA's earlier B2B tool was fragmented and ran into issues, so vendors went back to email. Some sent a spreadsheet order form, and some wrote in with the products and quantities they wanted. Each one landed with a sales rep.",
+  "problemHeading": "Wholesale orders kept ending up in a sales rep's inbox.",
+  "problemImageCaption": "",
+  "problemLabel": "The problem",
+  "researchBody": "The portal was a three-week project inside my ten-week internship. I interviewed the sales team and went through how an order moves through NetSuite.\n\nSales wanted to focus on selling, but email took up too much of the job: out-of-stock updates, failed payment methods, and shipping status. They keyed warehouse orders into NetSuite by hand and read and verified the spreadsheets themselves. They had very little automation or design support. With distribution and warehouse teams in Asia in the loop, one order could take up to two days. Sales also confirmed that distributors place recurring orders.\n\nThe rep's NetSuite view also had fields a buyer never touches, like warehouse notes and an order type that marks a replacement versus a new order. Those fields shaped the buyer screens, and later the rep screens. Three weeks was short, so I settled the decisions JOOLA would need to build it. My goal was to make ordering very simple for the buyer and keep a rep for the cases that need one.",
+  "researchHeading": "Sales spent their time on email, and one order could take up to two days.",
+  "researchLabel": "Research",
+  "slug": "joola",
+  "solutionBody": "Anna, a buyer at a sporting goods retailer, searches a SKU. Recommended fills in the other two paddles she reorders. She places the order on Net 30 and asks sales when it ships.\n\nThe prototype is working HTML in JOOLA's own font and color tokens. Every total is computed from the quantities and prices on screen. Order history, invoices and terms, and store-retailer integrations are also part of the portal.",
+  "solutionHeading": "Here's one restock order, from search to reply.",
+  "solutionLabel": "Solution",
+  "title": "B2B ordering for JOOLA",
+  "tocItems": [
+    {
+      "_key": "9e2e3852",
+      "id": "problem",
+      "label": "Problem"
+    },
+    {
+      "_key": "2333f0f3",
+      "id": "solution",
+      "label": "Solution"
+    },
+    {
+      "_key": "4c6c047f",
+      "id": "research",
+      "label": "Research"
+    },
+    {
+      "_key": "93e59fe2",
+      "id": "decision-1",
+      "label": "Search first"
+    },
+    {
+      "_key": "0626f757",
+      "id": "decision-2",
+      "label": "Stock status sits on the same line."
+    },
+    {
+      "_key": "adc8f016",
+      "id": "decision-3",
+      "label": "Net 30 credit in use"
+    },
+    {
+      "_key": "a8e3a554",
+      "id": "decision-4",
+      "label": "Split inbox approvals"
+    }
+  ],
+  "beforeAfterCaption": "Before, every order went through a rep. In the portal, the buyer builds the order, and a rep steps in when it needs one.",
+  "solutionEmbedCaption": "A restock order in the wholesale portal prototype.",
+  "d1Caption": "Search by name or SKU.",
+  "d2Caption": "Stock status sits on the same line.",
+  "d3Caption": "Checkout and the invoice show the same credit line and PO number.",
+  "d4Caption": "Orders over their Net 30 credit wait here, and an override needs a reason."
+}

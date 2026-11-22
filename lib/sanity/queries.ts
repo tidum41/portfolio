@@ -281,6 +281,7 @@ export interface CaseStudyData {
   problemHeading?: string;
   problemBody?: string;
   problemImageCaption?: string;
+  beforeAfterCaption?: string;
   problemImage?: string;
   painPoints?: string[];
 
@@ -301,6 +302,7 @@ export interface CaseStudyData {
   d1Label?: string;
   d1Heading?: string;
   d1Body?: string;
+  d1Caption?: string;
   d1CardLabels?: string[];
   d1CompCol1?: CompRow[];
   d1CompCol2?: CompRow[];
@@ -314,6 +316,7 @@ export interface CaseStudyData {
   d2Label?: string;
   d2Heading?: string;
   d2Body?: string;
+  d2Caption?: string;
   ueTestingVideo?: string;
   d2PhonePos?: PhonePos;
 
@@ -321,6 +324,7 @@ export interface CaseStudyData {
   d3Label?: string;
   d3Heading?: string;
   d3Body?: string;
+  d3Caption?: string;
   oldFlowVideo?: string;
   decision1Video?: string;
   d3BeforePhonePos?: PhonePos;
@@ -330,6 +334,7 @@ export interface CaseStudyData {
   d4Label?: string;
   d4Heading?: string;
   d4Body?: string;
+  d4Caption?: string;
   homepageComparison?: string;
   figmaComparison?: string;
 
@@ -337,6 +342,7 @@ export interface CaseStudyData {
   solutionLabel?: string;
   solutionHeading?: string;
   solutionBody?: string;
+  solutionEmbedCaption?: string;
   solutionBg?: string;
   solutionMuxId?: string;
   solutionVideo?: string;

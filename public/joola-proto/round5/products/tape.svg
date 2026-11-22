@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Edge tape">
+  <rect width="160" height="160" fill="#ececee"/>
+  <g fill="none" stroke="#8a8a90" stroke-width="2.5" stroke-linecap="round">
+    <rect x="40" y="52" width="80" height="56" rx="8"/>
+    <circle cx="80" cy="80" r="14"/>
+    <path d="M52 64 H68 M92 64 H108 M52 96 H68 M92 96 H108"/>
+  </g>
+</svg>

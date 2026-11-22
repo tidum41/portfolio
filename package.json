@@ -8,11 +8,18 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "joola:build-proto": "node scripts/build-joola-proto.mjs",
+    "joola:revendor": "node scripts/joola-revendor.mjs",
+    "joola:grep-embed-case": "node scripts/joola-grep-embed-case-copy.mjs",
+    "joola:grep-embed-dom": "node scripts/joola-grep-embed-dom.mjs",
+    "joola:pixel-diff": "node scripts/joola-pixel-diff.mjs",
+    "prebuild": "npm run joola:build-proto",
     "studio": "sanity dev",
     "seed:sviz": "node scripts/seed-sviz.mjs",
     "bench:nav": "node scripts/bench-nav-jank.cjs",
     "check:site-mobile": "node scripts/check-site-mobile.mjs",
-    "check:intro-panel": "node scripts/check-intro-panel.mjs"
+    "check:intro-panel": "node scripts/check-intro-panel.mjs",
+    "test:joola:unit": "npx tsx --test tests/joola/*.test.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -22,6 +29,7 @@
     "@sanity/client": "^7.23.0",
     "@sanity/image-url": "^2.1.1",
     "@sanity/vision": "^6.2.0",
+    "@types/pngjs": "^6.0.5",
     "@vercel/analytics": "^2.0.1",
     "agentation": "^3.0.2",
     "dialkit": "^1.4.3",
@@ -30,9 +38,13 @@
     "motion": "^12.43.0",
     "next": "^16.2.10",
     "next-sanity": "^13.1.1",
+    "pixelmatch": "^8.0.0",
+    "pngjs": "^7.0.0",
     "posthog-js": "^1.402.3",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.5",
+    "sonner": "^2.0.8",
     "sanity": "^6.3.0",
     "styled-components": "^6.4.3"
   },
@@ -41,10 +53,12 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.1.2",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.2.10",
     "playwright": "^1.52.0",
     "tailwindcss": "^4.1.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "vite": "^8.3.6"
   }
 }
