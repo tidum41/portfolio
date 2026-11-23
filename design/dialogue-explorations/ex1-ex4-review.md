@@ -29,3 +29,6 @@ Sources: `/workspace/dlg-depth-r1-shots/options/ex1-*`, `ex4-*` and `out/ex1-cho
 | Ex4 | **Fold into Levels, as a caption-level idea only** | The chain (count, person, clip) is worth one sentence in Levels if Mudit wants it, carried by the existing hero and clip still. No new figure until a real clip frame exists |
 
 Code is kept, not deleted: `components/dialogue/depth/EvidenceLayer/` (also used by exploration 5's live UI) and the `?ex=1` and `?ex=4` cells. Both stay dev only and are marked Not approved in DECISIONS.md (D4, D5, D9, D10, D14).
+
+## Update, review/dialogue-reset-r1 (Nov 23 2026)
+The `?ex=1` and `?ex=4` cells are cut from the dev lab (`app/dev/dialogue-depth/DepthLab.tsx`), with their storyboards and lift links. `components/dialogue/depth/EvidenceLayer/` stays because exploration 5's LiveFigure renders it. Revert: `git revert` the reset-r1 cut commit.
