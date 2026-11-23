@@ -1,0 +1,46 @@
+/* DenominatorReveal (dev only, awaiting Mudit's OK). Tokens only: styles/dialogue-tokens.css section 10.
+   Gate: npm run check:dialogue-depth. */
+
+.dlg-dx-denom__row { outline: none; }
+.dlg-dx-denom__row:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; border-radius: var(--dp-radius-control); }
+
+/* The lane holds the bar and, for option c, the units in one grid cell, so the row height never changes. */
+.dlg-dx-denom__lane { flex: 1; min-width: 0; display: grid; align-items: center; }
+.dlg-dx-denom__layer { grid-area: 1 / 1; min-width: 0; }
+
+.dlg-dx-denom__track { flex: none; width: var(--dlg-dx-track); min-width: 0; }
+.dlg-dx-denom__bar { width: var(--dlg-dx-fill); }
+.dlg-dx-denom__bar[data-tone="focal"] { background: var(--dp-chart-focal); }
+.dlg-dx-denom__bar[data-tone="mid"] { background: var(--dp-chart-mid); }
+
+/* b rescale, stage 2: the track resizes to its group after the label has cut (Heer and Robertson: stage axis
+   rescaling apart from value changes). A deeper move, so it animates on the system curve. */
+.dlg-dx-denom[data-option="rescale"] .dlg-dx-denom__track {
+  transition: width var(--dlg-motion-deeper-ms) var(--dlg-motion-ease) var(--dlg-motion-stage-gap-ms);
+}
+
+/* c units: one dot per person. The marks are replaced, never morphed (different marks mean different data). */
+.dlg-dx-denom__layer--units {
+  display: flex; flex-wrap: wrap; gap: var(--dlg-depth-unit-gap); align-content: center;
+  visibility: hidden;
+}
+.dlg-dx-denom__unit { width: var(--dlg-depth-unit-size); height: var(--dlg-depth-unit-size); border-radius: var(--dp-radius-bar); background: var(--dlg-depth-unit-empty); }
+.dlg-dx-denom__unit[data-tone="focal"] { background: var(--dp-chart-focal); }
+.dlg-dx-denom__unit[data-tone="mid"] { background: var(--dp-chart-mid); }
+.dlg-dx-denom[data-option="units"][data-phase="people"] .dlg-dx-denom__layer--units { visibility: visible; }
+.dlg-dx-denom[data-option="units"][data-phase="people"] .dlg-dx-denom__layer--bar { visibility: hidden; }
+
+/* The value cell: percent and count share one cell, so the swap reflows nothing. The label cut is instant. */
+.dlg-dx-denom__value { display: grid; width: var(--dlg-depth-value-width); }
+.dlg-dx-denom__v { grid-area: 1 / 1; }
+.dlg-dx-denom[data-phase="rate"] .dlg-dx-denom__v--people,
+.dlg-dx-denom[data-phase="people"] .dlg-dx-denom__v--rate { visibility: hidden; }
+/* TASTE Round 18 item 5: hovering a row swaps its count for its percent in the same cell. */
+.dlg-dx-denom[data-phase="people"] .dlg-dx-denom__row:hover .dlg-dx-denom__v--rate,
+.dlg-dx-denom[data-phase="people"] .dlg-dx-denom__row:focus-visible .dlg-dx-denom__v--rate { visibility: visible; }
+.dlg-dx-denom[data-phase="people"] .dlg-dx-denom__row:hover .dlg-dx-denom__v--people,
+.dlg-dx-denom[data-phase="people"] .dlg-dx-denom__row:focus-visible .dlg-dx-denom__v--people { visibility: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dlg-dx-denom[data-option="rescale"] .dlg-dx-denom__track { transition: none; }
+}

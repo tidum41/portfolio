@@ -14,6 +14,7 @@
 //   figure-class   a figure wrapper in DialogueCaseStudyContent without cs-figure
 //   allowlist      DialogueCaseStudyContent imports a component missing from design/SYSTEM-COMPONENTS.md
 //   thumbnail-card scripts/check-thumbnail-card.mjs (homepage card states cut, incl. its self-test) failed
+//   dialogue-depth scripts/check-dialogue-depth.mjs (depth explorations: tokens, reduced motion, sideways, dev gate) failed
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join, extname, basename } from "node:path";
@@ -176,6 +177,16 @@ if (existsSync(THUMB_GATE)) {
   if (r.status !== 0) {
     const lines = `${r.stdout}${r.stderr}`.split("\n").filter((l) => /\s(seg-|fill|tone-token|raw-color|travel-dev-only)|FAILED|did not fire/.test(l));
     for (const l of lines.length ? lines : ["check:thumbnail-card failed"]) report("scripts/check-thumbnail-card.mjs", 0, "thumbnail-card", l);
+  }
+}
+
+// 5. The depth explorations' gate (tokens, reduced motion, sideways switches, dev gate), self-test included.
+const DEPTH_GATE = new URL("./check-dialogue-depth.mjs", import.meta.url).pathname;
+if (existsSync(DEPTH_GATE)) {
+  const r = spawnSync(process.execPath, [DEPTH_GATE, ROOT], { encoding: "utf8" });
+  if (r.status !== 0) {
+    const lines = `${r.stdout}${r.stderr}`.split("\n").filter((l) => /\s(raw-color|shadow|blur|motion-guard|sideways|duration|lucide|teal|readme|escape-hatch|dev-gate)\s|FAILED|did not fire|good snippet/.test(l));
+    for (const l of lines.length ? lines : ["check:dialogue-depth failed"]) report("scripts/check-dialogue-depth.mjs", 0, "dialogue-depth", l);
   }
 }
 

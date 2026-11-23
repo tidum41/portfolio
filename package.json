@@ -19,6 +19,7 @@
     "check:dialogue-tokens": "node scripts/check-dialogue-tokens.mjs",
     "check:dialogue-system": "node scripts/check-dialogue-system.mjs",
     "check:thumbnail-card": "node scripts/check-thumbnail-card.mjs",
+    "check:dialogue-depth": "node scripts/check-dialogue-depth.mjs",
     "audit:dialogue-ui": "node scripts/audit-dialogue-ui.mjs",
     "audit:dialogue-clip": "node scripts/audit-dialogue-clip.mjs"
   },

@@ -1,0 +1,87 @@
+/* EvidenceLayer (dev only, awaiting Mudit's OK). Tokens only: styles/dialogue-tokens.css section 10.
+   Gate: npm run check:dialogue-depth. Deeper moves animate; sideways switches (225 and 75) never do. */
+
+.dlg-dx-ev { --dlg-dx-ev-height: 28rem; width: 100%; }
+/* The chat panel: separated from the well by its drop shadow (hard rule), the answer elevation step. */
+.dlg-dx-ev__viewport {
+  position: relative; height: var(--dlg-dx-ev-height); overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 12px; padding: 12px;
+  border-radius: var(--dp-radius-card); background: var(--dp-card); box-shadow: var(--dlg-elev-answer-shadow);
+}
+.dlg-dx-ev__viewport > .dlg-grow { margin-top: -12px; }
+.dlg-dx-ev__answer { position: relative; z-index: 0; }
+
+.dlg-dx-ev__people { display: flex; flex-direction: column; gap: var(--space-1); }
+.dlg-dx-ev__head { display: flex; align-items: center; gap: var(--space-1); margin: 0; font-size: var(--dp-chart-label-size); color: var(--dp-ink); }
+.dlg-dx-ev__head-count { margin-left: auto; font-weight: var(--dp-chart-value-focal-weight); }
+.dlg-dx-ev__swatch { width: 8px; height: 8px; border-radius: var(--dp-radius-bar); flex: none; }
+.dlg-dx-ev__swatch[data-tone="focal"] { background: var(--dp-chart-focal); }
+.dlg-dx-ev__swatch[data-tone="mid"] { background: var(--dp-chart-mid); }
+
+/* Rows are live: hover and press change fill only, so nothing shifts. */
+.dlg-dx-ev__row { cursor: pointer; transition: background-color 150ms var(--dlg-motion-ease); }
+.dlg-dx-ev__row:hover { background: var(--dp-warm); }
+.dlg-dx-ev__row:active { background: var(--dp-nav-active-bg); }
+.dlg-dx-ev__row:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 1px; }
+
+/* Sideways: switching 225 and 75 while open swaps the people in place, with no motion (research.md 1, 2, 4, 5). */
+.dlg-dx-ev__people { transition: opacity var(--dlg-motion-sideways-ms) linear; }
+
+/* The sheet. Options layer and header use it; flow uses the shipped Grow instead. */
+.dlg-dx-ev__sheet {
+  padding: 12px;
+  border-radius: var(--dp-radius-card);
+  background: var(--dlg-depth-evidence-surface);
+}
+.dlg-dx-ev__sheet[data-shown="false"] { visibility: hidden; }
+
+/* header: the answer cuts to its bar alone, and the people sit under it on the same plane. Instant. */
+.dlg-dx-ev[data-option="header"] .dlg-dx-ev__sheet { padding: 0; }
+.dlg-dx-ev[data-option="header"] .dlg-dx-ev__sheet[data-shown="false"] { display: none; }
+
+/* layer: one elevation step above the answer, pinned under the bar, so the count never leaves view. */
+.dlg-dx-ev[data-option="layer"] .dlg-dx-ev__sheet {
+  position: absolute;
+  z-index: 1;
+  top: calc(var(--dlg-dx-ev-top, 0px) + var(--space-1));
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  overflow-y: auto;
+  border: 1px solid var(--dlg-depth-evidence-edge);
+  box-shadow: var(--dlg-elev-evidence-shadow);
+  transition-property: opacity, transform, box-shadow, clip-path, visibility;
+  transition-timing-function: var(--dlg-motion-ease);
+  transition-duration: var(--dlg-motion-deeper-ms);
+}
+.dlg-dx-ev[data-option="layer"] .dlg-dx-ev__sheet[data-shown="false"] {
+  transition-duration: var(--dlg-motion-shallower-ms);
+  box-shadow: var(--dlg-elev-answer-shadow);
+}
+/* rise */
+.dlg-dx-ev[data-lift="rise"] .dlg-dx-ev__sheet[data-shown="false"] { opacity: 0; transform: translateY(var(--dlg-elev-evidence-rise)); }
+/* reveal: unclips downward from the bar's edge, the tapped thing is the origin */
+.dlg-dx-ev[data-lift="reveal"] .dlg-dx-ev__sheet { clip-path: inset(0 0 0 0 round var(--dp-radius-card)); }
+.dlg-dx-ev[data-lift="reveal"] .dlg-dx-ev__sheet[data-shown="false"] { clip-path: inset(0 0 100% 0 round var(--dp-radius-card)); }
+/* shadow: lands in place at once, and only its height (the shadow) arrives over time */
+.dlg-dx-ev[data-lift="shadow"] .dlg-dx-ev__sheet { transition-property: box-shadow; }
+
+/* Exploration 4: the clip, the deepest level, opens under the tapped person inside the layer (never a third elevation). */
+.dlg-dx-ev__entry { display: flex; flex-direction: column; }
+.dlg-dx-ev__clip { margin-top: var(--space-1); border-radius: var(--dp-radius-card); overflow: hidden; }
+.dlg-dx-ev__row[data-selected="true"] { background: var(--dp-warm); }
+.dlg-dx-ev__path { margin: 0; font-size: var(--dp-chart-label-size); color: var(--dp-muted); }
+/* zoom: expands from the row above it, the tapped thing is the origin. A deeper move. */
+.dlg-dx-ev__clip[data-motion="zoom"] { transform-origin: 50% 0; animation: dlg-dx-zoom var(--dlg-motion-deeper-ms) var(--dlg-motion-ease) both; }
+@keyframes dlg-dx-zoom { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
+/* Sideways: one person's clip to another's lands at once. */
+.dlg-dx-ev__clip[data-sideways="true"] { animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dlg-dx-ev__clip { animation: none; }
+  /* The shipped Grow has no reduced-motion guard of its own; scope one here rather than edit it. */
+  .dlg-dx-ev .dlg-grow--in, .dlg-dx-ev .dlg-grow--out, .dlg-dx-ev .dlg-grow__inner { animation: none; }
+  .dlg-dx-ev .dlg-grow--out { grid-template-rows: 0fr; }
+  .dlg-dx-ev__sheet, .dlg-dx-ev__row, .dlg-dx-ev__people { transition: none; }
+  .dlg-dx-ev__viewport { scroll-behavior: auto; }
+}

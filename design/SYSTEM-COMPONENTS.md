@@ -55,6 +55,8 @@ A new component needs Mudit's explicit OK before it is built. When he approves o
 - `ChartRankList`
 - `ChartLinePlot`
 
+- `DenominatorReveal` (PENDING Mudit's OK: added in round depth-r1 at the supervising agent's request so exploration 2 can sit in the Data viz section. Built only from ChartVizCard and chart tokens. Revert: remove this line and the figure; see design/dialogue-explorations/STORY-CHANGES.md)
+
 ## Scenarios
 - `HeroChatCard`
 - `HeroStructuredFigure`

@@ -293,6 +293,28 @@
 
   --dp-transcript-scroll-shadow: 0 4px 6px -1px color-mix(in srgb, var(--ds-black) 10%, transparent),
     0 2px 4px -2px color-mix(in srgb, var(--ds-black) 10%, transparent);
+
+  /* 10. Depth explorations (dev only, awaiting Mudit's OK; design/dialogue-explorations/DECISIONS.md).
+   *     Deeper moves animate on the system curve. Sideways switches between
+   *     siblings (225 and 75) never animate: research.md findings 1, 2, 4, 5.
+   *     Elevation follows the hard rule that UI is separated from its background
+   *     by its drop shadow: the answer sits at one step, evidence one step above. */
+  --dlg-motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  --dlg-motion-deeper-ms: 400ms;
+  --dlg-motion-shallower-ms: 240ms;
+  --dlg-motion-sideways-ms: 0ms;
+  --dlg-motion-stage-gap-ms: 160ms;
+  --dlg-elev-answer-shadow: var(--shadow-chat);
+  --dlg-elev-evidence-shadow: 0 1px 2px color-mix(in srgb, var(--ds-stone-900) 12%, transparent),
+    0 14px 32px -10px color-mix(in srgb, var(--ds-stone-900) 30%, transparent);
+  --dlg-elev-evidence-rise: 8px;
+  --dlg-depth-evidence-surface: var(--dp-card);
+  --dlg-depth-evidence-edge: var(--dp-border);
+  --dlg-depth-value-width: 4.75rem;
+  --dlg-depth-unit-size: 6px;
+  --dlg-depth-unit-gap: 2px;
+  --dlg-depth-unit-empty: var(--dp-chart-track);
+  --dlg-depth-proposal-edge: var(--dp-border-strong);
 }
 
 :root {
