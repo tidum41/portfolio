@@ -124,3 +124,9 @@ Written in my own voice so I can explain each one in an interview. Each entry ho
 
 **Decision.** The near-miss title now reads "Two of 300 shoppers said they missed a delivery.", the templates caption is a marked proposal without a list of three, and the thin cutoff has a visible `[PLACEHOLDER]` for its reason. **Why.** MOCK-DATA 4g gives no cause, the old caption was a list of three, and OPEN-QUESTIONS 22 is still open. **Revert.** Restore the earlier strings from git.
 
+
+
+### +N more is counted on the surface that shows the names
+
+**Decision.** `remainingCount(total, shown)` is the group total minus the named people actually shown on that surface. The pill next to Ana and Dev is +223 (225 − 2). The open list and the grouped quote list show four named Friday people, so both say 221 more (225 − 4). Unsure with Mei and Owen is +73 (75 − 2). **Why.** The three figures looked inconsistent, but each one is already consistent with the names it shows. Unifying every surface to one N would miscount the people on screen. **Revert.** Inline the subtractions and drop the helper.
+

@@ -195,6 +195,13 @@ export const ANATOMY_PART_IDS = [
   "followups",
 ] as const;
 
+/** Remaining people on one surface: the group total minus the named people that surface shows.
+ *  A pill next to two names is +223 (225 − 2). A list of four names is 221 more (225 − 4).
+ *  Each surface stays consistent with the names it shows; N is not one global figure. */
+export function remainingCount(total: number, shown: number) {
+  return total - shown;
+}
+
 /* Consult r1. Hearthside mock only (MOCK-DATA.md 4c to 4g). Labelled people on each side; the rest of each side is a +N remainder. */
 export const QUOTE_GROUPS = [
   { id: "friday", label: "Read it as this Friday", count: 225, rows: [...QUOTE_LIST_FRIDAY, ...QUOTE_LIST_NEW] },

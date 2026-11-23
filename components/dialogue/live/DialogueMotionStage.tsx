@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import { AnswerCard, type SideWhich } from "@/components/dialogue/live/AnswerCard";
@@ -13,7 +13,7 @@ import { ArrowUpIcon, ChevronUpIcon, LoaderArcIcon, WaveformIcon } from "@/compo
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
 import { THIN_FLAG, THIN_TIP } from "@/lib/dialogue/product/thinCopy";
-import { ANA_TRANSCRIPT, PARAGRAPH_ANSWER_WALL, PROBLEM_ANSWER, QUOTE_GROUPS, QUOTE_LIST, QUOTE_LIST_FRIDAY } from "@/lib/dialogue/product/sampleData";
+import { ANA_TRANSCRIPT, PARAGRAPH_ANSWER_WALL, PROBLEM_ANSWER, QUOTE_GROUPS, QUOTE_LIST, QUOTE_LIST_FRIDAY, remainingCount } from "@/lib/dialogue/product/sampleData";
 import SyncedTranscript, { type TranscriptRow } from "@/components/dialogue/product/SyncedTranscript";
 import type { MotionDemo } from "@/components/dialogue/motion/stages";
 import { InfoCircleIcon } from "@/components/dialogue/product/icons";
@@ -167,13 +167,13 @@ export function QuoteRow({ q, open, onTap, playSec, transcript }: { q: { partici
 
 function SampleHead({ meta, shown, onCollapse }: { meta: (typeof SAMPLE_META)[SampleWhich]; shown: number; onCollapse: () => void }) {
   return (
-    <p className="dp-side-sample__head dp-text-body">
+    <button type="button" className="dp-side-sample__head dp-text-body" data-target="side-collapse" aria-label={`Collapse the ${meta.count} ${meta.label}`} onClick={onCollapse}>
       <span className="dlg-sample-key" aria-hidden />
       <span className="dlg-sample-head__text"><span className="dp-summary__emph">{shown}</span> <span className="dlg-nowrap">{shown === 1 ? "quote shown," : "quotes shown,"}</span> <span className="dlg-nowrap">picked from the {meta.count}</span> <span className="dlg-nowrap">{meta.who}</span></span>
-      <button type="button" className="dlg-clip-collapse" data-target="side-collapse" data-shown="" aria-label={`Collapse the ${meta.count} ${meta.label}`} onClick={onCollapse}>
+      <span className="dlg-clip-collapse" data-shown="" aria-hidden>
         <ChevronUpIcon />
-      </button>
-    </p>
+      </span>
+    </button>
   );
 }
 
@@ -181,7 +181,7 @@ function SampleHead({ meta, shown, onCollapse }: { meta: (typeof SAMPLE_META)[Sa
    timestamps (the selected one shares the quote card's warm fill), and the quote uses the full panel width. Every part is
    an existing Dialogue element, and there is no coloured edge on the quote. */
 const FRIDAY = SAMPLE_META.friday;
-const TAIL = FRIDAY.count - QUOTE_LIST_FRIDAY.length;
+const TAIL = remainingCount(FRIDAY.count, QUOTE_LIST_FRIDAY.length);
 export function HeroSelection() {
   const [ana, dev] = QUOTE_LIST_FRIDAY;
   const startOf = (t: string) => t.split(/[\u2013-]/)[0];
@@ -206,13 +206,29 @@ export function HeroSelection() {
    Only labelled Hearthside people are listed (QUOTE_GROUPS); the rest of the side is one remainder line, 225 minus the names shown. */
 export function MoreList({ showEnd = false }: { showEnd?: boolean }) {
   const g = QUOTE_GROUPS[0];
-  const left = g.count - g.rows.length;
+  const left = remainingCount(g.count, g.rows.length);
   const rowsRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!showEnd) return;
     const el = rowsRef.current;
     if (!el) return;
-    const pin = () => { el.scrollTop = el.scrollHeight; };
+    const pin = () => {
+      const cards = [...el.querySelectorAll(".dp-clip-quote")] as HTMLElement[];
+      const rest = el.querySelector(".dlg-more-list__rest") as HTMLElement | null;
+      if (cards.length < 2 || !rest) {
+        el.scrollTop = el.scrollHeight;
+        return;
+      }
+      // Live stills may scale this panel; getBoundingClientRect is in screen px, maxHeight/scrollTop are not.
+      const scaleY = el.offsetHeight ? el.getBoundingClientRect().height / el.offsetHeight : 1;
+      const relTop = (node: HTMLElement) =>
+        (node.getBoundingClientRect().top - el.getBoundingClientRect().top) / scaleY + el.scrollTop;
+      const firstVisible = cards[cards.length - 2];
+      const startY = relTop(firstVisible);
+      const padBot = parseFloat(getComputedStyle(el).paddingBottom) || 0;
+      el.style.maxHeight = `${Math.ceil(relTop(rest) + rest.offsetHeight - startY + padBot)}px`;
+      el.scrollTop = Math.round(startY);
+    };
     pin();
     const id = requestAnimationFrame(pin);
     return () => cancelAnimationFrame(id);
@@ -237,7 +253,7 @@ export function MoreList({ showEnd = false }: { showEnd?: boolean }) {
 function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse, withTranscript = false }: { withTranscript?: boolean; open: boolean; which?: SampleWhich; playing: boolean; onPlay?: () => void; playSec?: number; onCollapse?: () => void }) {
   const meta = SAMPLE_META[which];
   const rows = meta.rows;
-  const more = meta.count - rows.length;
+  const more = remainingCount(meta.count, rows.length);
   const lead = rows[0];
   const collapse = onCollapse ?? (() => (window as unknown as { __dlg: { side: (b: SideWhich) => void } }).__dlg.side(false));
   return (

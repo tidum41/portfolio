@@ -4460,5 +4460,38 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* Grouped quote list: a swatch, the group name and its count; the 75 swatch is stone, the 225 swatch is the one cherry. */
 .dlg-qgroup { display: flex; flex-direction: column; gap: 8px; }
 .dlg-qgroup + .dlg-qgroup { margin-top: 12px; }
-.dlg-qgroup[data-group="unsure"] .dlg-sample-key { background: var(--dp-border-strong); }
+.dlg-qgroup[data-group="unsure"] .dlg-sample-key { background: var(--dp-border-strong); } /* same token as the count card's Unsure legend (data-tone="neutral") */
 .dlg-qgroup[data-group="friday"] .dlg-sample-key { background: var(--dp-chart-focal); }
+
+
+/* consult-r1 fix-r1 visual follow-up */
+/* hideHeader shells have no title hairline, so the 48px body offset (hairline to first message) does not apply. */
+.dp-study-chat.dp-study-chat--no-head:not(.dp-study-chat--hero) .dp-study-chat__body {
+  padding-top: 16px; /* same top pad as .dlg-live stills and hero body */
+}
+
+/* The "N quotes shown" row is the collapse control: pointer and the same warm hover as the chevron. */
+.dlg-live .dp-side-sample__head {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--dp-radius-control);
+}
+.dlg-live .dp-side-sample__head:hover {
+  background: var(--dp-warm);
+}
+.dlg-live .dp-side-sample__head:focus-visible {
+  outline: 2px solid var(--dp-brand);
+  outline-offset: 2px;
+}
+.dlg-live .dp-side-sample__head .dlg-clip-collapse,
+.dlg-live .dp-side-sample__head:hover .dlg-clip-collapse,
+.dlg-live .dp-side-sample__head .dlg-clip-collapse:hover {
+  background: transparent;
+  cursor: inherit;
+}

@@ -36,6 +36,7 @@ export default function StudyChatShell({
         dialogueProductFontClassName,
         hero ? "dp-study-chat--hero" : "",
         compact ? "dp-study-chat--compact" : "",
+        hideHeader ? "dp-study-chat--no-head" : "",
       ]
         .filter(Boolean)
         .join(" ")}
