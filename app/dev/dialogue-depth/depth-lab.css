@@ -1,0 +1,25 @@
+/* Dev page chrome only (not product UI). */
+.dlg-lab { padding: 24px; font-family: system-ui, sans-serif; color: var(--foreground, inherit); }
+.dlg-lab__bar { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; margin-bottom: 20px; }
+.dlg-lab__title { margin: 0; font-size: 14px; font-weight: 600; }
+.dlg-lab__nav { display: flex; gap: 12px; font-size: 13px; }
+.dlg-lab__nav [aria-current] { font-weight: 700; text-decoration: underline; }
+.dlg-lab__grid { display: grid; gap: 24px; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); }
+.dlg-lab__grid[data-count="1"] { --cols: 1; max-width: 560px; }
+.dlg-lab__cell { min-width: 0; }
+.dlg-lab__name { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+.dlg-lab__differs { margin: 0 0 10px; font-size: 12px; line-height: 1.4; opacity: .75; min-height: 2.8em; }
+.dlg-lab__panel { width: 100%; max-width: 448px; margin: 0 auto; }
+.dlg-lab__proposals { display: grid; gap: 12px; max-width: 720px; margin-top: 16px; }
+.dlg-lab__proposal { padding: 12px 16px; border: 1px dashed var(--dlg-depth-proposal-edge); border-radius: 8px; }
+.dlg-lab__tag { margin: 0 0 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.dlg-lab__old { margin: 0 0 4px; font-size: 13px; opacity: .7; }
+.dlg-lab__new { margin: 0; font-size: 14px; }
+.dlg-lab__panel--pad { padding: 24px 0; }
+.dlg-lab__placeholder { margin: 8px 0 0; font-size: 12px; padding: 6px 8px; border: 1px dashed var(--dlg-depth-proposal-edge); border-radius: 6px; }
+.dlg-lab__steps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.dlg-lab__steps button { font: inherit; font-size: 12px; min-height: 32px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--dp-border); background: transparent; cursor: pointer; }
+.dlg-lab__steps button[aria-pressed="true"] { background: var(--dp-nav-active-bg); }
+@media (max-width: 720px) { .dlg-lab { padding: 12px; } .dlg-lab__grid { --cols: 1; } }
+.dlg-lab__stage { width: 480px; }
+.dlg-lab__stage .dlg-lab__panel--pad { padding: 24px 16px; }

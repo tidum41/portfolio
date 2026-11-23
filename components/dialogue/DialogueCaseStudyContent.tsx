@@ -7,6 +7,8 @@ import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import DialogueChartLibrary from "@/components/dialogue/DialogueChartLibrary";
 import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
+import DenominatorReveal from "@/components/dialogue/depth/DenominatorReveal/DenominatorReveal";
+import { BY_GROUP, BY_GROUP_TITLE } from "@/components/dialogue/depth/hearthside";
 import StaticFigure from "@/components/dialogue/StaticFigure";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import DialogueDemoVideo, { DialogueDemoStill } from "@/components/dialogue/motion/DialogueDemoVideo";
@@ -261,6 +263,14 @@ export function DialogueCaseStudyContent({
               <CaseStudyBody>
                 Each template is adapted from IBM Carbon and counts people out of their own group, since two groups of different size look alike as percents.
               </CaseStudyBody>
+              {/* Depth r3, exploration 2 hover option a, counts at rest and the percent on hover (TASTE Round 18 item 5) (design/dialogue-explorations/ex2-denominator-reveal.md): percents for two
+                  groups of different size, then each group out of its own size. Caption is Mudit's existing verdict line. */}
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="system">
+                  <DenominatorReveal option="hover-counts" title={BY_GROUP_TITLE} groups={BY_GROUP} />
+                </DialogueRachelFrame>
+              </figure>
+              <Caption>Percents make 64% and 70% look alike, so each row counts people out of its own group: 9 of 14 new shoppers, 88 of 125 repeat. Illustrative data.</Caption>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary templates />
               </figure>

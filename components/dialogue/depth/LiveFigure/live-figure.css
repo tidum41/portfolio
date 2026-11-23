@@ -1,0 +1,38 @@
+/* LiveFigure (dev only, awaiting Mudit's OK). Tokens only: styles/dialogue-tokens.css section 10.
+   Gate: npm run check:dialogue-depth. Sits inside .dialogue-rachel-frame, which anchors the control to the well. */
+
+.dlg-dx-live { position: static; }
+.dlg-dx-live__stage { position: relative; padding: calc(var(--dlg-depth-hit-min) + 16px) 24px 24px; }
+.dlg-dx-live[data-mode="live"] { position: relative; }
+
+/* Hit areas: the bar sides reach 44px tall (WCAG 2.5.5, Apple HIG) with no visual change; the bar is 24px. */
+.dlg-dx-live .dlg-live__side { top: calc((24px - var(--dlg-depth-hit-min)) / 2); bottom: calc((24px - var(--dlg-depth-hit-min)) / 2); }
+
+/* control: on the well, top left, the same family as the take's play button (top right). Never on the product UI. */
+.dlg-dx-live__control {
+  position: absolute; top: 8px; left: 8px; z-index: 10;
+  min-height: var(--dlg-depth-hit-min); padding: 0 16px; border-radius: var(--dp-radius-pill);
+  border: 1px solid var(--dlg-depth-control-edge); background: var(--dlg-depth-control-bg);
+  color: var(--dp-ink); font: inherit; font-size: var(--dp-chart-label-size); cursor: pointer;
+  transition: background-color 150ms var(--dlg-motion-ease);
+}
+.dlg-dx-live__control:hover { background: var(--dp-warm); }
+.dlg-dx-live__control:active { background: var(--dp-nav-active-bg); }
+.dlg-dx-live__control:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
+
+/* ghost: a demo pointer, like the cursor in the recorded takes. One deeper move to the 225, a press, then it leaves. */
+.dlg-dx-live__ghost {
+  position: absolute; z-index: 5; left: 0; top: 0; width: 20px; height: 20px; margin: calc(-1 * 20px / 2) 0 0 calc(-1 * 20px / 2);
+  border-radius: var(--dp-radius-pill);
+  background: var(--dlg-depth-ghost-fill);
+  border: 2px solid var(--dlg-depth-ghost-edge);
+  pointer-events: none;
+  transform: translate(var(--gx), var(--gy));
+  transition: transform var(--dlg-motion-deeper-ms) var(--dlg-motion-ease), opacity var(--dlg-motion-fade-ms) linear, scale var(--dlg-motion-fade-ms) var(--dlg-motion-ease);
+}
+.dlg-dx-live__ghost[data-phase="enter"], .dlg-dx-live__ghost[data-phase="leave"] { opacity: 0; }
+.dlg-dx-live__ghost[data-phase="press"] { scale: 0.8; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dlg-dx-live__ghost, .dlg-dx-live__control { transition: none; }
+}

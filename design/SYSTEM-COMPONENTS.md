@@ -55,6 +55,8 @@ A new component needs Mudit's explicit OK before it is built. When he approves o
 - `ChartRankList`
 - `ChartLinePlot`
 
+- `DenominatorReveal` (PENDING Mudit's OK: added in round depth-r1 at the supervising agent's request so exploration 2 can sit in the Data viz section. Built only from ChartVizCard and chart tokens. Revert: remove this line and the figure; see design/dialogue-explorations/STORY-CHANGES.md)
+
 ## Scenarios
 - `HeroChatCard`
 - `HeroStructuredFigure`
@@ -74,3 +76,4 @@ A new component needs Mudit's explicit OK before it is built. When he approves o
 
 ## Not allowed without approval
 - Round P "hearthside" figures (BeforeChatFigure, ScopePairFigure, CountsOpenFigure, ComparisonRowsFigure, LevelsToggleFigure, ClipsFigure, ThinPlanFigure, HeroLayeredFigure, QuoteCardH, HearthsideViewport). Their content can be rebuilt from the components above.
+- PENDING Mudit's OK, dev page only (`/dev/dialogue-depth`), not importable on /dialogue until moved up into the allowlist: `EvidenceLayer` (explorations 1 and 4), `ChartChosen` (exploration 3), `LiveFigure` (exploration 5). Each lives in components/dialogue/depth/<Name>/ with a README and is gated by `npm run check:dialogue-depth`.
