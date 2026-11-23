@@ -8,7 +8,9 @@ import { useSearchParams } from "next/navigation";
 import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 import DenominatorReveal, { type DenominatorRevealOption, type DenominatorRevealPhase } from "@/components/dialogue/depth/DenominatorReveal/DenominatorReveal";
 import EvidenceLayer, { type ClipMotion, type EvidenceLayerOption, type EvidenceLift, type EvidenceSide } from "@/components/dialogue/depth/EvidenceLayer/EvidenceLayer";
-import { BY_GROUP, BY_GROUP_TITLE, FRIDAY_FINDING, FRIDAY_QUESTION, FRIDAY_SIDES, FRIDAY_TOTAL } from "@/components/dialogue/depth/hearthside";
+import ChartChosen, { type ChartChooser, type ChartMorph } from "@/components/dialogue/depth/ChartChosen/ChartChosen";
+import LiveFigure, { type LiveSignal } from "@/components/dialogue/depth/LiveFigure/LiveFigure";
+import { CHOSEN_STEPS, BY_GROUP, BY_GROUP_TITLE, FRIDAY_FINDING, FRIDAY_QUESTION, FRIDAY_SIDES, FRIDAY_TOTAL } from "@/components/dialogue/depth/hearthside";
 import "@/components/dialogue/product/dialogue-product.css";
 import "@/components/dialogue/depth/DenominatorReveal/denominator-reveal.css";
 import "@/components/dialogue/depth/EvidenceLayer/evidence-layer.css";
@@ -69,6 +71,61 @@ function Ex4Cell({ k, auto }: { k: OptKey; auto: boolean }) {
           <EvidenceLayer option="layer" lift="rise" question={FRIDAY_QUESTION} finding={FRIDAY_FINDING} total={FRIDAY_TOTAL} sides={FRIDAY_SIDES}
             open={open} onOpen={(s) => { setOpen(s); setPerson(null); }} clip={{ person, onPerson: setPerson, motion: o.motion }} />
         </div>
+      </DialogueRachelFrame>
+    </section>
+  );
+}
+
+const EX3: Record<OptKey, { morph: ChartMorph; name: string; differs: string }> = {
+  a: { morph: "cut", name: "a. Cut", differs: "The question line changes and the card swaps whole, at once. Height jumps." },
+  b: { morph: "constancy", name: "b. Marks travel (object constancy)", differs: "One set of marks: the bar's segments travel into rows, then shrink into the flag. 400ms." },
+  c: { morph: "staged", name: "c. Staged fade", differs: "Old marks fade (110ms), then the card resizes (240ms) while new rows fade in 20ms apart. About 350ms." },
+};
+const CHOOSER_NOTE: Record<ChartChooser, string> = {
+  model: "[PLACEHOLDER] Who picks the chart in real Dialogue is open (OQ 13, 25). This view: chooser = model, the template is the step's model pick.",
+  rule: "[PLACEHOLDER] Who picks the chart in real Dialogue is open (OQ 13, 25). This view: chooser = rule, answerLayout (two groups with short labels keep the bar, else rows) and under 3 people gets the flag.",
+};
+const EX3_STEP_MS = 2200;
+
+function Ex3Cell({ k, chooser, auto }: { k: OptKey; chooser: ChartChooser; auto: boolean }) {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    if (!auto) return;
+    const t = setInterval(() => setStep((n) => (n + 1) % CHOSEN_STEPS.length), EX3_STEP_MS);
+    return () => clearInterval(t);
+  }, [auto]);
+  const o = EX3[k];
+  return (
+    <section className="dlg-lab__cell" data-ex="3" data-opt={k}>
+      <h2 className="dlg-lab__name">{o.name}</h2>
+      <p className="dlg-lab__differs">{o.differs}</p>
+      <DialogueRachelFrame tone="system">
+        <div className="dlg-lab__panel dlg-lab__panel--pad">
+          <ChartChosen chooser={chooser} morph={o.morph} steps={CHOSEN_STEPS} step={step} />
+        </div>
+      </DialogueRachelFrame>
+      <p className="dlg-lab__placeholder">{CHOOSER_NOTE[chooser]}</p>
+      <nav className="dlg-lab__steps">{CHOSEN_STEPS.map((st, i) => <button key={st.question} type="button" aria-pressed={i === step} onClick={() => setStep(i)}>{st.question}</button>)}</nav>
+    </section>
+  );
+}
+
+const EX5: Record<"a" | "b", { signal: LiveSignal; name: string; differs: string }> = {
+  a: { signal: "control", name: "a. Container control", differs: "The take plays. A control on the well (top left, like the play button) swaps in the live UI." },
+  b: { signal: "ghost", name: "b. First-view demo tap", differs: "The live UI is the default. On first view a demo pointer taps 225 once, then hands over." },
+};
+/* Proposed copy for the control (STORY-CHANGES.md). Dev only. */
+const CONTROL_LABELS = { live: "Try it", take: "Watch the take" };
+
+function Ex5Cell({ k }: { k: "a" | "b" }) {
+  const o = EX5[k];
+  return (
+    <section className="dlg-lab__cell" data-ex="5" data-opt={k}>
+      <h2 className="dlg-lab__name">{o.name}</h2>
+      <p className="dlg-lab__differs">{o.differs}</p>
+      <DialogueRachelFrame tone="solution">
+        <LiveFigure signal={o.signal} take={{ src: "/dialogue/motion/live-side.mp4", poster: "/dialogue/motion/live-side.jpg", label: "Tapping 75 swaps the 225 shoppers for the 75 unsure, and tapping 225 swaps them back" }}
+          question={FRIDAY_QUESTION} finding={FRIDAY_FINDING} total={FRIDAY_TOTAL} sides={FRIDAY_SIDES} controlLabels={CONTROL_LABELS} />
       </DialogueRachelFrame>
     </section>
   );
@@ -137,7 +194,8 @@ function Ex2Cell({ k }: { k: OptKey }) {
 export default function DepthLab() {
   const params = useSearchParams();
   const rawEx = params.get("ex");
-  const ex = rawEx === "1" ? 1 : rawEx === "4" ? 4 : 2;
+  const ex = rawEx === "1" ? 1 : rawEx === "3" ? 3 : rawEx === "4" ? 4 : rawEx === "5" ? 5 : 2;
+  const chooser: ChartChooser = params.get("chooser") === "model" ? "model" : "rule";
   const rawOpt = params.get("opt");
   const only = KEYS.find((k) => k === rawOpt);
   const rawLift = params.get("lift");
@@ -166,22 +224,25 @@ export default function DepthLab() {
       </main>
     );
   }
-  const keys = only ? [only] : KEYS;
+  const keys = only ? [only] : ex === 5 ? (["a", "b"] as const) : KEYS;
   return (
     <main className="dialogue-product-root dlg-lab" data-ex={ex}>
       <header className="dlg-lab__bar">
-        <p className="dlg-lab__title">Dialogue depth, exploration {ex === 2 ? "2: denominator reveal" : ex === 4 ? "4: zoom from claim to moment" : "1: evidence layer"} (dev only, awaiting Mudit&rsquo;s OK)</p>
+        <p className="dlg-lab__title">Dialogue depth, exploration {ex === 2 ? "2: denominator reveal" : ex === 3 ? "3: watch the chart get chosen" : ex === 5 ? "5: one live figure" : ex === 4 ? "4: zoom from claim to moment" : "1: evidence layer"} (dev only, awaiting Mudit&rsquo;s OK)</p>
         <nav className="dlg-lab__nav">
           <a href="?ex=2">Ex 2</a>
           <a href="?ex=1">Ex 1</a>
+          <a href="?ex=3">Ex 3</a>
           <a href="?ex=4">Ex 4</a>
+          <a href="?ex=5">Ex 5</a>
+          {ex === 3 ? (["rule", "model"] as const).map((c) => <a key={c} href={`?ex=3&chooser=${c}${only ? `&opt=${only}` : ""}`} aria-current={c === chooser || undefined}>chooser {c}</a>) : null}
           <a href="?ex=story">Story proposals</a>
           {ex === 1 ? LIFTS.map((l) => <a key={l} href={`?ex=1&lift=${l}${only ? `&opt=${only}` : ""}`} aria-current={l === lift || undefined}>lift {l}</a>) : null}
           {ex === 2 ? <button type="button" onClick={() => setRun((r) => r + 1)}>Replay</button> : null}
         </nav>
       </header>
       <div className="dlg-lab__grid" data-count={keys.length}>
-        {keys.map((k) => (ex === 2 ? <Ex2Cell key={`${k}-${run}`} k={k} /> : ex === 4 ? <Ex4Cell key={k} k={k} auto={auto} /> : <Ex1Cell key={k} k={k} lift={lift} auto={auto} />))}
+        {keys.map((k) => (ex === 3 ? <Ex3Cell key={k} k={k} chooser={chooser} auto={auto} /> : ex === 5 ? <Ex5Cell key={k} k={k === "c" ? "b" : k} /> : ex === 2 ? <Ex2Cell key={`${k}-${run}`} k={k} /> : ex === 4 ? <Ex4Cell key={k} k={k} auto={auto} /> : <Ex1Cell key={k} k={k} lift={lift} auto={auto} />))}
       </div>
     </main>
   );

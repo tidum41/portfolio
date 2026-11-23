@@ -15,3 +15,9 @@
 .dlg-lab__tag { margin: 0 0 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
 .dlg-lab__old { margin: 0 0 4px; font-size: 13px; opacity: .7; }
 .dlg-lab__new { margin: 0; font-size: 14px; }
+.dlg-lab__panel--pad { padding: 24px 0; }
+.dlg-lab__placeholder { margin: 8px 0 0; font-size: 12px; padding: 6px 8px; border: 1px dashed var(--dlg-depth-proposal-edge); border-radius: 6px; }
+.dlg-lab__steps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.dlg-lab__steps button { font: inherit; font-size: 12px; min-height: 32px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--dp-border); background: transparent; cursor: pointer; }
+.dlg-lab__steps button[aria-pressed="true"] { background: var(--dp-nav-active-bg); }
+@media (max-width: 720px) { .dlg-lab { padding: 12px; } .dlg-lab__grid { --cols: 1; } }

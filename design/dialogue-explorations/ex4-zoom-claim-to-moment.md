@@ -25,8 +25,8 @@ Chosen: c. DECISIONS D9 and D10.
 - Sideways (Ana's clip to Dev's): lands at once in every option.
 - Reduced motion: no animation, scrolls jump.
 
-## Known gap
-Closing a clip in c cuts (the Grow unmounts with its row's clip). A folding close would need the Grow kept mounted per row. Left for the next round.
+## Close (fixed in round 2)
+Closing a clip in c folds back with the shipped Grow on `--dlg-motion-shallower-ms` (240ms). A clip that replaced another opens at once but still folds on close. Strip: `/workspace/dlg-depth-r1-shots/out/ex4-fold-strip.png`. DECISIONS D14.
 
 ## Clips and frames
 - Options: `/workspace/dlg-depth-r1-shots/options/ex4-opt-{a,b,c}.mp4` and sheets, `ex4-all-ana-clip.png`

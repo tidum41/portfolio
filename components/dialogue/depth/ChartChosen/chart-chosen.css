@@ -1,0 +1,56 @@
+/* ChartChosen (dev only, awaiting Mudit's OK). Tokens only: styles/dialogue-tokens.css section 10.
+   Gate: npm run check:dialogue-depth. */
+
+.dlg-dx-chosen__panel {
+  display: flex; flex-direction: column; gap: 12px; padding: 12px;
+  border-radius: var(--dp-radius-card); background: var(--dp-card); box-shadow: var(--dlg-elev-answer-shadow);
+}
+.dlg-dx-chosen__box { overflow: hidden; }
+.dlg-dx-chosen[data-morph="constancy"] .dlg-dx-chosen__box { transition: height var(--dlg-motion-deeper-ms) var(--dlg-motion-ease); }
+.dlg-dx-chosen[data-morph="staged"] .dlg-dx-chosen__box { transition: height var(--dlg-motion-resize-ms) var(--dlg-motion-ease); }
+
+/* c staged: fade the old marks out, then the new ones in, rows staggered (Carbon choreography). */
+.dlg-dx-chosen[data-morph="staged"] .dlg-dx-chosen__body { transition: opacity var(--dlg-motion-fade-ms) linear; }
+.dlg-dx-chosen[data-morph="staged"][data-phase="out"] .dlg-dx-chosen__body { opacity: 0; }
+.dlg-dx-chosen[data-morph="staged"][data-phase="in"] .dlg-dx-chosen__body .dp-chart-bars__row,
+.dlg-dx-chosen[data-morph="staged"][data-phase="in"] .dlg-dx-chosen__body .dp-chart-stack,
+.dlg-dx-chosen[data-morph="staged"][data-phase="in"] .dlg-dx-chosen__body .dp-low-signal {
+  animation: dlg-dx-chosen-in var(--dlg-motion-fade-ms) linear both;
+}
+.dlg-dx-chosen[data-morph="staged"][data-phase="in"] .dp-chart-bars__row:nth-child(2) { animation-delay: calc(var(--dlg-motion-stagger-ms)); }
+.dlg-dx-chosen[data-morph="staged"][data-phase="in"] .dp-chart-bars__row:nth-child(3) { animation-delay: calc(2 * var(--dlg-motion-stagger-ms)); }
+.dlg-dx-chosen[data-morph="staged"][data-phase="in"] .dp-chart-bars__row:nth-child(4) { animation-delay: calc(3 * var(--dlg-motion-stagger-ms)); }
+.dlg-dx-chosen[data-morph="staged"][data-phase="in"] .dp-chart-bars__row:nth-child(5) { animation-delay: calc(4 * var(--dlg-motion-stagger-ms)); }
+@keyframes dlg-dx-chosen-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* b constancy: one set of marks. Ranked rows keep a label column and a value column, as ChartBarList does. */
+.dlg-dx-chosen__plot { position: relative; --lx: 0px; --rx: 0px; min-height: 48px; }
+.dlg-dx-chosen__plot[data-kind="ranked"] { --lx: calc(var(--dp-chart-label-width) + var(--dp-chart-gutter)); --rx: calc(var(--dp-chart-value-width) + var(--dp-chart-gutter)); min-height: calc(5 * 26px - 4px); }
+.dlg-dx-chosen__plot[data-kind="flag"] { min-height: 24px; }
+.dlg-dx-chosen__mark {
+  position: absolute; border-radius: var(--dp-radius-bar);
+  left: calc(var(--lx) + var(--x) * (100% - var(--lx) - var(--rx)) / 100);
+  width: calc(var(--w) * (100% - var(--lx) - var(--rx)) / 100);
+  top: var(--y); height: var(--h);
+  transition-property: left, width, top, height, opacity;
+  transition-duration: var(--dlg-motion-deeper-ms);
+  transition-timing-function: var(--dlg-motion-ease);
+}
+.dlg-dx-chosen__mark[data-on="false"] { opacity: 0; }
+.dlg-dx-chosen__mark[data-tone="focal"] { background: var(--dp-chart-focal); }
+.dlg-dx-chosen__mark[data-tone="mid"] { background: var(--dp-chart-mid); }
+.dlg-dx-chosen__mark[data-tone="soft"] { background: var(--dp-chart-soft); }
+.dlg-dx-chosen__plot[data-kind="split"] .dlg-dx-chosen__mark:not(:first-child) { border-left: 2px solid var(--dp-card); }
+/* Labels are not shared between templates, so they fade in once the marks land. */
+.dlg-dx-chosen__labels { animation: dlg-dx-chosen-in var(--dlg-motion-fade-ms) linear var(--dlg-motion-deeper-ms) both; font-size: var(--dp-chart-label-size); color: var(--dp-chart-label-color); }
+.dlg-dx-chosen__labels b { font-weight: var(--dp-chart-value-weight); color: var(--dp-chart-value-color); }
+.dlg-dx-chosen__labels [data-focal] b, .dlg-dx-chosen__labels b[data-focal] { color: var(--dp-chart-focal); font-weight: var(--dp-chart-value-focal-weight); }
+.dlg-dx-chosen__split-labels { position: absolute; top: calc(24px + 6px); left: 0; right: 0; display: flex; justify-content: space-between; }
+.dlg-dx-chosen__row-label { position: absolute; left: 0; right: 0; top: var(--y); display: flex; justify-content: space-between; line-height: 18px; }
+.dlg-dx-chosen__row-label > span { width: var(--dp-chart-label-width); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dlg-dx-chosen__row-label > b { width: var(--dp-chart-value-width); text-align: right; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dlg-dx-chosen__box, .dlg-dx-chosen__body, .dlg-dx-chosen__mark { transition: none; }
+  .dlg-dx-chosen__labels, .dlg-dx-chosen__body * { animation: none; }
+}

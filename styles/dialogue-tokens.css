@@ -304,6 +304,16 @@
   --dlg-motion-shallower-ms: 240ms;
   --dlg-motion-sideways-ms: 0ms;
   --dlg-motion-stage-gap-ms: 160ms;
+  /* Exploration 3 (staged template change): fade out, resize the card, fade in, inside Carbon's 500ms choreography budget. */
+  --dlg-motion-fade-ms: 110ms;
+  --dlg-motion-resize-ms: 240ms;
+  --dlg-motion-stagger-ms: 20ms;
+  /* Exploration 5 (live figure): the demo pointer, and the container control that sits on the well, never on the UI. */
+  --dlg-depth-ghost-fill: color-mix(in srgb, var(--dp-ink) 22%, transparent);
+  --dlg-depth-ghost-edge: var(--dp-card);
+  --dlg-depth-control-bg: var(--dlg-play-bg);
+  --dlg-depth-control-edge: var(--dlg-figure-hairline);
+  --dlg-depth-hit-min: 44px;
   --dlg-elev-answer-shadow: var(--shadow-chat);
   --dlg-elev-evidence-shadow: 0 1px 2px color-mix(in srgb, var(--ds-stone-900) 12%, transparent),
     0 14px 32px -10px color-mix(in srgb, var(--ds-stone-900) 30%, transparent);

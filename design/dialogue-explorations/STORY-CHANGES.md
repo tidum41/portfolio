@@ -21,3 +21,14 @@ Mudit writes the story. Structural changes and figures are logged here with a re
 | P3 | Problem shows only the hidden count | One figure, "Many found" marked | Second symptom: the comparison that pooled counts hide (P6), drawn as the 64% and 70% bars alone. The misattributed quote (P4) waits on OQ "when were the before gaps observed" | Comparison is the decision most questions are about, and its numbers already exist |
 | P4 | Levels h2 claims "too slow", the take shows lost place | "Every level at once was too slow, so depth became optional" | "Every level at once lost the count, so depth became optional" | The proof is spatial. Mudit's words (Oct 28) say "not feasible and efficient", so he may prefer to keep "slow". His call |
 | P5 | Speed has no visual proof | (text only) | A hops figure: the before path to a person (section page, then quote modal) beside one tap on the bar. Hop count [PLACEHOLDER] until PLATFORM "a few steps away" is confirmed. No timing numbers | Shows speed as fewer steps, with nothing invented |
+
+## Round 2 proposals (dev page only, never on /dialogue)
+
+| # | Where | Old | Proposed | Why |
+|---|---|---|---|---|
+| P6 | Exploration 5 container control (live mode off) | (none) | "Try it" | The control needs a label. Two words, sentence case. Mudit writes the final copy |
+| P7 | Exploration 5 container control (live mode on) | (none) | "Watch the take" | Returns to the recording |
+| P8 | Exploration 3 framing under the figure | (none) | [PLACEHOLDER] until OQ 13 and 25 close. If the model picks: "The model picks the template from the question." If a rule picks: "A rule I wrote picks the template from the answer's shape." | The figure works under either answer, so only this line changes |
+| P9 | Speed break (ANALYSIS section 3) | (text only) | Exploration 3 as the speed figure: one card that answers three questions in the right shape, with no re-asking. No timing numbers | Shows speed as the right shape first time, nothing invented |
+
+No new copy went on /dialogue in round 2.

@@ -116,7 +116,7 @@ Quotes below are verbatim from pages fetched on 2026-11-22 (Sources, end of file
 - NN/g: "the more frequent the animation, the more subtle and shorter you’ll want it to be."
 - NN/g response times: "0.1 second is about the limit for having the user feel that the system is reacting instantaneously".
 - Carbon gives button and toggle micro-interactions `duration-fast-01` 70ms.
-- research.md findings 1 to 5 reach the same answer for the homepage card.
+- design/dialogue-explorations/research-selection-motion.md findings 1 to 5 reach the same answer for the homepage card.
 
 **Choice.** `--dlg-motion-sideways-ms: 0ms`. The sheet stays up and only its people swap. check:dialogue-depth fails any sideways selector over 100ms, and fails the token above 100ms.
 
@@ -177,3 +177,69 @@ Emil Kowalski's rule from CLAUDE.md: enforce the system in code. `scripts/check-
 **Rejected.** a scales the clip while the layer scrolls, so two things move at once, and it adds a new keyframe the system does not have. b keeps a written trail but nothing on screen shows where the clip came from. Its path line could join c later if Mudit wants the trail in words.
 
 **Frames.** `options/ex4-opt-{a,b,c}-sheet.png`, `options/ex4-all-ana-clip.png`. Chosen: `out/ex4-chosen-c-grow.mp4`, `out/ex4-chosen-c-reduced-motion.mp4`.
+
+---
+
+## D11. Exploration 3: how the card changes template (round 2, 2026-11-22)
+
+**Question.** One card answers three questions in turn: Split (225 and 75 of 300), Ranked (top five asks), Flag (2 of 300). How does it reshape?
+
+**Options** (`?ex=3`):
+- a. Cut. The question line changes and the card swaps whole. Height jumps.
+- b. Marks travel (object constancy). One set of marks: the bar's segments travel into the ranked rows, then shrink into the flag (400ms).
+- c. Staged fade. Old marks fade (110ms), then the card resizes (240ms) while new rows fade in 20ms apart. About 350ms.
+
+**Evidence.**
+- Heer and Robertson 2007, on semantic correspondence: "marks representing specific data points should not be reused to depict different data points across a transition. Thus some data schema changes should involve the removal and addition of marks even if the data graphic type remains unchanged." Each question here has different data, so b's 225 segment becoming "Show an exact calendar date" claims a link that does not exist.
+- Heer and Robertson: "If objects occlude each other during a transition, they will be more difficult to track". In b the 75 segment passes over the 225 mid-move (`options/ex3-morph-strip-b-top-c-bottom.png`, top row).
+- Heer and Robertson: "Use staging for complex transitions." c removes, resizes, then adds.
+- Carbon choreography: "staggering the entrance of table content by 20 ms significantly reduces the cognitive load" and "total time is still within 500 ms". Carbon tokens: `duration-fast-02` 110ms (fade), `duration-moderate-02` 240ms (expansion).
+- Material (container transform): "This pattern creates a visible connection between two UI elements." The card is the persistent container. Its contents are not.
+- NN/g: "Motion can be used to indicate that the interface switched to a different state". In a, the height jump gives no such cue.
+
+**Choice: c.** The card persists and visibly adapts, and no mark pretends to be a different data point.
+
+**Rejected.** b is the most striking, and it is the one the research says misleads. It stays in dev as the cautionary option. a is honest but reads as three pictures, which is the catalog problem ANALYSIS names.
+
+**Chooser.** `chooser: "model" | "rule"` decides the template (`rule` runs answerLayout plus the under-3 flag; `model` reads each step's `modelPick`). The dev page shows the framing as a visible [PLACEHOLDER]. Neither is asserted (OQ 13, 25).
+
+**Frames.** `options/ex3-opt-{a,b,c}.mp4` and sheets, `options/ex3-all-step0.png`, `options/ex3-morph-strip-b-top-c-bottom.png`. Chosen: `out/ex3-chosen-c-staged.mp4`, `out/ex3-chosen-c-reduced-motion.mp4`.
+
+## D12. Exploration 5: how the figure says it can be touched
+
+**Options** (`?ex=5`):
+- a. Container control. The take plays, as on the page today. A 44px pill on the well (top left, the play button's family) swaps in the live UI and back.
+- b. First-view demo tap. The live UI is the default. On first view a demo pointer taps 225 once, holds the open layer, closes it and leaves. Any real touch ends it.
+
+**Evidence.**
+- NN/g (flat UI): "Many modern UIs have ripped out the perceptible cues that users rely on to understand what is clickable." A live figure that looks like the takes around it has no cue at all.
+- NN/g (clickable elements): "interactive components must retain sufficient cues to suggest clickability."
+- NN/g (instructional overlays): "users tend to dismiss them quickly and do not read thoroughly", and "Presenting hints one-by-one, at the right moment, makes it a lot easier for users to understand and learn instructions." This is the case for b: one demonstration, in context.
+- TASTE hard rule: video controls live on the container, never on the product UI. a follows the existing pattern exactly. b draws a pointer over the product UI (as the takes do).
+- ANALYSIS section 4 item 5: "A live figure that looks like a video confuses people. Mark it with the existing container-level control pattern".
+- Apple HIG: "Make motion optional." Under reduced motion, b has no signal left and falls back to the poster. a still offers the control.
+
+**Choice: a.** It is an explicit cue that sits off the product UI, and it works with reduced motion.
+
+**Rejected.** b teaches by showing, which NN/g supports, but it opens the layer for the reader once without being asked. It also loses its only signal under reduced motion.
+
+**Frames.** `options/ex5-opt-{a,b}.mp4` and sheets, `options/ex5-all-desktop.png`. Chosen: `out/ex5-chosen-a-control.mp4`, `out/ex5-chosen-a-reduced-motion.mp4`, `out/ex5-390-dev-page.png`.
+
+## D13. Exploration 5: tap targets and fallbacks
+
+- WCAG 2.5.5 (AAA): "The size of the target for pointer inputs is at least 44 by 44 CSS pixels". WCAG 2.5.8 (AA) sets the floor at "at least 24 by 24 CSS pixels". Apple HIG: "a button needs a hit region of at least 44x44 pt".
+- Measured at 390px wide: 225 side 177x84, 75 side 67x84, people rows 228x86, control 139x44. All meet 44. The sides' hit areas extend to `--dlg-depth-hit-min` with no visual change.
+- Fallbacks: no JavaScript gets a `<noscript>` poster. Viewports under 360px get the take. Reduced motion keeps the poster (a offers the control).
+
+## D14. Exploration 4: closing a clip folds back
+
+The close is a shallower move, so it folds with the shipped Grow on `--dlg-motion-shallower-ms` (240ms, Carbon `duration-moderate-02`) in place of a cut. A clip that replaced another (sideways) still lands open at once, but keeps its Grow so it can fold. Strip: `out/ex4-fold-strip.png`.
+
+**Sources added in round 2 (fetched 2026-11-22):**
+- https://www.w3.org/WAI/WCAG21/Understanding/target-size.html
+- https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html
+- https://developer.apple.com/tutorials/data/design/human-interface-guidelines/buttons.json
+- https://www.nngroup.com/articles/mobile-instructional-overlay/
+- https://www.nngroup.com/articles/flat-ui-less-attention-cause-uncertainty/
+- https://www.nngroup.com/articles/clickable-elements/
+- Carbon choreography, the Material Motion.md file and Heer and Robertson are as listed in Sources above.

@@ -58,12 +58,10 @@ function Clip({ p, motion, sideways }: { p: EvidencePerson; motion: ClipMotion; 
       <DialogueInterviewPlayer start={p.time} current={p.time} total={p.end} />
     </div>
   );
-  /* Sideways (one person to another) never animates, whatever the deeper motion is. */
-  if (motion === "grow" && !sideways) return <Grow open className="dlg-grow--gap">{player}</Grow>;
   return player;
 }
 
-function People({ side, data, clip, sideways }: { side: EvidenceSide; data: EvidenceSideData; clip?: ClipControl; sideways: boolean }) {
+function People({ side, data, clip, sideways, closing }: { side: EvidenceSide; data: EvidenceSideData; clip?: ClipControl; sideways: boolean; closing: string | null }) {
   const active = clip?.person ?? null;
   return (
     <div className="dlg-dx-ev__people" data-side={side}>
@@ -90,7 +88,13 @@ function People({ side, data, clip, sideways }: { side: EvidenceSide; data: Evid
               <p className="dp-clip-quote__who"><WaveformIcon className="dp-clip-quote__icon" /><span className="dp-clip-quote__name">{q.name}</span><span className="dp-clip-quote__time">{q.time}</span></p>
               <p className="dp-clip-quote__text">{q.quote}</p>
             </div>
-            {clip && active === q.name ? <Clip p={q} motion={clip.motion} sideways={sideways} /> : null}
+            {/* grow: the shipped Grow opens under the row and folds back on close (a shallower move). A clip replaced
+                by another (sideways) never folds or grows. */}
+            {clip?.motion === "grow" && (active === q.name || closing === q.name) ? (
+              <Grow open={active === q.name} closeMs={240} className={sideways && active === q.name ? "dlg-grow--gap dlg-dx-ev__nogrow" : "dlg-grow--gap"}>
+                <Clip p={q} motion="grow" sideways={sideways && active === q.name} />
+              </Grow>
+            ) : clip && clip.motion !== "grow" && active === q.name ? <Clip p={q} motion={clip.motion} sideways={sideways} /> : null}
           </div>
         ))}
       </div>
@@ -109,8 +113,10 @@ export default function EvidenceLayer({ option, lift = "rise", question, finding
   const person = clip?.person ?? null;
   const [lastPerson, setLastPerson] = useState<string | null>(person);
   const [sideways, setSideways] = useState(false);
+  const [closing, setClosing] = useState<string | null>(null);
   if (person !== lastPerson) {
     setSideways(lastPerson !== null && person !== null);
+    setClosing(person === null ? lastPerson : null);
     setLastPerson(person);
   }
 
@@ -142,10 +148,10 @@ export default function EvidenceLayer({ option, lift = "rise", question, finding
           <AnswerCard still answer={{ finding: title, total, groups }} sideOpen={open ?? false} onSide={toggle} />
         </div>
         {option === "flow" ? (
-          <Grow open={!!open} className="dlg-grow--gap"><People side={side} data={sides[side]} clip={clip} sideways={sideways} /></Grow>
+          <Grow open={!!open} className="dlg-grow--gap"><People side={side} data={sides[side]} clip={clip} sideways={sideways} closing={closing} /></Grow>
         ) : (
           <div className="dlg-dx-ev__sheet" data-shown={open ? "true" : "false"} aria-hidden={!open}>
-            <People side={side} data={sides[side]} clip={clip} sideways={sideways} />
+            <People side={side} data={sides[side]} clip={clip} sideways={sideways} closing={closing} />
           </div>
         )}
       </div>

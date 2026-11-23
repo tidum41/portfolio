@@ -24,7 +24,7 @@
 .dlg-dx-ev__row:active { background: var(--dp-nav-active-bg); }
 .dlg-dx-ev__row:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 1px; }
 
-/* Sideways: switching 225 and 75 while open swaps the people in place, with no motion (research.md 1, 2, 4, 5). */
+/* Sideways: switching 225 and 75 while open swaps the people in place, with no motion (research-selection-motion.md 1, 2, 4, 5). */
 .dlg-dx-ev__people { transition: opacity var(--dlg-motion-sideways-ms) linear; }
 
 /* The sheet. Options layer and header use it; flow uses the shipped Grow instead. */
@@ -74,6 +74,10 @@
 /* zoom: expands from the row above it, the tapped thing is the origin. A deeper move. */
 .dlg-dx-ev__clip[data-motion="zoom"] { transform-origin: 50% 0; animation: dlg-dx-zoom var(--dlg-motion-deeper-ms) var(--dlg-motion-ease) both; }
 @keyframes dlg-dx-zoom { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
+/* grow close: the fold is a shallower move, so it runs on the shorter token (the shipped Grow defaults to 450ms). */
+.dlg-dx-ev .dlg-dx-ev__entry .dlg-grow--out { animation-duration: var(--dlg-motion-shallower-ms); }
+/* A clip that replaced another (sideways) lands open at once, but keeps its Grow so it can still fold on close. */
+.dlg-dx-ev .dlg-dx-ev__nogrow.dlg-grow--in, .dlg-dx-ev .dlg-dx-ev__nogrow.dlg-grow--in .dlg-grow__inner { animation: none; }
 /* Sideways: one person's clip to another's lands at once. */
 .dlg-dx-ev__clip[data-sideways="true"] { animation: none; }
 

@@ -1,12 +1,13 @@
 // Records the depth explorations (app/dev/dialogue-depth) as short mp4 clips and 6-frame sheets.
-// Run: node scripts/record-dialogue-depth.mjs <baseUrl> <outDir> <name> <query> <ms> [reduce] [cellSelector]
+// Run: node scripts/record-dialogue-depth.mjs <baseUrl> <outDir> <name> <query> <ms> [reduce] [cellSelector] [actions]
+// actions: "900:.selector|2200:.other" clicks each selector at that many ms after the recording starts.
 // Records the whole viewport with Playwright, crops to the first matching cell with ffmpeg, then tiles a frame sheet.
 import { chromium } from "playwright";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 
-const [base, outDir, name, query, msArg = "5000", reduce = "0", cellSel = ".dlg-lab__cell"] = process.argv.slice(2);
+const [base, outDir, name, query, msArg = "5000", reduce = "0", cellSel = ".dlg-lab__cell", actions = ""] = process.argv.slice(2);
 const ms = Number(msArg);
 mkdirSync(outDir, { recursive: true });
 const tmp = path.join(outDir, `.tmp-${name}`);
@@ -27,7 +28,15 @@ await page.evaluate(() => {
 });
 const box = await page.locator(cellSel).first().boundingBox();
 const start = (Date.now() - t0) / 1000;
-await page.waitForTimeout(ms);
+let waited = 0;
+for (const a of actions.split("|").filter(Boolean)) {
+  const i = a.indexOf(":");
+  const at = Number(a.slice(0, i));
+  await page.waitForTimeout(Math.max(0, at - waited));
+  waited = at;
+  await page.locator(a.slice(i + 1)).first().click({ force: true }).catch((e) => console.error(`click ${a}: ${e.message.split("\n")[0]}`));
+}
+await page.waitForTimeout(Math.max(0, ms - waited));
 await ctx.close();
 await browser.close();
 const webm = readdirSync(tmp).find((f) => f.endsWith(".webm"));
