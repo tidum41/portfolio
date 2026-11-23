@@ -101,3 +101,26 @@ Written in my own voice so I can explain each one in an interview. Each entry ho
 ### Match the chart is three rows
 
 **Decision.** The Match the chart figure is three rows. Each row pairs a question with the chart it gets and puts one line under it; the first row is a split bar, the second is ranked bars and the third is a flag for fewer than 3 people. **Tried.** Option 2 was one worked example and a text index that names the other charts, and before that the figure carried a By group pair and four awkward-shape frames. **Why.** A skimmer reads the question to chart mapping in one pass when every chart is drawn next to its question, and option 2 hides that mapping in text. The cost is that By group's percent against count comparison and the tie, too many themes, nothing matches and two shapes frames are off the page. **Revisit.** If someone asks how the template handles a tie or too many themes, I would add that one row back instead of restoring the whole set. I would also revisit it if the three rows feel too thin next to the thin data section below.
+
+## Consult r1
+
+### The Problem figure is a frozen frame of the live "before" stage
+
+**Decision.** The Problem figure renders the live `before` stage in a frozen final state, with an emoji heading, the existing Hearthside paragraphs, "Many found" as the one cherry mark, the ranked themes as raw pipe text and three barred quotes from Ana, Dev and Mei. **Tried.** Another recorded JPG. **Why.** The JPG showed a short tidy paragraph, which is not what the shipped chat answers with, and takes are real live UI. The black quote bar is the shipped style we depict, scoped to `.dlg-before`, so it cannot reach our own quotes (no coloured bar on quotes). **Revert.** Remove the `live` prop on the Problem figure; the old JPG path is still on the call.
+
+### Ana's clip carries her transcript line, and nothing is invented around it
+
+**Decision.** `SyncedTranscript` takes rows as props (Mei's rows stay the default) and Ana's open clip shows one active row, 04:10. **Why.** MOCK-DATA holds Ana's line and no Dialogue line around it, so adding one would be invented. The transcript sits inside the quote row, so the clip never covers the count. **Revert.** Drop the `transcript` prop on `QuoteRow`.
+
+### The 75 is stone in every two-segment count split
+
+**Decision.** A `remainder` flag on bar and stacked-bar data draws the non-focal side with `--dp-border-strong`. It is set for the 225 and 75 in the Split template, the rows answer and the Counts explorations. **Why.** The hero and Counts draw the 75 stone, and the pink mid read as a second finding. Ranked charts keep ramp B mid for ranks 2 and 3, and the cherry versus neutral question for ranked charts stays open. **Revert.** Remove `remainder` from the three call sites.
+
+### Two missing states and the 161 sentence
+
+**Decision.** A grouped quote list (a count per group, no chart) sits in Data viz, and the "+223 more" list sits under Counts. The 161 untagged shoppers get one proposed sentence under By group, with no third row. **Why.** STATES S4 and S12 asked for them and TASTE Nov 10 allows the 161 as a sentence only. Only labelled Hearthside people are named, and the rest is a remainder line (225 minus 4 is 221, 75 minus 2 is 73). **Revert.** Remove the three figures and the line.
+
+### Rule-break fixes
+
+**Decision.** The near-miss title now reads "Two of 300 shoppers said they missed a delivery.", the templates caption is a marked proposal without a list of three, and the thin cutoff has a visible `[PLACEHOLDER]` for its reason. **Why.** MOCK-DATA 4g gives no cause, the old caption was a list of three, and OPEN-QUESTIONS 22 is still open. **Revert.** Restore the earlier strings from git.
+

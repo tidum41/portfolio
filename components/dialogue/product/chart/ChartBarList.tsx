@@ -43,8 +43,8 @@ export default function ChartBarList({
               <div className="dp-chart-cols__track">
                 <div
                   className="dp-chart-cols__bar"
-                  data-tone={chartBarTone(i, row.focal)}
-                  style={{ height: `${Math.max(0, Math.min(100, (row.value / max) * 100))}%`, backgroundColor: chartBarFill(i, row.focal, row.secondary) }}
+                  data-tone={chartBarTone(i, row.focal, row.remainder)}
+                  style={{ height: `${Math.max(0, Math.min(100, (row.value / max) * 100))}%`, backgroundColor: chartBarFill(i, row.focal, row.secondary, row.remainder) }}
                 />
               </div>
               <span className="dp-chart-cols__label">{row.label}</span>
@@ -67,7 +67,7 @@ export default function ChartBarList({
         const fill =
           fillMode === "magnitude"
             ? chartBarFillByMagnitude(row.value, max, row.focal)
-            : chartBarFill(i, row.focal, row.secondary);
+            : chartBarFill(i, row.focal, row.secondary, row.remainder);
         return (
           <div key={row.label} className="dp-chart-bars__row" data-annotate-part={`bar-row-${annotateSlug(row.label)}`}>
             <span className="dp-chart-bars__label" data-annotate-part={`bar-label-${annotateSlug(row.label)}`}>{row.label}</span>
@@ -78,7 +78,7 @@ export default function ChartBarList({
             >
               <div
                 className="dp-chart-bars__bar"
-                data-tone={chartBarTone(i, row.focal)}
+                data-tone={chartBarTone(i, row.focal, row.remainder)}
                 data-annotate-part={`bar-${annotateSlug(row.label)}`}
                 style={{ width: `${widthPct}%`, backgroundColor: fill }}
               />

@@ -25,13 +25,13 @@ export function AnswerCard({ segment = false, onSide, sideOpen = false, chart = 
   const lead = Math.round((groups[0].value / total) * 10000) / 100;
   const bar = rows ? (
     <div className="dlg-answer--rows" data-layout="rows">
-      <ChartBarList max={total} rows={groups.map((g) => ({ label: g.label, value: g.value, display: `${share(g.value)} of ${share(total)}`, pct: `${Math.round((g.value / total) * 100)}%`, focal: g.focal }))} />
+      <ChartBarList max={total} rows={groups.map((g) => ({ label: g.label, value: g.value, display: `${share(g.value)} of ${share(total)}`, pct: `${Math.round((g.value / total) * 100)}%`, focal: g.focal, remainder: groups.length === 2 && !g.focal }))} />
     </div>
   ) : (
       <div className="dlg-live__bar" data-layout="bar" data-side={sideOpen || undefined}>
         <ChartStackedBar lanes
           total={total}
-          segments={groups.map((g) => ({ label: g.label, value: g.value, display: `${share(g.value)} of ${share(total)}`, focal: g.focal }))}
+          segments={groups.map((g) => ({ label: g.label, value: g.value, display: `${share(g.value)} of ${share(total)}`, focal: g.focal, remainder: groups.length === 2 && !g.focal }))}
         />
         {/* P14 items 1+7: both segments tappable; focal segment carries data-target for the recorder. */}
         <button type="button" className="dlg-live__side dlg-live__side--friday" style={{ width: `calc(${lead}% + 12px)` }} data-target="side-friday" aria-label={`Open ${groups[0].label}, ${share(groups[0].value)} of ${share(total)}`} aria-expanded={sideOpen === "friday"} onClick={() => onSide?.("friday")} />

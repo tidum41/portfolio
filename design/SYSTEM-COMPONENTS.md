@@ -57,6 +57,9 @@ A new component needs Mudit's explicit OK before it is built. When he approves o
 
 - `DenominatorReveal` (PENDING Mudit's OK: added in round depth-r1 at the supervising agent's request so exploration 2 can sit in the Data viz section. Built only from ChartVizCard and chart tokens. Revert: remove this line and the figure; see design/dialogue-explorations/STORY-CHANGES.md)
 
+- `MoreList` (PENDING Mudit's OK: added in consult r1, STATES S12. Lives in DialogueMotionStage.tsx and is shown through `DialogueDemoStill live`. Built only from SourcePill, the quote row and the hero head line. Revert: remove the function, the `still="more"` branch and the Counts figure.)
+- `DialogueDemoStill live` (PENDING Mudit's OK: an option on the existing still, not a new file. It renders a frozen final frame of DialogueMotionStage instead of a recorded JPG. Revert: drop the `live` prop and the `LiveStill` function; the JPG paths remain.)
+
 ## Scenarios
 - `HeroChatCard`
 - `HeroStructuredFigure`
@@ -67,7 +70,7 @@ A new component needs Mudit's explicit OK before it is built. When he approves o
 - `LeadCompareAnswerCard`
 - `ParagraphAnswerFigure`
 - `QuoteFrameFigure`
-- `QuoteListFigure`
+- `QuoteListFigure` (consult r1: `grouped` shows quotes under a count per group with no chart, STATES S4)
 - `SideSample` (round P8, pending Mudit OK: composed of QuoteListFigure and SourcePill, shows the quotes behind one side of a count as a sample with +N more)
 - `DialogueDemoVideo` (round P10: muted looping recording of the live recreation with pause and replay; poster under reduced motion)
 - `DialogueChatLive` (round P10: interactive recreation of the study chat on Dialogue's real keyframes, composed of UserMessageBubble, ChartVizCard, ChartStackedBar, SideSample and DialogueInterviewPlayer)

@@ -36,6 +36,8 @@ export const dialogueChartSpec = {
     mid: "var(--dp-chart-mid)",
     /** Ramp B soft: ranks 4 and later. */
     soft: "var(--dp-chart-soft)",
+    /** The remainder of a two-segment count split (the 75): Dialogue stone, never a ramp pink. */
+    remainder: "var(--dp-border-strong)",
     /** Alias of mid; kept so older secondary-series call sites stay valid. */
     secondary: "var(--dp-chart-secondary)",
     /** Alias of mid for existing CSS that still names muted. */
@@ -89,6 +91,8 @@ export type ChartBarDatum = {
   focal?: boolean;
   /** The second series beside the focal one (ramp B mid). Leave unset for a remainder or any one-series chart. */
   secondary?: boolean;
+  /** The non-focal remainder of a two-segment count split (the 75). Draws Dialogue stone instead of the ramp B mid pink. */
+  remainder?: boolean;
   /** Quiet secondary figure shown after the value (for example the drop at a step). */
   detail?: string;
   /** P15 item 11: share shown on hover, e.g. "64%". */
@@ -96,8 +100,9 @@ export type ChartBarDatum = {
 };
 
 /** Cherry for the finding, mid for ranks 2-3 or a second series, soft for ranks 4+. */
-export function chartBarFill(index: number, focal?: boolean, secondary?: boolean): string {
+export function chartBarFill(index: number, focal?: boolean, secondary?: boolean, remainder?: boolean): string {
   if (focal) return dialogueChartSpec.color.focal;
+  if (remainder) return dialogueChartSpec.color.remainder;
   if (secondary) return dialogueChartSpec.color.mid;
   return index >= 3 ? dialogueChartSpec.color.soft : dialogueChartSpec.color.mid;
 }
@@ -108,8 +113,9 @@ export function chartBarFillByMagnitude(_value: number, _max: number, focal?: bo
 }
 
 /** Rank 1 finding, ranks 2-3 mid, ranks 4+ soft. */
-export function chartBarTone(index: number, focal?: boolean): "focal" | "mid" | "soft" {
+export function chartBarTone(index: number, focal?: boolean, remainder?: boolean): "focal" | "mid" | "soft" | "neutral" {
   if (focal) return "focal";
+  if (remainder) return "neutral";
   return index >= 3 ? "soft" : "mid";
 }
 

@@ -10,6 +10,7 @@ import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 import DenominatorReveal from "@/components/dialogue/depth/DenominatorReveal/DenominatorReveal";
 import { BY_GROUP, BY_GROUP_TITLE } from "@/components/dialogue/depth/hearthside";
 import StaticFigure from "@/components/dialogue/StaticFigure";
+import QuoteListFigure from "@/components/dialogue/product/scenarios/QuoteListFigure";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import DialogueDemoVideo, { DialogueDemoStill } from "@/components/dialogue/motion/DialogueDemoVideo";
 import { DIALOGUE_TITLE } from "@/lib/caseStudies/dialogue";
@@ -67,6 +68,11 @@ function StatusLine({ children }: { children: React.ReactNode }) {
 /** Visible scaffold for copy Mudit writes himself (TASTE: visible markers, never invented facts). */
 function Placeholder({ children }: { children: React.ReactNode }) {
   return <span className="cs-placeholder">[PLACEHOLDER: {children}]</span>;
+}
+
+/** Marks a line Mudit still writes. The text after it is a proposal, never final copy. */
+function Proposal({ children }: { children: React.ReactNode }) {
+  return <><span className="cs-placeholder">[Proposal, Mudit writes the final]</span> {children}</>;
 }
 
 function Caption({ children }: { children: React.ReactNode }) {
@@ -160,11 +166,11 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="problem">
                   <StaticFigure figure="problem-before">
-                    <DialogueDemoStill src="/dialogue/motion/variant-before-full.jpg" label="Dialogue today: one fluent paragraph under the question, with &ldquo;Many found&rdquo; underlined and noted as an unstated count" />
+                    <DialogueDemoStill src="/dialogue/motion/variant-before-full.jpg" live={{ demo: "before", still: "final" }} label="Dialogue today: a long text answer with an emoji heading, &ldquo;Many found&rdquo; underlined as an unstated count, a table written out as raw pipe text, and quotes" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
-              <Caption>How Dialogue&rsquo;s chat answers today, recreated in code. &ldquo;Many found&rdquo; stands in for a count the answer never states. Illustrative data.</Caption>
+              <Caption><Proposal>How Dialogue&rsquo;s chat answers today, recreated in code. &ldquo;Many found&rdquo; stands in for a count the answer never states, and the table arrives as raw text. Illustrative data.</Proposal></Caption>
               <p className="dlg-constraint">Two constraints: Dialogue&rsquo;s fixed 448px chat panel, and teams I knew only through Dialogue&rsquo;s customer stories, where Kalshi sets the bar at a share-out by tomorrow morning.</p>
             </Section>
 
@@ -213,7 +219,7 @@ export function DialogueCaseStudyContent({
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
                   <StaticFigure figure="clip-open">
-                    <DialogueDemoStill src="/dialogue/motion/live-clip.jpg" label="Ana&rsquo;s quote open under the head line &ldquo;picked from the 225&rdquo;, with her clip player inside the answer" />
+                    <DialogueDemoStill src="/dialogue/motion/live-clip.jpg" live={{ demo: "clip", still: "final" }} label="Ana&rsquo;s quote open under the head line &ldquo;picked from the 225&rdquo;, with her clip player and her synced transcript line inside the answer" />
                   </StaticFigure>
                 </DialogueRachelFrame>
               </figure>
@@ -245,6 +251,14 @@ export function DialogueCaseStudyContent({
                 </div>
               </figure>
               <Caption>The versions run from two bars side by side, to two stacked, to the one bar that shipped. Tapping 75 swaps in two of the unsure shoppers. Illustrative data.</Caption>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="solution">
+                  <StaticFigure figure="more-list">
+                    <DialogueDemoStill src="/dialogue/motion/live-side.jpg" live={{ demo: "clip", still: "more" }} label="The +223 more pill opened in the panel: the head line Read it as this Friday 225 stays pinned while four named shoppers scroll under it, then a line for the 221 more" />
+                  </StaticFigure>
+                </DialogueRachelFrame>
+              </figure>
+              <Caption><Proposal>The +223 more pill opens the rest of the 225 inside the panel. The head line stays pinned while the rows scroll. Illustrative data.</Proposal></Caption>
             </Section>
 
             <Section id="data-viz">
@@ -271,12 +285,21 @@ export function DialogueCaseStudyContent({
                 </DialogueRachelFrame>
               </figure>
               <Caption>Percents make 64% and 70% look alike, so each row counts people out of its own group: 9 of 14 new shoppers, 88 of 125 repeat. Illustrative data.</Caption>
+              <p className="dlg-constraint"><Proposal>Each row counts people out of its own group. The 161 shoppers tagged neither new nor repeat sit outside both rows. Illustrative data.</Proposal></p>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueChartLibrary templates />
               </figure>
-              <Caption>Three questions, three charts, and one line under each. Illustrative data.</Caption>
+              <Caption><Proposal>Each question gets the chart that fits it, with one line saying how to read it. Illustrative data.</Proposal></Caption>
+              <figure className="cs-figure dialogue-live-block">
+                <DialogueRachelFrame tone="system">
+                  <StaticFigure figure="quote-groups">
+                    <QuoteListFigure grouped />
+                  </StaticFigure>
+                </DialogueRachelFrame>
+              </figure>
+              <Caption><Proposal>Some questions ask who said what, so the answer groups the quotes and counts each group, with no chart. Illustrative data.</Proposal></Caption>
               <CaseStudyBody>
-                The last rule is for thin data. Under three people the answer swaps its chart for an early-signal flag, with follow-ups the same interviews can count.
+                The last rule is for thin data. Under three people the answer swaps its chart for an early-signal flag, with follow-ups the same interviews can count. <Placeholder>why the cutoff is three people (OPEN-QUESTIONS 22)</Placeholder>
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <div className="dlg-demo-pair">

@@ -4220,8 +4220,13 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* Round 9, updated 10 Nov 2026 for ramp B: the 225 is the focal segment (cherry). The 75
    and other ranks 2-3 use mid. Ranks 4+ use soft. Swatches follow data-tone so they match
    the segment they name. */
-.dialogue-product-root .dp-chart-stack__seg:not([data-focal]):not([data-tone="soft"]),
-.dlg-live .dp-chart-stack__seg:not([data-focal]):not([data-tone="soft"]) { background: var(--dp-chart-mid); }
+.dialogue-product-root .dp-chart-stack__seg:not([data-focal]):not([data-tone="soft"]):not([data-tone="neutral"]),
+.dlg-live .dp-chart-stack__seg:not([data-focal]):not([data-tone="soft"]):not([data-tone="neutral"]) { background: var(--dp-chart-mid); }
+/* Consult r1 (F31): the remainder of a two-segment count split is Dialogue stone in every figure, as in the hero. */
+.dialogue-product-root .dp-chart-stack__seg[data-tone="neutral"],
+.dialogue-product-root .dp-chart-stack__swatch[data-tone="neutral"],
+.dlg-live .dp-chart-stack__seg[data-tone="neutral"],
+.dlg-live .dp-chart-stack__swatch[data-tone="neutral"] { background: var(--dp-border-strong); }
 .dialogue-product-root .dp-chart-stack__seg[data-tone="soft"],
 .dlg-live .dp-chart-stack__seg[data-tone="soft"] { background: var(--dp-chart-soft); }
 .dlg-reason .dialogue-lib__mark[data-kind="pro"] { color: var(--color-text-secondary); }
@@ -4423,3 +4428,37 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 
 /* Round 19: the constraint line moves under the problem figure, so it needs air below the caption. */
 .cs-caption + .dlg-constraint { margin-top: var(--space-3); }
+
+/* ===== Consult r1 ===== */
+/* Frozen stage frames on the page (DialogueDemoStill live): no entrance, no transition, so a capture is never mid-animation. */
+.dlg-stage--still, .dlg-stage--still * { animation: none !important; transition: none !important; }
+.dlg-stage--still .dlg-stage__body { overflow: visible; }
+.dlg-live-still:not([data-measured]) { min-height: 320px; }
+.dlg-qgroups { max-width: 448px; margin-inline: auto; }
+.dlg-live-still { position: relative; width: 100%; line-height: normal; overflow: hidden; }
+.dlg-live-still__inner { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.dlg-live-still__panel { box-sizing: border-box; }
+/* Problem "before": the shipped answer anatomy as plain text. The black bar is the shipped quote style we depict, and it stays inside .dlg-before. */
+.dlg-before__h { margin: 0; font-weight: var(--dp-weight-medium); color: var(--dp-ink); }
+.dlg-before__rest { display: flex; flex-direction: column; gap: 12px; }
+.dlg-before__raw { margin: 0; padding: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--dp-font-mono); font-size: var(--ds-text-xs); line-height: 20px; color: var(--dp-muted); }
+.dlg-before__quote { margin: 0; padding: 0 0 0 12px; border-left: 3px solid var(--dp-ink); color: var(--dp-ink); }
+.dlg-before__who { color: var(--dp-muted); white-space: nowrap; }
+/* Clip open in place: the transcript sits under the player at the panel's width. Ana's row is the one active (warm) row. */
+.dlg-live__transcript { padding: 12px 0 0; line-height: normal; }
+.dlg-live__transcript .dp-synced-transcript__head { margin-bottom: 8px; }
+.dlg-live__transcript .dp-synced-transcript__row { gap: 12px; padding: 8px; margin-bottom: 0; }
+.dlg-live__transcript .dp-synced-transcript__avatar { width: 32px; height: 32px; }
+.dlg-live__transcript .dp-synced-transcript__scroll { display: none; }
+/* The +223 list: head pinned, rows scroll. */
+.dlg-more-list { display: flex; flex-direction: column; gap: 8px; }
+.dlg-more-list__head { flex: 0 0 auto; padding-bottom: 8px; border-bottom: 1px solid var(--dp-border); }
+.dlg-more-list__rows { max-height: 276px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; scrollbar-width: thin; }
+.dlg-more-list__rows:focus-visible { outline: 2px solid var(--dp-ink); outline-offset: 2px; }
+.dlg-more-list__rest { margin: 0; padding: 4px 4px 8px; color: var(--dp-muted); }
+.dlg-stage .dlg-stage__sample[data-more] .dlg-more-list__rows { display: flex; }
+/* Grouped quote list: a swatch, the group name and its count; the 75 swatch is stone, the 225 swatch is the one cherry. */
+.dlg-qgroup { display: flex; flex-direction: column; gap: 8px; }
+.dlg-qgroup + .dlg-qgroup { margin-top: 12px; }
+.dlg-qgroup[data-group="unsure"] .dlg-sample-key { background: var(--dp-border-strong); }
+.dlg-qgroup[data-group="friday"] .dlg-sample-key { background: var(--dp-chart-focal); }

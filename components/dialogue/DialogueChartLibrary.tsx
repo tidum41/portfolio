@@ -281,7 +281,7 @@ const TEMPLATES: Template[] = [
       <ChartVizCard title="225 of 300 shoppers read ‘Arrives by Friday’ as this Friday.">
         <ChartStackedBar lanes
           total={FRIDAY_TOTAL}
-          segments={FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: `${r.count} of ${FRIDAY_TOTAL}`, focal: r.focal }))}
+          segments={FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: `${r.count} of ${FRIDAY_TOTAL}`, focal: r.focal, remainder: !r.focal }))}
         />
       </ChartVizCard>
     ),
@@ -413,7 +413,7 @@ function ChartTemplatesPairs({ layout }: { layout: "grid" | "stack" }) {
         <MatchRow ask="How many read it which way?" name="Split" line={`Each side shows its count out of ${FRIDAY_TOTAL}. Hover for the percent.`}>
           <MatchPanel>
             <ChartVizCard title="225 of 300 shoppers read ‘Arrives by Friday’ as this Friday.">
-              <ChartStackedBar lanes total={FRIDAY_TOTAL} segments={FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: `${r.count} of ${FRIDAY_TOTAL}`, focal: r.focal }))} />
+              <ChartStackedBar lanes total={FRIDAY_TOTAL} segments={FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: `${r.count} of ${FRIDAY_TOTAL}`, focal: r.focal, remainder: !r.focal }))} />
             </ChartVizCard>
           </MatchPanel>
         </MatchRow>
@@ -475,7 +475,7 @@ function ThinNearMiss() {
   return (
     <StaticFigure figure="thin-bar" className="dlg-thin-miss">
       <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-mini dlg-edge__panel ${dialogueProductFontClassName}`} data-neutral="">
-        <ChartVizCard title="Two shoppers missed a delivery after reading it as this Friday.">
+        <ChartVizCard title="Two of 300 shoppers said they missed a delivery.">
           <ChartBarList
             rows={[{ label: "Missed a delivery", value: 2, display: "2", focal: true }]}
             max={2}
@@ -490,7 +490,7 @@ function ThinNearMiss() {
 /* Round 13: the two standard two-bar charts tried before the single bar, drawn in the 448px panel with the page's 225 and 75.
    Neutral, because the kept bar beside them (the take) carries the one cherry. */
 function CountsExplored() {
-  const rows = FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: String(r.count), focal: r.focal }));
+  const rows = FRIDAY_ROWS.map((r) => ({ label: r.label, value: r.count, display: String(r.count), focal: r.focal, remainder: !r.focal }));
   const panel = (children: ReactNode) => (
     <div className={`dialogue-product-root dp-chat-panel-typography dlg-templates__panel dlg-mini dlg-edge__panel ${dialogueProductFontClassName}`} data-neutral="">
       <ChartVizCard title="Read ‘Arrives by Friday’ as this Friday">{children}</ChartVizCard>
