@@ -268,8 +268,15 @@ The close is a shallower move, so it folds with the shipped Grow on `--dlg-motio
 
 **Choice: a,** on /dialogue and in the take. The caption is unchanged.
 
-**Rejected.** b tells the denominator story more dramatically (64% turns into 9 of 14), but it reverses Round 18 item 5. It is flagged for Mudit (OPEN-QUESTIONS 37). The round 1 autoplay relabel is gone from the page. The `relabel`, `rescale` and `units` options stay in dev.
+**Rejected.** b tells the denominator story more dramatically (64% turns into 9 of 14), but it reverses Round 18 item 5. OPEN-QUESTIONS 37 is closed: Mudit delegated the call to research-team preference on Nov 22 2026, and a stays (counts first, matching the shipped Counts bar; TASTE.md line Nov 22). The round 1 autoplay relabel is gone from the page. The `relabel`, `rescale` and `units` options stay in dev.
 
 **Take.** Recorded with the take recorder's pointer (the same SVG, the 600ms EASE_IO glide with a 0.08 bow). The first hover lands about 1s in, each payoff holds 2s, the pointer leaves the way it came and the loop closes on the rest frame. 2.5x zoom gives 35px type in a 1200x511 crop.
 
 **Files.** `out/ex2-hover-a.mp4`, `-poster.png`, `-sheet.png`. `out/ex2-hover-b.mp4`, `-poster.png`, `-sheet.png`. `out/ex2-hover-a-reduced-motion.mp4` (+ sheet and poster). `out/page-ex2-hover-1440.png` (the /dialogue figure hovered).
+
+## D16. Exploration 2: the hovered row's bar state (Nov 22 2026)
+**Question.** The hover take swapped the label but the bar showed no hover state.
+**Choice.** The hovered or focused row's bar steps one tone darker with the same recipe as the shipped Counts bar hover (focal 85% plus ink, mid 80% plus ink, dialogue-product.css Round 16), through two semantic tokens, `--dlg-depth-bar-hover-focal` and `--dlg-depth-bar-hover-mid`. No outline (TASTE 2026-11-10), no tint box, nothing moves.
+**Why.** It reuses an approved state instead of inventing one, and the step is instant, the sideways rule in D6 (NN/g: "the more frequent the animation, the more subtle and shorter"), so reduced motion sees the same thing.
+**Rejected.** A row background tint: it adds a box around the hit area, which the shipped Counts bar avoids ("no box around the hit area").
+**Take.** /workspace/dlg-depth-r1-shots/out/ex2-hover-a.mp4 and -poster.png, re-recorded with the same pointer and glide.

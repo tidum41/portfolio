@@ -49,6 +49,13 @@
 .dlg-dx-denom .dp-chart-bars__row:focus-visible .dp-chart-bars__v-share { opacity: 1; }
 .dlg-dx-denom .dp-chart-bars__row:focus-visible .dp-chart-bars__v-count { opacity: 0; }
 
+/* Row hover (Nov 22, OQ 37 closed): the hovered row's bar steps one tone darker, the shipped Counts bar hover.
+   No outline, no tint box, nothing moves; the step is instant (a sideways change), so it needs no transition. */
+.dlg-dx-denom .dlg-dx-denom__row:hover .dlg-dx-denom__bar[data-tone="focal"],
+.dlg-dx-denom .dlg-dx-denom__row:focus-visible .dlg-dx-denom__bar[data-tone="focal"] { background: var(--dlg-depth-bar-hover-focal); }
+.dlg-dx-denom .dlg-dx-denom__row:hover .dlg-dx-denom__bar[data-tone="mid"],
+.dlg-dx-denom .dlg-dx-denom__row:focus-visible .dlg-dx-denom__bar[data-tone="mid"] { background: var(--dlg-depth-bar-hover-mid); }
+
 @media (prefers-reduced-motion: reduce) {
   .dlg-dx-denom .dp-chart-bars__value > span { transition: none; }
   .dlg-dx-denom[data-option="rescale"] .dlg-dx-denom__track { transition: none; }

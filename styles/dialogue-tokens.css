@@ -325,6 +325,9 @@
   --dlg-depth-unit-gap: 2px;
   --dlg-depth-unit-empty: var(--dp-chart-track);
   --dlg-depth-proposal-edge: var(--dp-border-strong);
+  /* Denominator figure row hover: the same one-step darker tone as the shipped Counts bar hover (dialogue-product.css Round 16). */
+  --dlg-depth-bar-hover-focal: color-mix(in srgb, var(--dp-chart-focal) 85%, var(--dp-ink));
+  --dlg-depth-bar-hover-mid: color-mix(in srgb, var(--dp-chart-mid) 80%, var(--dp-ink));
 }
 
 :root {
