@@ -1,0 +1,28 @@
+/* Dev page chrome only (not product UI). Tokens only; the answer itself is Dialogue's components. */
+.dlg-genui { max-width: 1400px; margin: 24px auto; padding: 32px; box-sizing: border-box; background: var(--dp-bg); color: var(--dp-ink); border-radius: var(--dp-radius-card); }
+.dlg-genui .dlg-lab__steps button { color: var(--dp-ink); }
+.dlg-genui .dlg-lab__title { color: var(--dp-ink); }
+.dlg-genui__head { margin-bottom: 16px; }
+.dlg-genui__note { margin: 4px 0 0; font-size: 12px; line-height: 1.45; color: var(--dp-muted); max-width: 80ch; }
+.dlg-genui__ask { margin-bottom: 20px; }
+.dlg-genui__label { font-size: 12px; font-weight: 600; color: var(--dp-ink); }
+.dlg-genui__row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+.dlg-genui__input { flex: 1; min-height: 40px; padding: 0 12px; font: inherit; font-size: 14px; border: 1px solid var(--dp-input-border); border-radius: var(--dp-radius-control); background: var(--dp-card); color: var(--dp-ink); }
+.dlg-genui__btn { min-height: 40px; padding: 0 16px; font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--dp-border-strong); border-radius: var(--dp-radius-control); background: var(--dp-nav-active-bg); color: var(--dp-ink); cursor: pointer; }
+.dlg-genui__btn:disabled { opacity: .5; cursor: default; }
+.dlg-genui__select { min-height: 32px; font: inherit; font-size: 13px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-control); background: var(--dp-card); color: var(--dp-ink); }
+.dlg-genui__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; }
+.dlg-genui__side { min-width: 0; padding-top: 12px; border-top: 1px solid var(--dp-border); }
+.dlg-genui__rules { display: block; width: 100%; margin-top: 8px; padding: 8px 10px; resize: vertical; font-family: var(--dp-font-mono); font-size: 12px; line-height: 1.5; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-control); background: var(--dp-surface); color: var(--dp-ink); box-sizing: border-box; }
+.dlg-genui__status { margin: 12px 0; font-size: 12px; color: var(--dp-muted); }
+.dlg-genui__meta { display: grid; gap: 4px; margin: 12px 0; font-size: 12px; line-height: 1.45; }
+.dlg-genui__meta div { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 8px; }
+.dlg-genui__meta dt { color: var(--dp-muted); }
+.dlg-genui__meta dd { margin: 0; color: var(--dp-ink); }
+.dlg-genui__stage { display: flex; justify-content: center; align-items: flex-start; padding: 24px 0; background: var(--dp-app-bg); border-radius: var(--dp-radius-card); min-height: 120px; }
+.dlg-genui__panel { width: 448px; display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: var(--dp-radius-card); background: var(--dp-card); box-shadow: var(--dlg-elev-answer-shadow); }
+.dlg-genui__text { margin: 0; }
+@media (max-width: 960px) { .dlg-genui__grid { grid-template-columns: 1fr; } .dlg-genui__panel { width: 100%; } }
+.dlg-genui__note--side { min-height: 2.9em; margin-bottom: 8px; }
+.dlg-genui__stage { min-height: 300px; }
+.dlg-genui__side > .dlg-genui__label { display: block; margin-top: 8px; }
