@@ -3783,12 +3783,6 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 }
 
 .dlg-live-stage__slot { width: 471px; margin: 40px auto; }
-.dlg-hero-opt { padding: 40px; display: grid; gap: 48px; justify-items: center; }
-.dlg-hero-opt__a { width: 640px; }
-.dlg-hero-opt__b { width: 923px; }
-.dlg-hero-opt .dialogue-rachel-frame { padding: 20px; }
-.dlg-hero-opt__panel { width: 471px; margin: 0 auto; }
-.dlg-hero-opt__b .dlg-hero-opt__panel { zoom: 1.45; }
 
 /* P5 / TASTE: thin-data is a stone line, not amber. Keep the icon centred on the first line. */
 .dp-low-signal {
