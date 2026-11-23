@@ -29,3 +29,10 @@ Branch review/dialogue-depth-r1. Spec: /workspace/dialogue-agent/ANALYSIS-2026-1
 
 ## Session end, round 2 (2026-11-22)
 Gates: check:dialogue-system OK (93 files), check:thumbnail-card OK, check:dialogue-depth OK (16 files, self-test 18 bad + 2 good), check:dialogue-tokens 6 (the pre-existing six, none added), tsc clean, eslint 0 problems on every changed file. Repo-wide `eslint .` reports 263 errors and 4987 warnings, all in files this round did not touch (public/dev, components/embeds, Footer and others), so they don't match the "1 error + 1 warning" baseline. Dev server on 3127 stopped.
+
+## Round 3 (2026-11-22, after Mudit's review)
+- Ex2 hover take rebuilt: DenominatorReveal `hover-counts` (a, chosen, on /dialogue) and `hover-percents` (b, flagged as OQ 37). Stage `/dev/dialogue-depth?ex=hover&opt=a|b`. Recorder `scripts/record-dialogue-depth-hover.mjs` (take pointer, 600ms glide, 2.5x). Outputs in /workspace/dlg-depth-r1-shots/out/ex2-hover-*. DECISIONS D15.
+- Ex1 and ex4 marked Not approved. Review in design/dialogue-explorations/ex1-ex4-review.md (recommend: cut ex1, fold the ex4 idea into Levels as a caption-level idea only).
+- Ex3 left as is (Mudit likes the staged fade).
+- Next: Mudit's calls on OQ 37 and the ex1/ex4 recommendation. If ex1 is cut, LiveFigure (ex5) still uses EvidenceLayer's layer, so revisit ex5's live UI before it ships.
+Dev server on 3127 stopped.

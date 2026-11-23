@@ -41,6 +41,15 @@
 .dlg-dx-denom[data-phase="people"] .dlg-dx-denom__row:hover .dlg-dx-denom__v--people,
 .dlg-dx-denom[data-phase="people"] .dlg-dx-denom__row:focus-visible .dlg-dx-denom__v--people { visibility: hidden; }
 
+/* Hover options. TASTE 2026-11-10: no outline on hover or press in demos, so the chart.css hover outline is off here;
+   the hover state is the value swap. Keyboard focus swaps too. */
+.dlg-dx-denom__hover { width: var(--dlg-depth-value-width); }
+.dlg-dx-denom .dp-chart-bars__row:hover .dp-chart-bars__bar,
+.dlg-dx-denom .dp-chart-bars__row:focus-within .dp-chart-bars__bar { box-shadow: none; }
+.dlg-dx-denom .dp-chart-bars__row:focus-visible .dp-chart-bars__v-share { opacity: 1; }
+.dlg-dx-denom .dp-chart-bars__row:focus-visible .dp-chart-bars__v-count { opacity: 0; }
+
 @media (prefers-reduced-motion: reduce) {
+  .dlg-dx-denom .dp-chart-bars__value > span { transition: none; }
   .dlg-dx-denom[data-option="rescale"] .dlg-dx-denom__track { transition: none; }
 }

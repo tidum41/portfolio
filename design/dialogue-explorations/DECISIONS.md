@@ -65,7 +65,7 @@ Quotes below are verbatim from pages fetched on 2026-11-22 (Sources, end of file
 
 ---
 
-## D4. Exploration 1: where the evidence goes
+## D4. Exploration 1: where the evidence goes (Not approved: Mudit, round 3. See ex1-ex4-review.md)
 
 **Question.** Opening the 225 shows its people. Where do they go so the count never leaves view (the Levels first-try failure)?
 
@@ -90,7 +90,7 @@ Quotes below are verbatim from pages fetched on 2026-11-22 (Sources, end of file
 
 ---
 
-## D5. Exploration 1: how the layer arrives (the lift)
+## D5. Exploration 1: how the layer arrives (the lift) (Not approved: Mudit, round 3. See ex1-ex4-review.md)
 
 **Options** (`?ex=1&opt=a&lift=`):
 - rise: opacity plus 8px up, while the shadow steps from answer to evidence. 400ms in, 240ms out.
@@ -156,13 +156,13 @@ Emil Kowalski's rule from CLAUDE.md: enforce the system in code. `scripts/check-
 
 ---
 
-## D9. Exploration 4: where the clip opens
+## D9. Exploration 4: where the clip opens (Not approved: Mudit, round 3. See ex1-ex4-review.md)
 
 **Question.** The clip is the deepest level. Where does it go so the count stays in view?
 
 **Choice.** Inside exploration 1's layer, under the tapped person, and the layer scrolls inside itself to that person. A separate player surface would be a third elevation (ANALYSIS: keep two). Opening it in the stream repeats the first-try failure, where the player pushes the count away (TASTE P16 round 4).
 
-## D10. Exploration 4: how the clip is born
+## D10. Exploration 4: how the clip is born (Not approved: Mudit, round 3. See ex1-ex4-review.md)
 
 **Options.** a zoom from the row (scale 0.94 to 1, 400ms). b cut with a path line. c the shipped Grow (height opens under the row).
 
@@ -231,7 +231,7 @@ Emil Kowalski's rule from CLAUDE.md: enforce the system in code. `scripts/check-
 - Measured at 390px wide: 225 side 177x84, 75 side 67x84, people rows 228x86, control 139x44. All meet 44. The sides' hit areas extend to `--dlg-depth-hit-min` with no visual change.
 - Fallbacks: no JavaScript gets a `<noscript>` poster. Viewports under 360px get the take. Reduced motion keeps the poster (a offers the control).
 
-## D14. Exploration 4: closing a clip folds back
+## D14. Exploration 4: closing a clip folds back (Not approved: Mudit, round 3. See ex1-ex4-review.md)
 
 The close is a shallower move, so it folds with the shipped Grow on `--dlg-motion-shallower-ms` (240ms, Carbon `duration-moderate-02`) in place of a cut. A clip that replaced another (sideways) still lands open at once, but keeps its Grow so it can fold. Strip: `out/ex4-fold-strip.png`.
 
@@ -243,3 +243,33 @@ The close is a shallower move, so it folds with the shipped Grow on `--dlg-motio
 - https://www.nngroup.com/articles/flat-ui-less-attention-cause-uncertainty/
 - https://www.nngroup.com/articles/clickable-elements/
 - Carbon choreography, the Material Motion.md file and Heer and Robertson are as listed in Sources above.
+
+
+---
+
+## D15. Exploration 2: the hover take (round 3, replaces the autoplay reveal on /dialogue)
+
+**Mudit (round 3):** the relabel take "needs to use a hover mouse ... very simple like posthog."
+
+**Question.** What does the reader see at rest, and what does hovering a row show?
+
+**Options** (`/dev/dialogue-depth?ex=hover&opt=a|b`):
+- a. Counts at rest (9 of 14, 88 of 125). Hovering a row swaps its value for its percent in the same grid cell.
+- b. Percents at rest (64%, 70%). Hovering a row reveals its count.
+- c. Tooltip. Not built: it adds a surface the approved charts do not have, and the budget went to a and b.
+
+**Evidence.**
+- TASTE Round 18 item 5 (Mudit): "Hovering a stacked bar or a ranked row swaps its counts for percents in one grid cell." That sets the direction (counts at rest) and the mechanism (one grid cell). a reuses the shipped swap classes in dialogue-product.css as they are.
+- TASTE 2026-11-10: "no outline on hover or press in demos". The chart.css hover outline is switched off inside the figure. The hover state is the value swap, nothing new.
+- NN/g: "if 4 out of 5 test users do something, don't conclude that 80% of all users will do the same." https://www.nngroup.com/videos/numbers-small-ux-studies/
+- Garcia-Retamero and Galesic 2009: "many participants paid too much attention to numerators and insufficient attention to denominators." https://pmc.ncbi.nlm.nih.gov/articles/PMC2775772 . Leading with "of 14" puts the denominator in the first read. b puts it behind a hover most readers never make.
+- NN/g progressive disclosure: "Initially, show users only a few of the most important options." https://www.nngroup.com/articles/progressive-disclosure/ . The count is the primary read and the percent is the secondary one.
+- Stageshow (local skill, /workspace/.agents/skills/stageshow/references/motion.md): "The cursor never covers the words it clicks", and the poster is the beat that tells the story alone. The pointer rests on each track's empty end, and the poster is the first swap held.
+
+**Choice: a,** on /dialogue and in the take. The caption is unchanged.
+
+**Rejected.** b tells the denominator story more dramatically (64% turns into 9 of 14), but it reverses Round 18 item 5. It is flagged for Mudit (OPEN-QUESTIONS 37). The round 1 autoplay relabel is gone from the page. The `relabel`, `rescale` and `units` options stay in dev.
+
+**Take.** Recorded with the take recorder's pointer (the same SVG, the 600ms EASE_IO glide with a 0.08 bow). The first hover lands about 1s in, each payoff holds 2s, the pointer leaves the way it came and the loop closes on the rest frame. 2.5x zoom gives 35px type in a 1200x511 crop.
+
+**Files.** `out/ex2-hover-a.mp4`, `-poster.png`, `-sheet.png`. `out/ex2-hover-b.mp4`, `-poster.png`, `-sheet.png`. `out/ex2-hover-a-reduced-motion.mp4` (+ sheet and poster). `out/page-ex2-hover-1440.png` (the /dialogue figure hovered).

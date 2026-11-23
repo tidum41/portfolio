@@ -32,3 +32,7 @@ Mudit writes the story. Structural changes and figures are logged here with a re
 | P9 | Speed break (ANALYSIS section 3) | (text only) | Exploration 3 as the speed figure: one card that answers three questions in the right shape, with no re-asking. No timing numbers | Shows speed as the right shape first time, nothing invented |
 
 No new copy went on /dialogue in round 2.
+
+## Round 3 (page)
+- The Data viz denominator figure now uses `DenominatorReveal option="hover-counts"`: 9 of 14 and 88 of 125 at rest, and hovering a row shows its percent in the same cell (TASTE Round 18 item 5). The round 1 autoplay relabel is removed. The caption is unchanged (Mudit's verdict line plus "Illustrative data."). No new copy.
+- Revert to round 1: set `option="relabel"` on that line in DialogueCaseStudyContent.tsx. Revert entirely: as in section 1 above.

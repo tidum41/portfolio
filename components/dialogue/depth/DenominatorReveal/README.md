@@ -16,7 +16,7 @@ Shows two groups of different size first as percents, then as people out of thei
 ## Props
 | Prop | Type | Notes |
 |---|---|---|
-| `option` | `"relabel" \| "rescale" \| "units"` | a, b, c. The /dialogue figure uses `"relabel"` (it ends on the kept By group chart). `"rescale"` contradicts CHART-RATIONALE By group (d) and waits for Mudit |
+| `option` | `"relabel" \| "rescale" \| "units" \| "hover-counts" \| "hover-percents"` | a, b, c. Round 3: the /dialogue figure uses `"hover-counts"` (no autoplay; hover swaps a row's count for its percent, the shipped Round 18 swap). Round 1 used `"relabel"` (it ends on the kept By group chart). `"rescale"` contradicts CHART-RATIONALE By group (d) and waits for Mudit |
 | `title` | `string` | The chart title (answer sentence) |
 | `groups` | `readonly [DenominatorGroup, DenominatorGroup]` | `{ label, count, of, tone: "focal" \| "mid" }`. Tone maps to chart tokens, never a colour string |
 | `phase` | `"rate" \| "people"` (optional) | Controlled. Omit it and the figure runs itself once 60% in view |
@@ -35,3 +35,6 @@ No `className` or `style` props (check:dialogue-depth fails on them).
 
 ## Reduced motion
 Starts in `people` and never transitions (JS check plus a CSS `transition: none` block).
+
+## Hover options (round 3)
+`hover-counts` and `hover-percents` ignore `phase` and never autoplay. The only motion is the shipped 150ms opacity swap, off under reduced motion. No outline on hover (TASTE 2026-11-10). Keyboard focus swaps too.

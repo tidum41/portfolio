@@ -224,6 +224,21 @@ export default function DepthLab() {
       </main>
     );
   }
+  if (rawEx === "hover") {
+    /* Round 3 take stage: one well, one card, cropped by scripts/record-dialogue-depth-hover.mjs. */
+    const opt = rawOpt === "b" ? "hover-percents" : "hover-counts";
+    return (
+      <main className="dialogue-product-root dlg-lab dlg-lab--stage">
+        <div id="frame" className="dlg-lab__stage">
+          <DialogueRachelFrame tone="system">
+            <div className="dlg-lab__panel dlg-lab__panel--pad">
+              <DenominatorReveal option={opt} title={BY_GROUP_TITLE} groups={BY_GROUP} />
+            </div>
+          </DialogueRachelFrame>
+        </div>
+      </main>
+    );
+  }
   const keys = only ? [only] : ex === 5 ? (["a", "b"] as const) : KEYS;
   return (
     <main className="dialogue-product-root dlg-lab" data-ex={ex}>

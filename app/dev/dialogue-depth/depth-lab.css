@@ -21,3 +21,5 @@
 .dlg-lab__steps button { font: inherit; font-size: 12px; min-height: 32px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--dp-border); background: transparent; cursor: pointer; }
 .dlg-lab__steps button[aria-pressed="true"] { background: var(--dp-nav-active-bg); }
 @media (max-width: 720px) { .dlg-lab { padding: 12px; } .dlg-lab__grid { --cols: 1; } }
+.dlg-lab__stage { width: 480px; }
+.dlg-lab__stage .dlg-lab__panel--pad { padding: 24px 16px; }

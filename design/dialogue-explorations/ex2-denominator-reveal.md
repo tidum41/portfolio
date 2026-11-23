@@ -1,6 +1,6 @@
 # Exploration 2: the denominator reveal
 
-Status: option a is on /dialogue (Data viz, after the Carbon sentence), pending Mudit's OK. Options b and c stay on `/dev/dialogue-depth?ex=2`.
+Status (round 3): the /dialogue figure is hover option a (counts at rest, the percent on hover, TASTE Round 18 item 5), pending Mudit's OK. The round 1 autoplay relabel is off the page. Hover option b and the round 1 options stay in dev. DECISIONS D15.
 
 ## What it repairs
 The Data viz h2 says charts count people out of their own group, and before this round every figure in the section used one denominator (300). The proof lived in code (DialogueChartLibrary ENTRIES, 64% / 70% against 9 of 14 / 88 of 125) and was not rendered. Mudit approved featuring the unequal-segments blind spot (handoffs, Nov 9). Problems P6 and P4 in ANALYSIS section 2.
@@ -31,3 +31,9 @@ Chosen for the page: a. See DECISIONS D1 to D3 for evidence, rejections and the 
 
 ## Open
 - b or c on the page needs Mudit (OPEN-QUESTIONS, depth-r1 items).
+
+## Round 3: the hover take
+- Stage: `/dev/dialogue-depth?ex=hover&opt=a|b`. Recorder: `scripts/record-dialogue-depth-hover.mjs <base> <out> <a|b> [reduce]`.
+- a (chosen): 9 of 14 and 88 of 125 at rest. Hovering a row swaps in 64% or 70% in the same cell (the shipped 150ms swap), with no outline.
+- b (flagged): 64% and 70% at rest. Hovering reveals the count. Reverses Round 18 item 5.
+- Outputs: `/workspace/dlg-depth-r1-shots/out/ex2-hover-{a,b}.mp4`, `-poster.png`, `-sheet.png`, `ex2-hover-a-reduced-motion.mp4`, `page-ex2-hover-1440.png`.

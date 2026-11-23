@@ -10,7 +10,10 @@ import "./denominator-reveal.css";
 
 /** a relabel: geometry fixed, the label cuts. b rescale: label cuts, then each track resizes to its group (staged).
  *  c units: the percent bar is replaced by one dot per person. */
-export type DenominatorRevealOption = "relabel" | "rescale" | "units";
+export type DenominatorRevealOption = "relabel" | "rescale" | "units" | "hover-counts" | "hover-percents";
+/* Round 3 (Mudit: a hover take, PostHog-simple). hover-counts: counts at rest, hovering a row swaps in its percent
+   (TASTE Round 18 item 5, the /dialogue figure). hover-percents: percents at rest, hovering reveals the count. No motion
+   but the shipped 150ms opacity swap; no phase, no autoplay. */
 export type DenominatorRevealPhase = "rate" | "people";
 export type DenominatorTone = "focal" | "mid";
 export type DenominatorGroup = { label: string; count: number; of: number; tone: DenominatorTone };
@@ -59,7 +62,8 @@ function usePhase(controlled: DenominatorRevealPhase | undefined, holdMs: number
 }
 
 export default function DenominatorReveal({ option, title, groups, phase: controlled, holdMs = 900 }: Props) {
-  const { ref, phase } = usePhase(controlled, holdMs);
+  const hover = option === "hover-counts" || option === "hover-percents";
+  const { ref, phase } = usePhase(hover ? "people" : controlled, holdMs);
   const maxOf = Math.max(...groups.map((g) => g.of));
   return (
     <div ref={ref} className="dialogue-product-root dlg-dx-denom" data-option={option} data-phase={phase}>
@@ -85,10 +89,18 @@ export default function DenominatorReveal({ option, title, groups, phase: contro
                   ) : null}
                 </div>
                 {/* One grid cell: the percent and the count share it, so nothing reflows when either shows. */}
-                <span className={["dp-chart-bars__value", "dlg-dx-denom__value", g.tone === "focal" ? "dp-chart-bars__value--focal" : ""].filter(Boolean).join(" ")}>
-                  <span className="dlg-dx-denom__v dlg-dx-denom__v--rate">{pct(g)}</span>
-                  <span className="dlg-dx-denom__v dlg-dx-denom__v--people">{ofText(g)}</span>
-                </span>
+                {hover ? (
+                  /* The shipped Round 18 swap: both values in one grid cell (dialogue-product.css), so nothing reflows. */
+                  <span className={["dp-chart-bars__value", "dlg-dx-denom__hover", g.tone === "focal" ? "dp-chart-bars__value--focal" : ""].filter(Boolean).join(" ")}>
+                    <span className="dp-chart-bars__v-count">{option === "hover-counts" ? ofText(g) : pct(g)}</span>
+                    <span className="dp-chart-bars__v-share" aria-hidden>{option === "hover-counts" ? pct(g) : ofText(g)}</span>
+                  </span>
+                ) : (
+                  <span className={["dp-chart-bars__value", "dlg-dx-denom__value", g.tone === "focal" ? "dp-chart-bars__value--focal" : ""].filter(Boolean).join(" ")}>
+                    <span className="dlg-dx-denom__v dlg-dx-denom__v--rate">{pct(g)}</span>
+                    <span className="dlg-dx-denom__v dlg-dx-denom__v--people">{ofText(g)}</span>
+                  </span>
+                )}
               </div>
             );
           })}
