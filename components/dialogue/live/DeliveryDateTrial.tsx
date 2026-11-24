@@ -25,7 +25,7 @@ const ANA = QUOTE_LIST_FRIDAY[0];
 
 /** Which points are open. The clip can only be open while the count is. */
 export type TrialState = { count: boolean; clip: boolean; asks: boolean };
-const CLOSED: TrialState = { count: false, clip: false, asks: false };
+export const CLOSED: TrialState = { count: false, clip: false, asks: false };
 
 /** Reduced motion or a phone width: show the stepped static strip. */
 function usePrefersReducedMotion() {
@@ -53,19 +53,20 @@ function Wrap({ still, open, children }: { still: boolean; open: boolean; childr
   return <Grow open={open} className="dlg-trial__open">{children}</Grow>;
 }
 
-function Answer({ state, set }: { state: TrialState; set?: (s: TrialState) => void }) {
+export function Answer({ state, set, points = true, footer }: { state: TrialState; set?: (s: TrialState) => void; points?: boolean; footer?: ReactNode }) {
   const toggle = (k: keyof TrialState) => set && (() => {
     const next = { ...state, [k]: !state[k] };
     if (k === "count" && !next.count) next.clip = false;
     set(next);
   });
   const still = !set;
+  const countLabel = `${FRIDAY} of ${TOTAL} shoppers`;
   return (
     <div className={`dialogue-product-root dp-chat-panel-typography dlg-live dlg-stage dlg-trial__panel ${dialogueProductFontClassName}`}>
       <div className="dlg-trial__body">
         <UserMessageBubble>{QUESTION}</UserMessageBubble>
         <p className="dlg-trial__line">
-          <Point open={state.count} target="trial-count" onClick={toggle("count")}>{FRIDAY} of {TOTAL} shoppers</Point> read it as this Friday.
+          {points ? <Point open={state.count} target="trial-count" onClick={toggle("count")}>{countLabel}</Point> : countLabel} read it as this Friday.
         </p>
         <Wrap still={still} open={state.count}>
           <AnswerCard still sideOpen="friday" answer={COUNT_ONLY} />
@@ -75,7 +76,7 @@ function Answer({ state, set }: { state: TrialState; set?: (s: TrialState) => vo
           <p className="dlg-trial__more">+{remainingCount(FRIDAY, 1)} more who read it as this Friday</p>
         </Wrap>
         <p className="dlg-trial__line">
-          The <Point open={state.asks} target="trial-asks" onClick={toggle("asks")}>top ask</Point> is an exact date.
+          The {points ? <Point open={state.asks} target="trial-asks" onClick={toggle("asks")}>top ask</Point> : "top ask"} is an exact date.
         </p>
         <Wrap still={still} open={state.asks}>
           <ChartVizCard>
@@ -86,6 +87,7 @@ function Answer({ state, set }: { state: TrialState; set?: (s: TrialState) => vo
           <p className="dlg-trial__more">{TOP_ASKS.length - ASKS_SHOWN} more asks</p>
         </Wrap>
       </div>
+      {footer}
     </div>
   );
 }

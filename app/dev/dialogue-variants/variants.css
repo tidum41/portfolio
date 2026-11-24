@@ -23,3 +23,15 @@
 .dlgv-open { display: flex; flex-direction: column; gap: 12px; }
 .dlgv-d { margin-top: 56px; }
 @media (max-width: 600px) { .dlgv-d { margin-top: 0; } }
+
+.dlgv-compare { display: grid; grid-template-columns: repeat(3, minmax(0, 423px)); gap: 32px; justify-content: center; align-items: start; }
+.dlgv-compare .dlg-trial { width: 100%; margin-inline: 0; }
+.dlgv-compare .dlg-trial__panel { display: flex; flex-direction: column; }
+.dlgv-compare [data-compare="picker"] .dlg-trial__body { min-height: 120px; }
+.dlgv-compare .dlg-depth:last-child { margin-bottom: 0; }
+.dlgv-compare .dlg-depth__opt { text-align: center; }
+.dlgv-reset { align-self: flex-start; margin: 4px 0 0; color: var(--dp-muted); font-size: var(--text-meta-size); }
+@media (max-width: 600px) {
+  .dlgv-compare { grid-template-columns: minmax(0, 1fr); }
+  .dlgv-compare [data-compare="picker"] .dlg-trial__body { min-height: 48px; }
+}
