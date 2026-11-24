@@ -3,7 +3,7 @@
 /* Depth r2, variant D (Mudit picked C+B, Nov 23 2026): the delivery-date answer as one interaction trial.
    Two short lines (B wording). Each line has one underlined point; a click opens more on that point under it, in place
    (C): the count opens the bar and one named quote, the quote opens its clip and synced transcript, the asks line opens
-   the ranked asks. Nothing covers the answer. Reduced motion shows the same states as a static stepped strip.
+   the ranked asks. Nothing covers the answer. Reduced motion and phone widths show the same states as a static stepped strip.
    Hearthside mock data only (MOCK-DATA.md). Approved parts only: UserMessageBubble, AnswerCard, ChartVizCard,
    ChartBarList, QuoteRow, Grow. Icons come from product/icons via QuoteRow, never Lucide. */
 import { useEffect, useState, type ReactNode } from "react";
@@ -27,10 +27,11 @@ const ANA = QUOTE_LIST_FRIDAY[0];
 export type TrialState = { count: boolean; clip: boolean; asks: boolean };
 const CLOSED: TrialState = { count: false, clip: false, asks: false };
 
+/** Reduced motion or a phone width: show the stepped static strip. */
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce), (max-width: 600px)");
     const on = () => setReduce(mq.matches);
     on();
     mq.addEventListener("change", on);

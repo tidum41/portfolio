@@ -10,6 +10,7 @@ import DialogueRachelFrame from "@/components/dialogue/DialogueRachelFrame";
 import DenominatorReveal from "@/components/dialogue/depth/DenominatorReveal/DenominatorReveal";
 import { BY_GROUP, BY_GROUP_TITLE } from "@/components/dialogue/depth/hearthside";
 import StaticFigure from "@/components/dialogue/StaticFigure";
+import DeliveryDateTrial from "@/components/dialogue/live/DeliveryDateTrial";
 import QuoteListFigure from "@/components/dialogue/product/scenarios/QuoteListFigure";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import DialogueDemoVideo, { DialogueDemoStill } from "@/components/dialogue/motion/DialogueDemoVideo";
@@ -218,9 +219,8 @@ export function DialogueCaseStudyContent({
               </CaseStudyBody>
               <figure className="cs-figure dialogue-live-block">
                 <DialogueRachelFrame tone="solution">
-                  <StaticFigure figure="clip-open">
-                    <DialogueDemoStill src="/dialogue/motion/live-clip.jpg" live={{ demo: "clip", still: "final" }} label="Ana&rsquo;s quote open under the head line &ldquo;picked from the 225&rdquo;, with her clip player and her synced transcript line inside the answer" />
-                  </StaticFigure>
+                  {/* Depth r2 (Mudit OK, Nov 23 2026): the single interaction trial. Phones and reduced motion get the stepped strip. */}
+                  <div data-annotate="dialogue-trial/root"><DeliveryDateTrial /></div>
                 </DialogueRachelFrame>
               </figure>
               <Caption>Ana&rsquo;s clip opens under her quote, inside the answer. Illustrative data.</Caption>

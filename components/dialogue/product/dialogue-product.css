@@ -4252,7 +4252,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
    so its bar rows put the label and value on one line with the track under them (the phone layout, at every width). */
 .dlg-match__pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
 .dlg-match__half { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.dlg-match__tag { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-tertiary); }
+.dlg-match__tag { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--dp-muted); }
 .dlg-match__tag[data-kept] { color: var(--color-text-primary); }
 .dlg-templates__panel.dlg-mini .dp-chart-bars__row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "track track"; row-gap: 4px; }
 .dlg-templates__panel.dlg-mini .dp-chart-bars__row > .dp-chart-bars__label { grid-area: label; width: auto; white-space: normal; }
