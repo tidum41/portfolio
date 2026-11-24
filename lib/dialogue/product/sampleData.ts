@@ -233,3 +233,12 @@ export const PROBLEM_ANSWER = {
     { participant: "Mei", time: "18:27", quote: "Friday which week?" },
   ],
 } as const;
+
+/** Hearthside mock (MOCK-DATA ranked themes): what shoppers asked for after checkout, mentions out of 300. Same rows as PROBLEM_ANSWER.table. */
+export const TOP_ASKS = [
+  { label: "Show an exact calendar date", value: 41 },
+  { label: "Say which Friday it means", value: 28 },
+  { label: "Warn when Friday slips", value: 17 },
+  { label: "Offer a pickup option", value: 11 },
+  { label: "Email the day before", value: 8 },
+] as const;

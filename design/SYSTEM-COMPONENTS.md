@@ -80,3 +80,4 @@ A new component needs Mudit's explicit OK before it is built. When he approves o
 ## Not allowed without approval
 - Round P "hearthside" figures (BeforeChatFigure, ScopePairFigure, CountsOpenFigure, ComparisonRowsFigure, LevelsToggleFigure, ClipsFigure, ThinPlanFigure, HeroLayeredFigure, QuoteCardH, HearthsideViewport). Their content can be rebuilt from the components above.
 - PENDING Mudit's OK, dev page only (`/dev/dialogue-depth`), not importable on /dialogue until moved up into the allowlist: `EvidenceLayer` (explorations 1 and 4), `ChartChosen` (exploration 3), `LiveFigure` (exploration 5). Each lives in components/dialogue/depth/<Name>/ with a README and is gated by `npm run check:dialogue-depth`.
+- PENDING (Mudit OK): `DeliveryDateTrial` (depth r2 variant D: composed of UserMessageBubble, AnswerCard, ChartVizCard, ChartBarList, QuoteRow and Grow; the case study's single interaction trial, with a stepped static fallback under reduced motion)

@@ -4495,3 +4495,20 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
   background: transparent;
   cursor: inherit;
 }
+
+/* Depth r2, variant D: the delivery-date interaction trial. Tokens only. */
+.dlg-trial { width: 100%; max-width: 423px; margin-inline: auto; }
+.dlg-trial__panel { border: 1px solid var(--dp-border); border-radius: var(--dp-radius); background: var(--dp-surface); overflow: hidden; }
+.dlg-trial__body { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.dlg-trial__line { margin: 0; color: var(--dp-ink); }
+.dlg-trial__point { padding: 0; border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: var(--dp-brand); text-decoration-thickness: 2px; text-underline-offset: 3px; border-radius: var(--dp-radius-chip); transition: background-color 150ms ease; }
+.dlg-trial__point:hover { background: var(--dp-warm); }
+.dlg-trial__point[aria-expanded="true"] { text-decoration-color: var(--dp-ink); }
+.dlg-trial__point:disabled { cursor: default; }
+.dlg-trial__point:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
+.dlg-trial__open .dlg-grow__inner, div.dlg-trial__open:not(.dlg-grow) { display: flex; flex-direction: column; gap: 12px; }
+.dlg-trial__more { margin: 0; color: var(--dp-muted); font-size: var(--text-meta-size); }
+.dlg-trial--stepped { max-width: none; display: grid; grid-template-columns: repeat(2, minmax(0, 423px)); gap: 32px; justify-content: center; align-items: start; }
+.dlg-trial__step { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.dlg-trial__step-label { color: var(--dp-muted); font-size: var(--text-meta-size); }
+@media (max-width: 600px) { .dlg-trial--stepped { grid-template-columns: minmax(0, 1fr); } }

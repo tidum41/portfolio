@@ -11,6 +11,7 @@ import { QuoteRow } from "@/components/dialogue/live/DialogueMotionStage";
 import { DialogueDemoStill } from "@/components/dialogue/motion/DialogueDemoVideo";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { ANA_TRANSCRIPT, QUOTE_LIST, QUOTE_LIST_FRIDAY, remainingCount } from "@/lib/dialogue/product/sampleData";
+import DeliveryDateTrial from "@/components/dialogue/live/DeliveryDateTrial";
 import "./variants.css";
 
 const QUESTION = "How do shoppers read \u2018Arrives by Friday\u2019?";
@@ -118,6 +119,8 @@ export default function VariantsLab() {
       <section className="dlgv-pair" data-pair="a"><Before /><VariantA /></section>
       <section className="dlgv-pair" data-pair="b"><Before /><VariantB /></section>
       <section className="dlgv-pair" data-pair="c"><Before /><VariantC /></section>
+      <section className="dlgv-pair" data-pair="d"><Before /><div className="dlgv-col"><p className="dlgv-label">D. C and B combined, the interaction trial</p><div className="dlgv-d"><DeliveryDateTrial /></div></div></section>
+      <section className="dlgv-pair dlgv-pair--c" data-pair="d-stepped"><DeliveryDateTrial stepped /></section>
     </main>
   );
 }

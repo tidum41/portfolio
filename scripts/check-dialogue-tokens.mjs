@@ -64,6 +64,7 @@ function checkTs(file, src) {
       report(file, n, "1.5 stroke", raw);
     if (/strokeWidth:\s*1\.5\b/.test(line)) report(file, n, "1.5 stroke", raw);
     if (/var\(--ds-/.test(line)) report(file, n, "raw DS token in component", raw);
+    if (/from\s+["'](?:lucide-react|lucide)["']/.test(line)) report(file, n, "Lucide import (use product/icons)", raw);
   });
 }
 

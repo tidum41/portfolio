@@ -1,0 +1,120 @@
+"use client";
+
+/* Depth r2, variant D (Mudit picked C+B, Nov 23 2026): the delivery-date answer as one interaction trial.
+   Two short lines (B wording). Each line has one underlined point; a click opens more on that point under it, in place
+   (C): the count opens the bar and one named quote, the quote opens its clip and synced transcript, the asks line opens
+   the ranked asks. Nothing covers the answer. Reduced motion shows the same states as a static stepped strip.
+   Hearthside mock data only (MOCK-DATA.md). Approved parts only: UserMessageBubble, AnswerCard, ChartVizCard,
+   ChartBarList, QuoteRow, Grow. Icons come from product/icons via QuoteRow, never Lucide. */
+import { useEffect, useState, type ReactNode } from "react";
+import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
+import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
+import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
+import { AnswerCard } from "@/components/dialogue/live/AnswerCard";
+import { Grow } from "@/components/dialogue/live/Grow";
+import { QuoteRow } from "@/components/dialogue/live/DialogueMotionStage";
+import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
+import { ANA_TRANSCRIPT, QUOTE_LIST_FRIDAY, TOP_ASKS, remainingCount } from "@/lib/dialogue/product/sampleData";
+
+const QUESTION = "How do shoppers read \u2018Arrives by Friday\u2019?";
+const TOTAL = 300;
+const FRIDAY = 225;
+const ASKS_SHOWN = 2;
+const COUNT_ONLY = { finding: "", total: TOTAL, groups: [{ label: "Read it as this Friday", value: FRIDAY, focal: true }, { label: "Unsure", value: TOTAL - FRIDAY }] };
+const ANA = QUOTE_LIST_FRIDAY[0];
+
+/** Which points are open. The clip can only be open while the count is. */
+export type TrialState = { count: boolean; clip: boolean; asks: boolean };
+const CLOSED: TrialState = { count: false, clip: false, asks: false };
+
+function usePrefersReducedMotion() {
+  const [reduce, setReduce] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const on = () => setReduce(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return reduce;
+}
+
+function Point({ open, target, onClick, children }: { open: boolean; target: string; onClick?: () => void; children: ReactNode }) {
+  return (
+    <button type="button" className="dlg-trial__point" data-target={target} aria-expanded={open} onClick={onClick} disabled={!onClick}>
+      {children}
+    </button>
+  );
+}
+
+function Wrap({ still, open, children }: { still: boolean; open: boolean; children: ReactNode }) {
+  if (still) return open ? <div className="dlg-trial__open">{children}</div> : null;
+  return <Grow open={open} className="dlg-trial__open">{children}</Grow>;
+}
+
+function Answer({ state, set }: { state: TrialState; set?: (s: TrialState) => void }) {
+  const toggle = (k: keyof TrialState) => set && (() => {
+    const next = { ...state, [k]: !state[k] };
+    if (k === "count" && !next.count) next.clip = false;
+    set(next);
+  });
+  const still = !set;
+  return (
+    <div className={`dialogue-product-root dp-chat-panel-typography dlg-live dlg-stage dlg-trial__panel ${dialogueProductFontClassName}`}>
+      <div className="dlg-trial__body">
+        <UserMessageBubble>{QUESTION}</UserMessageBubble>
+        <p className="dlg-trial__line">
+          <Point open={state.count} target="trial-count" onClick={toggle("count")}>{FRIDAY} of {TOTAL} shoppers</Point> read it as this Friday.
+        </p>
+        <Wrap still={still} open={state.count}>
+          <AnswerCard still sideOpen="friday" answer={COUNT_ONLY} />
+          <div className="dp-clip-quotes">
+            <QuoteRow q={ANA} open={state.clip} onTap={toggle("clip") || undefined} playSec={4} transcript={ANA_TRANSCRIPT} />
+          </div>
+          <p className="dlg-trial__more">+{remainingCount(FRIDAY, 1)} more who read it as this Friday</p>
+        </Wrap>
+        <p className="dlg-trial__line">
+          The <Point open={state.asks} target="trial-asks" onClick={toggle("asks")}>top ask</Point> is an exact date.
+        </p>
+        <Wrap still={still} open={state.asks}>
+          <ChartVizCard>
+            <div className="dlg-answer--rows">
+              <ChartBarList max={TOP_ASKS[0].value} rows={TOP_ASKS.slice(0, ASKS_SHOWN).map((a, i) => ({ label: a.label, value: a.value, display: `${a.value} of ${TOTAL}`, focal: i === 0 }))} />
+            </div>
+          </ChartVizCard>
+          <p className="dlg-trial__more">{TOP_ASKS.length - ASKS_SHOWN} more asks</p>
+        </Wrap>
+      </div>
+    </div>
+  );
+}
+
+const STEPS: { label: string; state: TrialState }[] = [
+  { label: "Closed", state: CLOSED },
+  { label: "One click on the count", state: { count: true, clip: false, asks: false } },
+  { label: "At the source", state: { count: true, clip: true, asks: false } },
+  { label: "One click on the asks", state: { count: false, clip: false, asks: true } },
+];
+
+/** The case study's single full interaction trial. `initial` is for stills and shots. */
+export default function DeliveryDateTrial({ initial = CLOSED, stepped }: { initial?: TrialState; stepped?: boolean }) {
+  const reduce = usePrefersReducedMotion();
+  const [state, setState] = useState<TrialState>(initial);
+  if (stepped ?? reduce) {
+    return (
+      <div className="dlg-trial dlg-trial--stepped" data-mode="stepped">
+        {STEPS.map((s) => (
+          <figure key={s.label} className="dlg-trial__step">
+            <figcaption className="dlg-trial__step-label">{s.label}</figcaption>
+            <Answer state={s.state} />
+          </figure>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="dlg-trial" data-mode="live">
+      <Answer state={state} set={setState} />
+    </div>
+  );
+}
