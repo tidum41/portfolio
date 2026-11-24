@@ -288,3 +288,4 @@ Defaults: specific headings and copy, section order details, figure choices and 
 - Nov 22 2026 Mudit (delegated to research-team preference): the denominator figure reads counts first (9 of 14, 88 of 125) with the percent on hover, matching the shipped Counts bar ("18 of 24" not a percent); build priority follows what teams ask for: verbatims and clips, then segment comparison, then sharing.
 - Delivery-date answer: C+B combination (one-click in-place depth, B wording, asks as second expandable line), Mudit 2026-11-23
 - Delivery-date trial (D, dotted ink underline triggers) goes in the /dialogue depth section as the single interactive moment, Mudit 2026-11-23
+- 2026-11-24 (Mudit): the data viz deep dive opens on the live product's raw markdown table (the before), so the PostHog reference lands as the turn, then our Current templates.
