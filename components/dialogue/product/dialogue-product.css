@@ -4501,9 +4501,9 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 .dlg-trial__panel { border: 1px solid var(--dp-border); border-radius: var(--dp-radius); background: var(--dp-surface); overflow: hidden; }
 .dlg-trial__body { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
 .dlg-trial__line { margin: 0; color: var(--dp-ink); }
-.dlg-trial__point { padding: 0; border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: var(--dp-brand); text-decoration-thickness: 2px; text-underline-offset: 3px; border-radius: var(--dp-radius-chip); transition: background-color 150ms ease; }
+.dlg-trial__point { padding: 0; border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer; text-decoration: underline dotted; text-decoration-color: var(--dp-ink); text-decoration-thickness: 2px; text-underline-offset: 3px; border-radius: var(--dp-radius-chip); transition: background-color 150ms ease; } /* real click trigger: dotted ink, cherry stays on the 225 bar */
 .dlg-trial__point:hover { background: var(--dp-warm); }
-.dlg-trial__point[aria-expanded="true"] { text-decoration-color: var(--dp-ink); }
+.dlg-trial__point[aria-expanded="true"] { text-decoration-style: solid; }
 .dlg-trial__point:disabled { cursor: default; }
 .dlg-trial__point:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
 .dlg-trial__open .dlg-grow__inner, div.dlg-trial__open:not(.dlg-grow) { display: flex; flex-direction: column; gap: 12px; }
