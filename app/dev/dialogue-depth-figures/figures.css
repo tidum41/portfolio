@@ -1,0 +1,23 @@
+/* Dev page only. The figure itself uses the case study's own classes (cs-figure, dialogue-rachel-frame, dialogue-caption). */
+.dlgf-page { min-height: 100vh; padding: 48px 24px 120px; background: var(--color-bg-primary); display: flex; flex-direction: column; align-items: center; gap: 64px; }
+.dlgf-head, .dlgf-fig { width: 100%; max-width: 640px; }
+.dlgf-title { margin: 0; font-family: var(--font-sans); font-size: 20px; line-height: 28px; font-weight: 500; color: var(--color-text-primary); }
+.dlgf-sub { margin: 8px 0 0; font-family: var(--font-sans); font-size: 13px; line-height: 20px; color: var(--color-text-secondary); }
+.dlgf-point { margin: 0 0 16px; font-family: var(--font-sans); font-size: 13px; line-height: 20px; font-weight: 500; color: var(--color-text-secondary); }
+.dlgf-figure { margin: 0; }
+.dlgf-stage { position: relative; }
+.dlgf-panel { width: 400px; }
+.dlgf-panel .dlg-trial { margin-inline: 0; }
+/* The take's gutter note, placed beside a 423px panel inside the 20px well padding. */
+.dlgf-stage .dlgf-note { left: 424px; width: 176px; margin: 0; }
+.dlgf-stage .dlgf-note .dlg-note__line { flex-basis: 16px; }
+.dlgf-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.dlgf-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dlgf-side__label { margin: 0; }
+.dlgf-side .dlg-trial { max-width: none; }
+@media (max-width: 600px) {
+  .dlgf-page { padding: 24px 16px 96px; gap: 48px; }
+  .dlgf-panel { width: 100%; }
+  .dlgf-stage .dlgf-note { display: none; }
+  .dlgf-pair { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+}

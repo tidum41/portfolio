@@ -130,3 +130,14 @@ Written in my own voice so I can explain each one in an interview. Each entry ho
 
 **Decision.** `remainingCount(total, shown)` is the group total minus the named people actually shown on that surface. The pill next to Ana and Dev is +223 (225 − 2). The open list and the grouped quote list show four named Friday people, so both say 221 more (225 − 4). Unsure with Mei and Owen is +73 (75 − 2). **Why.** The three figures looked inconsistent, but each one is already consistent with the names it shows. Unifying every surface to one N would miscount the people on screen. **Revert.** Inline the subtractions and drop the helper.
 
+
+### Depth r4 (2026-11-24): one chart path for the depth compare, and stacked-bar labels past two segments
+
+**Decision.** Every take on `/dev/dialogue-variants` draws the delivery-date reply through `DeliveryDateTrial`'s `Answer`, and both its charts go through `AnswerCard` (`COUNT_ANSWER`, `ASKS_ANSWER`). The count shows a selected side only while its people are on screen (`people: false` at the Chart depth). `answerLayout(groups, total)` returns rows when the groups do not split the total (ranked asks overlap), and those rows scale to the top ask as the ranked template already did; only a true two-way split draws its second group as the stone remainder. In `ChartStackedBar`, two legend lanes wrap per lane instead of breaking a label mid-name, three or more segments list one legend row per segment (the homepage card's rows), and from three segments the non-focal fills alternate mid and soft so no two neighbours share a fill.
+**Why.** The compare's picker had its own hand-built answer: it pinned `sideOpen="friday"` at every depth, so at Chart the 225 was drawn selected with the 75 receded and no people under it, and its asks rows had no hover percent, unlike the count bar. Past two segments the one-line legend broke labels into single letters at 336px and below.
+**Revert.** Restore `components/dialogue/live/DeliveryDateTrial.tsx`, `AnswerCard.tsx`, `ChartStackedBar.tsx`, `lib/dialogue/product/answerLayout.ts` and the last block of `dialogue-product.css` from 460912e. /dialogue at 1440 and the homepage card measure identical either way; at 390 three two-lane legends grow 4px because the second lane now wraps whole.
+
+### Depth r4 (2026-11-24): option 4, a composer depth menu, stays on a dev route
+
+**Decision.** `app/dev/dialogue-variants/DepthMenu.tsx` picks the reply's depth from a model-picker style menu in the composer. It is dev only and PENDING Mudit's OK; nothing on /dialogue imports it.
+**Why.** No earlier round built a menu-style depth picker (searched iterations, notes, p10-decisions, git history, review-desk and the dlg folders); every picker so far was the tab row. The compare needed the take to judge it.

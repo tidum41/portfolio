@@ -12,7 +12,7 @@ import { DialogueDemoStill } from "@/components/dialogue/motion/DialogueDemoVide
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { ANA_TRANSCRIPT, QUOTE_LIST, QUOTE_LIST_FRIDAY, remainingCount } from "@/lib/dialogue/product/sampleData";
 import DeliveryDateTrial from "@/components/dialogue/live/DeliveryDateTrial";
-import DepthCompare from "./DepthCompare";
+import DepthCompare, { type Beat } from "./DepthCompare";
 import "./variants.css";
 
 const QUESTION = "How do shoppers read \u2018Arrives by Friday\u2019?";
@@ -114,15 +114,17 @@ function VariantC() {
   );
 }
 
-export default function VariantsLab() {
+export default function VariantsLab({ beat, menuOpen }: { beat?: Beat; menuOpen?: boolean }) {
   return (
-    <main className="dlgv-page" data-theme-scope="light">
+    <main className="dlgv-page dialogue-product-root" data-theme-scope="light">
+      {/* Depth r4: the iteration leads; the r1 and r2 answer variants follow as its history. */}
+      <DepthCompare initialBeat={beat} menuOpen={menuOpen} />
+      <h2 className="dlgv-history">Earlier answer variants (depth r1 and r2)</h2>
       <section className="dlgv-pair" data-pair="a"><Before /><VariantA /></section>
       <section className="dlgv-pair" data-pair="b"><Before /><VariantB /></section>
       <section className="dlgv-pair" data-pair="c"><Before /><VariantC /></section>
       <section className="dlgv-pair" data-pair="d"><Before /><div className="dlgv-col"><p className="dlgv-label">D. C and B combined, the interaction trial</p><div className="dlgv-d"><DeliveryDateTrial /></div></div></section>
       <section className="dlgv-pair dlgv-pair--c" data-pair="d-stepped"><DeliveryDateTrial stepped /></section>
-      <DepthCompare />
     </main>
   );
 }

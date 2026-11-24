@@ -4,27 +4,30 @@
    Two short lines (B wording). Each line has one underlined point; a click opens more on that point under it, in place
    (C): the count opens the bar and one named quote, the quote opens its clip and synced transcript, the asks line opens
    the ranked asks. Nothing covers the answer. Reduced motion and phone widths show the same states as a static stepped strip.
-   Hearthside mock data only (MOCK-DATA.md). Approved parts only: UserMessageBubble, AnswerCard, ChartVizCard,
-   ChartBarList, QuoteRow, Grow. Icons come from product/icons via QuoteRow, never Lucide. */
+   Hearthside mock data only (MOCK-DATA.md). Approved parts only: UserMessageBubble, AnswerCard (which draws ChartVizCard,
+   ChartStackedBar and ChartBarList), QuoteRow, Grow. Icons come from product/icons via QuoteRow, never Lucide. */
 import { useEffect, useState, type ReactNode } from "react";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
-import ChartVizCard from "@/components/dialogue/product/chart/ChartVizCard";
-import ChartBarList from "@/components/dialogue/product/chart/ChartBarList";
-import { AnswerCard } from "@/components/dialogue/live/AnswerCard";
+import { AnswerCard, type AnswerData } from "@/components/dialogue/live/AnswerCard";
 import { Grow } from "@/components/dialogue/live/Grow";
 import { QuoteRow } from "@/components/dialogue/live/DialogueMotionStage";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { ANA_TRANSCRIPT, QUOTE_LIST_FRIDAY, TOP_ASKS, remainingCount } from "@/lib/dialogue/product/sampleData";
 
-const QUESTION = "How do shoppers read \u2018Arrives by Friday\u2019?";
-const TOTAL = 300;
-const FRIDAY = 225;
-const ASKS_SHOWN = 2;
-const COUNT_ONLY = { finding: "", total: TOTAL, groups: [{ label: "Read it as this Friday", value: FRIDAY, focal: true }, { label: "Unsure", value: TOTAL - FRIDAY }] };
+export const QUESTION = "How do shoppers read \u2018Arrives by Friday\u2019?";
+export const TOTAL = 300;
+export const FRIDAY = 225;
+export const ASKS_SHOWN = 2;
+/* Depth r4: the one source for both charts. Every take on /dev/dialogue-variants renders these through AnswerCard, so the
+   same data always gets the same template (answerLayout), the same fills and the same labels. */
+export const COUNT_ANSWER: AnswerData = { finding: "", total: TOTAL, groups: [{ label: "Read it as this Friday", value: FRIDAY, focal: true }, { label: "Unsure", value: TOTAL - FRIDAY }] };
+/** Ranked asks overlap (one shopper can ask for two things), so they never split the 300: AnswerCard returns rows scaled to the top ask. */
+export const ASKS_ANSWER: AnswerData = { finding: "", total: TOTAL, groups: TOP_ASKS.slice(0, ASKS_SHOWN).map((a, i) => ({ label: a.label, value: a.value, focal: i === 0 })) };
 const ANA = QUOTE_LIST_FRIDAY[0];
 
-/** Which points are open. The clip can only be open while the count is. */
-export type TrialState = { count: boolean; clip: boolean; asks: boolean };
+/** Which points are open. The clip can only be open while the count's people are. `people: false` opens the count's
+ *  chart alone (the Chart depth of a picker); left out, the count opens with its people, as a click on the count does. */
+export type TrialState = { count: boolean; clip: boolean; asks: boolean; people?: boolean };
 export const CLOSED: TrialState = { count: false, clip: false, asks: false };
 
 /** Reduced motion or a phone width: show the stepped static strip. */
@@ -53,13 +56,14 @@ function Wrap({ still, open, children }: { still: boolean; open: boolean; childr
   return <Grow open={open} className="dlg-trial__open">{children}</Grow>;
 }
 
-export function Answer({ state, set, points = true, footer }: { state: TrialState; set?: (s: TrialState) => void; points?: boolean; footer?: ReactNode }) {
+export function Answer({ state, set, points = true, footer, after }: { state: TrialState; set?: (s: TrialState) => void; points?: boolean; footer?: ReactNode; after?: ReactNode }) {
   const toggle = (k: keyof TrialState) => set && (() => {
     const next = { ...state, [k]: !state[k] };
     if (k === "count" && !next.count) next.clip = false;
     set(next);
   });
   const still = !set;
+  const people = state.people !== false;
   const countLabel = `${FRIDAY} of ${TOTAL} shoppers`;
   return (
     <div className={`dialogue-product-root dp-chat-panel-typography dlg-live dlg-stage dlg-trial__panel ${dialogueProductFontClassName}`}>
@@ -69,23 +73,25 @@ export function Answer({ state, set, points = true, footer }: { state: TrialStat
           {points ? <Point open={state.count} target="trial-count" onClick={toggle("count")}>{countLabel}</Point> : countLabel} read it as this Friday.
         </p>
         <Wrap still={still} open={state.count}>
-          <AnswerCard still sideOpen="friday" answer={COUNT_ONLY} />
-          <div className="dp-clip-quotes">
-            <QuoteRow q={ANA} open={state.clip} onTap={toggle("clip") || undefined} playSec={4} transcript={ANA_TRANSCRIPT} />
-          </div>
-          <p className="dlg-trial__more">+{remainingCount(FRIDAY, 1)} more who read it as this Friday</p>
+          {/* A side is open only when its people are on screen (Round 18): the chart alone shows no selected segment. */}
+          <AnswerCard still sideOpen={people ? "friday" : false} answer={COUNT_ANSWER} />
+          {people ? (
+            <>
+              <div className="dp-clip-quotes">
+                <QuoteRow q={ANA} open={state.clip} onTap={toggle("clip") || undefined} playSec={4} transcript={ANA_TRANSCRIPT} />
+              </div>
+              <p className="dlg-trial__more">+{remainingCount(FRIDAY, 1)} more who read it as this Friday</p>
+            </>
+          ) : null}
         </Wrap>
         <p className="dlg-trial__line">
           The {points ? <Point open={state.asks} target="trial-asks" onClick={toggle("asks")}>top ask</Point> : "top ask"} is an exact date.
         </p>
         <Wrap still={still} open={state.asks}>
-          <ChartVizCard>
-            <div className="dlg-answer--rows">
-              <ChartBarList max={TOP_ASKS[0].value} rows={TOP_ASKS.slice(0, ASKS_SHOWN).map((a, i) => ({ label: a.label, value: a.value, display: `${a.value} of ${TOTAL}`, focal: i === 0 }))} />
-            </div>
-          </ChartVizCard>
+          <AnswerCard still answer={ASKS_ANSWER} />
           <p className="dlg-trial__more">{TOP_ASKS.length - ASKS_SHOWN} more asks</p>
         </Wrap>
+        {after}
       </div>
       {footer}
     </div>

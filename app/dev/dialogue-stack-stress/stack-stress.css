@@ -1,0 +1,26 @@
+/* Dev page chrome only. Product parts keep their own CSS. */
+.dlgx-page { padding: 32px; min-height: 100vh; background: var(--dp-bg); display: flex; flex-direction: column; gap: 16px; }
+.dlgx-title { margin: 0; font: 500 20px/28px system-ui, sans-serif; color: var(--dp-ink); }
+.dlgx-sub { margin: 0; font: 400 13px/20px system-ui, sans-serif; color: var(--dp-muted); }
+.dlgx-case { display: flex; flex-direction: column; gap: 12px; padding-top: 24px; border-top: 1px solid var(--dp-border); }
+.dlgx-h { margin: 0; font: 500 16px/24px system-ui, sans-serif; color: var(--dp-ink); }
+.dlgx-src { margin-left: 8px; font-weight: 400; font-size: 12px; color: var(--dp-muted); }
+.dlgx-part { margin: 0; font: 400 12px/18px system-ui, sans-serif; color: var(--dp-muted); }
+.dlgx-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.dlgx-cell { margin: 0; display: flex; flex-direction: column; gap: 4px; max-width: 100%; }
+.dlgx-cap { font: 400 12px/18px system-ui, sans-serif; color: var(--dp-muted); }
+.dlgx-panel { box-sizing: border-box; max-width: 100%; padding: 16px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius); background: var(--dp-surface); }
+.dlgx-panel[data-w="284"] { width: 284px; }
+.dlgx-panel[data-w="336"] { width: 336px; }
+.dlgx-panel[data-w="358"] { width: 358px; }
+.dlgx-panel[data-w="423"] { width: 423px; }
+.dlgx-panel[data-w="471"] { width: 471px; }
+/* Before: the old legend, one line of lanes that never wrapped, at any segment count. */
+.dlgx-cell[data-before] .dp-chart-stack__lanes,
+.dlgx-cell[data-before] .dp-chart-stack__lanes[data-rows] { flex-direction: row; flex-wrap: nowrap; justify-content: space-between; align-items: center; gap: 16px; }
+.dlgx-cell[data-before] .dp-chart-stack__lanes[data-rows] .dp-chart-stack__lane { display: inline-flex; width: auto; }
+.dlgx-cell[data-before] .dp-chart-stack__lanes[data-rows] .dp-chart-stack__lane-label { flex: 0 1 auto; }
+.dlgx-cell[data-before] .dp-chart-stack__lanes[data-rows] .dp-chart-stack__lane-value { margin-left: 0; }
+.dlgx-cell[data-before] .dp-chart-stack__lane { flex: 0 1 auto; }
+.dlgx-cell[data-before] .dlgx-panel { box-shadow: 0 0 0 1px var(--dp-border-strong); }
+@media (max-width: 600px) { .dlgx-page { padding: 16px; } .dlgx-panel[data-w] { width: 100%; } .dlgx-cell { width: 100%; } }
