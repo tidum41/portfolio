@@ -5,10 +5,10 @@ import ContinuedLab, { type Opt, type Phase } from "./ContinuedLab";
 export const metadata: Metadata = { title: "Dialogue continued interaction", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
-const OPTS = ["a", "b", "c"] as const;
-const PHASES = ["landed", "next"] as const;
+const OPTS = ["a", "b", "c", "cs"] as const;
+const PHASES = ["start", "landed", "next"] as const;
 
-/** ?opt=a|b|c isolates one take; ?state=landed|next freezes the beat (for stills). */
+/** ?opt=a|b|c|cs isolates one take; ?state=start|landed|next freezes the beat (for stills and the walkthrough). */
 export default async function DialogueContinuedPage({ searchParams }: { searchParams: Promise<{ opt?: string; state?: string }> }) {
   if (process.env.NEXT_PUBLIC_VERCEL_ENV === "production" || process.env.VERCEL_ENV === "production") notFound();
   const { opt, state } = await searchParams;

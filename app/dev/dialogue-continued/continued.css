@@ -7,7 +7,7 @@
 .dlg-cont-beat:hover { background: var(--dp-warm, #f5f2ee); color: var(--dp-ink, #1c1917); }
 .dlg-cont-beat[aria-pressed="true"] { background: var(--dp-nav-active-bg, #eceae4); color: var(--dp-ink, #1c1917); cursor: default; }
 .dlg-cont-beat:focus-visible { outline: 2px solid var(--dp-brand, #b43f7f); outline-offset: 2px; }
-.dlg-cont-grid { width: 100%; max-width: 1392px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.dlg-cont-grid { width: 100%; max-width: 1392px; margin: 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0, 423px)); gap: 24px; justify-content: start; align-items: start; }
 .dlg-cont-grid[data-solo] { grid-template-columns: minmax(0, 423px); justify-content: start; }
 .dlg-cont-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .dlg-cont-label { margin: 0; font: 500 13px/20px system-ui, sans-serif; color: var(--dp-ink, #1c1917); }
@@ -18,6 +18,17 @@
 .dlg-cont__q { align-self: flex-end; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; max-width: 91.6667%; }
 .dlg-cont__q .dp-user-bubble { align-self: stretch; max-width: none; }
 .dlg-cont__chip { padding: 4px 10px; }
+.dlg-cont__rank-plot { position: relative; --dp-chart-label-width: 168px; }
+.dlg-cont__rank-plot .dp-chart-bars__row { min-height: 48px; overflow: visible; }
+.dlg-cont__rank-plot .dp-chart-bars__label { overflow: visible; }
+.dlg-cont__rank-plot .dp-chart-bars__value { width: auto; min-width: 7.5em; overflow: visible; }
+.dlg-cont__rank-hits { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.dlg-cont__rank-hit { flex: 1 1 0; width: 100%; margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: var(--dp-radius-chip, 8px); }
+.dlg-cont__rank-hit:hover { background: color-mix(in srgb, var(--dp-warm, #f5f2ee) 70%, transparent); }
+.dlg-cont__rank-hit:focus-visible { outline: 2px solid var(--dp-brand, #b43f7f); outline-offset: 2px; }
+.dlg-cont__composer-input { flex: 1 1 auto; min-width: 0; width: 100%; margin: 0; padding: 0; border: 0; background: transparent; font: inherit; color: var(--dp-ink, #1c1917); outline: none; resize: none; line-height: 1.35; min-height: 3.2em; }
+.dlg-cont__composer-input::placeholder { color: var(--dp-muted, #57534e); }
+.dlg-cont .dp-study-chat__composer-send { cursor: pointer; border: 0; }
 @media (max-width: 1180px) {
   .dlg-cont-grid:not([data-solo]) { grid-template-columns: repeat(2, minmax(0, 423px)); justify-content: center; }
 }

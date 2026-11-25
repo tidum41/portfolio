@@ -2,7 +2,8 @@
 
 /* Continued interaction after depth D: a second question lands on a thread where a point in reply 1 is (or was) open.
    Dev-only harness. Built from UserMessageBubble, AnswerCard, ChartVizCard, ChartBarList, QuoteRow, Grow, ChatComposer.
-   Hearthside numbers only (MOCK-DATA). No new product components. */
+   Hearthside numbers only (MOCK-DATA). Theme counts among the 225 do not exist there, so they are labelled [PLACEHOLDER].
+   No new product components. */
 import { useState, type ReactNode } from "react";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import ChatComposer from "@/components/dialogue/product/ChatComposer";
@@ -12,19 +13,22 @@ import { AnswerCard } from "@/components/dialogue/live/AnswerCard";
 import { Grow } from "@/components/dialogue/live/Grow";
 import { QuoteRow } from "@/components/dialogue/live/DialogueMotionStage";
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
+import { ArrowUpIcon } from "@/components/dialogue/product/icons";
+import { dialogueCopy } from "@/components/dialogue/product/tokens";
 import { ANA_TRANSCRIPT, QUOTE_LIST_FRIDAY, QUOTE_LIST_NEW, remainingCount } from "@/lib/dialogue/product/sampleData";
 import { COUNT_ANSWER, FRIDAY, QUESTION, TOTAL } from "@/components/dialogue/live/DeliveryDateTrial";
 import "./continued.css";
 
-export const OPTS = ["a", "b", "c"] as const;
+export const OPTS = ["a", "b", "c", "cs"] as const;
 export type Opt = (typeof OPTS)[number];
-export const PHASES = ["landed", "next"] as const;
+export const PHASES = ["start", "landed", "next"] as const;
 export type Phase = (typeof PHASES)[number];
 
 export const LABELS: Record<Opt, string> = {
   a: "Reply 1 folds back to its count, with a mark that it was opened.",
   b: "Reply 1 stays open, and reply 2 arrives at the overview.",
   c: "Reply 2 stays on the opened point, shown as a chip on the question.",
+  cs: "C at study scale. Reply 2 ranks reasons among the 225, with placeholder counts.",
 };
 
 const Q2 = "Do new and repeat shoppers read \u2018Arrives by Friday\u2019 the same way?";
@@ -35,19 +39,32 @@ const NEW = 9;
 const REPEAT_OF = 125;
 const REPEAT = 88;
 const ANA = QUOTE_LIST_FRIDAY[0];
+const DEV = QUOTE_LIST_FRIDAY[1];
 const KAI = QUOTE_LIST_NEW[0];
+const RAE = QUOTE_LIST_NEW[1];
 const GROUP_ROWS = [
   { label: "New shoppers", value: NEW / NEW_OF, display: `${NEW} of ${NEW_OF}`, focal: true },
   { label: "Repeat shoppers", value: REPEAT / REPEAT_OF, display: `${REPEAT} of ${REPEAT_OF}` },
 ];
 
-type Thread = { r1: boolean; clip1: boolean; r2: boolean; clip2: boolean };
+/** Reasons among the 225. MOCK-DATA has the quotes (4c, 4d) but no per-theme counts, so values stay [PLACEHOLDER]. */
+export const SCALE_THEMES = [
+  { id: "planned", label: "Planned for this Friday", quotes: [ANA] },
+  { id: "closest", label: "The closest Friday", quotes: [DEV, RAE] },
+  { id: "new", label: "Meant this week", quotes: [KAI] },
+] as const;
+export type ThemeId = (typeof SCALE_THEMES)[number]["id"];
+const SCALE_ROWS = SCALE_THEMES.map((th) => ({ label: th.label, value: 0, display: "[PLACEHOLDER]" }));
+
+type Thread = { asked: boolean; r1: boolean; clip1: boolean; r2: boolean; clip2: boolean; theme: ThemeId | null; draft: string };
 
 function initialThread(opt: Opt, phase: Phase): Thread {
-  const r1 = opt === "b";
-  const r2 = phase === "next" && opt !== "c" ? true : false;
+  const asked = phase !== "start";
+  const r1 = asked && opt === "b";
+  const r2 = phase === "next" && opt !== "c" && opt !== "cs";
   const clip2 = opt === "c" && phase === "next";
-  return { r1, clip1: false, r2, clip2 };
+  const theme: ThemeId | null = opt === "cs" && phase === "next" ? "planned" : null;
+  return { asked, r1, clip1: false, r2, clip2, theme, draft: "" };
 }
 
 function Point({ open, opened, target, onClick, children }: { open: boolean; opened?: boolean; target: string; onClick?: () => void; children: ReactNode }) {
@@ -62,16 +79,53 @@ function Wrap({ open, children }: { open: boolean; children: ReactNode }) {
   return <Grow open={open} className="dlg-trial__open">{children}</Grow>;
 }
 
+function AskComposer({ value, onChange, onSend }: { value: string; onChange: (v: string) => void; onSend: () => void }) {
+  return (
+    <div className="dp-study-chat__composer" data-export-chat-composer="true">
+      <div className="dp-study-chat__composer-box">
+        <textarea
+          className="dlg-cont__composer-input"
+          data-target="composer-input"
+          rows={3}
+          value={value}
+          placeholder={dialogueCopy.composerPlaceholder}
+          aria-label="Ask a follow-up"
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSend(); } }}
+        />
+        <button type="button" className="dp-study-chat__composer-send" data-target="composer-send" aria-label="Send" onClick={onSend} style={{ opacity: value.trim() ? 1 : 0.5 }}>
+          <ArrowUpIcon />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ScopedQuestion() {
+  return (
+    <div className="dlg-cont__q">
+      <span className="dp-chip dlg-cont__chip">{CHIP}</span>
+      <UserMessageBubble>{Q2_SCOPED}</UserMessageBubble>
+    </div>
+  );
+}
+
 function ThreadPanel({ opt, phase }: { opt: Opt; phase: Phase }) {
   const [t, setT] = useState<Thread>(() => initialThread(opt, phase));
   const set = (patch: Partial<Thread>) => setT((cur) => ({ ...cur, ...patch }));
+  const send = () => {
+    if (t.asked) return;
+    set({ asked: true, r1: opt === "b" ? t.r1 : false, clip1: opt === "b" ? t.clip1 : false, draft: "" });
+  };
+  const scoped = opt === "c" || opt === "cs";
+  const openTheme = SCALE_THEMES.find((th) => th.id === t.theme);
   return (
-    <div className="dlg-trial dlg-cont" data-mode="live" data-opt={opt} data-state={phase} data-r1={t.r1 ? "open" : "folded"} data-r2={t.r2 ? "open" : "closed"}>
+    <div className="dlg-trial dlg-cont" data-mode="live" data-opt={opt} data-state={phase} data-asked={t.asked ? "true" : "false"} data-r1={t.r1 ? "open" : "folded"} data-r2={t.r2 ? "open" : "closed"} data-theme={t.theme || undefined}>
       <div className={`dialogue-product-root dp-chat-panel-typography dlg-live dlg-stage dlg-trial__panel ${dialogueProductFontClassName}`}>
         <div className="dlg-trial__body">
           <UserMessageBubble>{QUESTION}</UserMessageBubble>
           <p className="dlg-trial__line">
-            <Point open={t.r1} opened target="r1-count" onClick={() => set({ r1: !t.r1, clip1: t.r1 ? false : t.clip1 })}>{`${FRIDAY} of ${TOTAL} shoppers`}</Point>
+            <Point open={t.r1} opened={t.asked || t.r1} target="r1-count" onClick={() => set({ r1: !t.r1, clip1: t.r1 ? false : t.clip1 })}>{`${FRIDAY} of ${TOTAL} shoppers`}</Point>
             {" "}read it as this Friday.
           </p>
           <Wrap open={t.r1}>
@@ -81,24 +135,53 @@ function ThreadPanel({ opt, phase }: { opt: Opt; phase: Phase }) {
             </div>
             <p className="dlg-trial__more">+{remainingCount(FRIDAY, 1)} more who read it as this Friday</p>
           </Wrap>
-          {opt === "c" ? (
+          {t.asked && scoped ? (
             <>
-              <div className="dlg-cont__q">
-                <span className="dp-chip dlg-cont__chip">{CHIP}</span>
-                <UserMessageBubble>{Q2_SCOPED}</UserMessageBubble>
-              </div>
-              <p className="dlg-trial__line">
-                <Point open={t.clip2} target="r2-ana" onClick={() => set({ clip2: !t.clip2 })}>{ANA.participant}</Point>
-                {" "}said she planned for this Friday.
-              </p>
-              <Wrap open={true}>
-                <div className="dp-clip-quotes">
-                  <QuoteRow q={ANA} open={t.clip2} onTap={() => set({ clip2: !t.clip2 })} playSec={4} transcript={ANA_TRANSCRIPT} />
-                </div>
-                <p className="dlg-trial__more">+{remainingCount(FRIDAY, 1)} more who read it as this Friday</p>
-              </Wrap>
+              <ScopedQuestion />
+              {opt === "c" ? (
+                <>
+                  <div className="dp-clip-quotes" data-target="r2-ana">
+                    <QuoteRow q={ANA} open={t.clip2} onTap={() => set({ clip2: !t.clip2 })} playSec={4} transcript={ANA_TRANSCRIPT} />
+                  </div>
+                  <p className="dlg-trial__more">+{remainingCount(FRIDAY, 1)} more who read it as this Friday</p>
+                </>
+              ) : (
+                <>
+                  <p className="dlg-trial__line">Reasons among the 225 who read it as this Friday.</p>
+                  <ChartVizCard>
+                    <div className="dlg-cont__rank-plot">
+                      <ChartBarList rows={SCALE_ROWS} max={1} />
+                      <div className="dlg-cont__rank-hits">
+                        {SCALE_THEMES.map((th) => (
+                          <button
+                            key={th.id}
+                            type="button"
+                            className="dlg-cont__rank-hit"
+                            data-target={`r2-theme-${th.id}`}
+                            aria-label={`Open ${th.label}`}
+                            aria-expanded={t.theme === th.id}
+                            onClick={() => set({ theme: t.theme === th.id ? null : th.id })}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="dp-chart-bars__note">Counts among the 225 are [PLACEHOLDER]. Theme names come from the Friday-reader quotes in MOCK-DATA 4c.</p>
+                  </ChartVizCard>
+                  <Wrap open={!!openTheme}>
+                    {openTheme ? (
+                      <>
+                        <div className="dp-clip-quotes">
+                          {openTheme.quotes.map((q) => <QuoteRow key={q.participant} q={q} open={false} />)}
+                        </div>
+                        <p className="dlg-trial__more">+[PLACEHOLDER] more</p>
+                      </>
+                    ) : null}
+                  </Wrap>
+                </>
+              )}
             </>
-          ) : (
+          ) : null}
+          {t.asked && !scoped ? (
             <>
               <UserMessageBubble>{Q2}</UserMessageBubble>
               <p className="dlg-trial__line">
@@ -117,15 +200,16 @@ function ThreadPanel({ opt, phase }: { opt: Opt; phase: Phase }) {
                 <p className="dlg-trial__more">+{remainingCount(NEW_OF, 1)} more new shoppers</p>
               </Wrap>
             </>
-          )}
+          ) : null}
         </div>
-        <ChatComposer />
+        {t.asked ? <ChatComposer /> : <AskComposer value={t.draft} onChange={(draft) => set({ draft })} onSend={send} />}
       </div>
     </div>
   );
 }
 
 const PHASE_LABEL: Record<Phase, string> = {
+  start: "Before the second question",
   landed: "Right after reply 2 lands",
   next: "A point in reply 2 is open",
 };
