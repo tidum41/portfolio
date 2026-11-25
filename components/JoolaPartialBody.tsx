@@ -2,8 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import CaseStudyBody from "@/components/CaseStudyBody";
 import AnnotatedFigure from "@/components/joola/AnnotatedFigure";
-import FlawFigure from "@/components/joola/FlawFigure";
-import { Callouts, OptionCards, OrderLoop, QuoteRules, type OptionCard, type QuoteRule } from "@/components/joola/StoryParts";
+import { BeforeAfter, Callouts, OptionCards, QuoteRules, type FlowPanel, type OptionCard, type QuoteRule } from "@/components/joola/StoryParts";
 import ImportVersions, { type ImportVersion } from "@/components/joola/product/ImportVersions";
 import RepApproveLoop from "@/components/joola/product/RepApproveLoop";
 
@@ -14,18 +13,14 @@ import RepApproveLoop from "@/components/joola/product/RepApproveLoop";
  */
 
 export const JOOLA_PARTIAL_TOC = [
+  { id: "impact", label: "Before and after" },
   { id: "overview", label: "Overview" },
-  { id: "problem", label: "Before" },
-  { id: "first-version", label: "First version" },
   { id: "research", label: "Research" },
   { id: "import", label: "Import" },
   { id: "credit", label: "Credit limit" },
   { id: "rep-queue", label: "Rep" },
   { id: "outcome", label: "Outcome" },
 ];
-
-/** New captures get a new folder, so cached copies of older figures never show. */
-const IMG = "/images/joola/v9";
 
 function Section({ id, children, noReveal = false }: { id: string; children: ReactNode; noReveal?: boolean }) {
   return (
@@ -76,6 +71,19 @@ const IMPORT_VERSIONS: readonly ImportVersion[] = [
   },
 ];
 
+const BEFORE: FlowPanel = {
+  title: "Before",
+  steps: ["Order form", "Rep retypes every line", "NetSuite"],
+  back: "email",
+  caption: "Reps retyped every order. A quick order could wait 2 to 3 days.",
+};
+
+const AFTER: FlowPanel = {
+  title: "With the portal",
+  steps: ["Buyer imports her order form", "Portal flags the problem rows", "Rep approves only the exceptions"],
+  caption: "The buyer fixes her own order; the rep only sees what needs a decision. Demoed inside JOOLA, on the roadmap, not shipped.",
+};
+
 const OPTIONS: readonly OptionCard[] = [
   { title: "Stop the order", plus: "Keeps credit safe.", minus: "Loses the sale." },
   { title: "Pay the gap", plus: "Keeps the sale.", minus: "Confuses the buyer and fights how wholesale credit works." },
@@ -89,31 +97,14 @@ export default function JoolaPartialBody() {
         {`Names and numbers in these screens are mocked for this case study.`}
       </p>
 
+      <Section id="impact" noReveal>
+        <h2 id="impact-heading" className="sr-only">{`Before and after the portal`}</h2>
+        <BeforeAfter before={BEFORE} after={AFTER} label="How an order moved before the portal and with it" />
+      </Section>
+
       <Section id="overview" noReveal>
         <H2 id="overview">{`What I designed`}</H2>
         <CaseStudyBody>{`JOOLA makes pickleball and table tennis gear, and stores buy it wholesale through a JOOLA sales rep. I designed both sides of an ordering portal, for the store's buyer and for the rep, as a coded prototype.`}</CaseStudyBody>
-      </Section>
-
-      <Section id="problem">
-        <H2 id="problem">{`Orders before the portal`}</H2>
-        <CaseStudyBody>{`Reps retyped every order by hand, and a quick order could wait 2 to 3 days.`}</CaseStudyBody>
-        <figure className="cs-figure" style={{ margin: 0 }}>
-          <OrderLoop nodes={["Order form", "Rep retypes every line", "NetSuite"]} back="email" label="How an order moved before the portal" />
-        </figure>
-      </Section>
-
-      <Section id="first-version">
-        <H2 id="first-version">{`My first version`}</H2>
-        <CaseStudyBody>{`I built it from an old Jira spec, inside JOOLA's public store and its Shopify design system.`}</CaseStudyBody>
-        <FlawFigure
-          src={`${IMG}/first-nav.webp`}
-          width={913}
-          height={114}
-          alt="Top of my first version: the public store menu with Pickleball Paddles, Apparel, Footwear and more, outlined, above the wholesale tabs Quick Order, Catalog, Templates, Order History and Invoices and Terms."
-          flaw={{ left: 19.5, top: 6, width: 80, height: 41 }}
-          label={`Store menu above wholesale tabs`}
-          phoneCrop={0.56}
-        />
       </Section>
 
       <Section id="research">

@@ -2932,6 +2932,14 @@ html[data-theme="dark"] .jo-cs {
   --jp-ease: cubic-bezier(0.2, 0, 0, 1);
   --jp-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --jp-motion: 200ms;
+  /* Demo pointer (DemoCursor): macOS-style ink and halo, an eased travel, a short press. */
+  --jp-cursor-ink: #000000;
+  --jp-cursor-halo: #ffffff;
+  --jp-cursor-shadow: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.35));
+  --jp-cursor-travel: 640ms;
+  --jp-cursor-ease: cubic-bezier(0.42, 0, 0.18, 1);
+  --jp-cursor-press-scale: 0.9;
+  --jp-cursor-press: 90ms;
   color-scheme: light;
   font-family: "FK Grotesk Neue", var(--font-sans);
   color: var(--jp-ink);
@@ -3189,17 +3197,7 @@ html[data-theme="dark"] .jp-tabs { background: #1B1F23; }
 .jo-phase { display: flex; align-items: center; gap: 12px; margin: 0 0 var(--space-5); font-size: 12px; line-height: 18px; letter-spacing: 0.04em; color: var(--color-text-tertiary); }
 .jo-phase__rule { flex: 1; height: 1px; background: var(--color-border-subtle); }
 
-.jo-oloop { border-radius: var(--radius-control); background: var(--color-placeholder); box-shadow: inset 0 0 0 1px var(--color-border-subtle); padding: var(--space-5) var(--space-4) var(--space-4); }
-html[data-theme="dark"] .jo-oloop, html[data-theme="dark"] .jo-qr__rule, html[data-theme="dark"] .jo-opts__card { background: #1B1F23; }
-.jo-oloop__row { display: grid; grid-template-columns: 1fr 1.3fr 1fr; align-items: center; }
-.jo-oloop__cell { display: flex; align-items: center; min-width: 0; }
-.jo-oloop__cell:last-child { justify-content: stretch; }
-.jo-oloop__node { flex: 1; min-width: 0; text-align: center; padding: 14px 12px; border-radius: var(--radius-control); background: var(--color-bg); box-shadow: 0 0 0 1px var(--color-border-subtle); font-size: 15px; line-height: 21px; color: var(--color-text-primary); }
-.jo-oloop__node.is-key { font-family: var(--font-sans-medium); font-weight: 500; box-shadow: 0 0 0 1.5px var(--color-text-primary); }
-.jo-oloop__arrow { flex: 0 0 28px; margin: 0 8px; color: var(--color-text-tertiary); }
-.jo-oloop__back { position: relative; height: 40px; margin: 0 calc(100% / 6.6); color: var(--color-text-tertiary); }
-.jo-oloop__backline { position: absolute; inset: 0 0 auto; width: 100%; height: 22px; }
-.jo-oloop__backlabel { position: absolute; left: 50%; top: 22px; transform: translateX(-50%); font-size: 13px; line-height: 18px; color: var(--color-text-secondary); white-space: nowrap; }
+html[data-theme="dark"] .jo-ba__flow, html[data-theme="dark"] .jo-qr__rule, html[data-theme="dark"] .jo-opts__card { background: #1B1F23; }
 
 .jo-qr { display: grid; gap: var(--space-2); margin: 24px 0 8px; }
 .jo-qr__row { display: grid; grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr); gap: var(--space-2); align-items: center; }
@@ -3249,14 +3247,28 @@ html[data-theme="dark"] .jo-opts__card.is-chosen { background: var(--color-bg); 
   .jp .jp-ac-actions > .jp-rep__mark { top: auto; bottom: 10px; transform: none; }
 }
 
-.jo-flaw__frame { position: relative; overflow: hidden; border-radius: var(--radius-control); box-shadow: inset 0 0 0 1px var(--color-border-subtle); background: #fff; }
-.jo-flaw__inner { position: relative; display: block; }
-.jo-flaw__box { position: absolute; border-radius: 6px; box-shadow: 0 0 0 2px var(--color-text-primary); background: rgba(0, 0, 0, 0.03); }
-.jo-flaw__label { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-family: var(--font-sans-medium); font-weight: 500; font-size: 14px; line-height: 20px; color: var(--color-text-primary); }
-.jo-flaw__dot { width: 10px; height: 10px; border-radius: 3px; box-shadow: 0 0 0 2px var(--color-text-primary); }
+
+/* Impact: before and with the portal, two matching three-step panels. */
+.jo-ba { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--space-3); row-gap: 0; margin: 0; --jo-ba-gutter: 76px; }
+.jo-ba__panel { display: grid; grid-row: span 3; grid-template-rows: subgrid; min-width: 0; }
+.jo-ba__title { margin: 0 0 var(--space-1); font-family: var(--font-sans-medium); font-weight: 500; font-size: 15px; line-height: 22px; color: var(--color-text-primary); }
+.jo-ba__flow { position: relative; padding: var(--space-3); border-radius: var(--radius-control); background: var(--color-placeholder); box-shadow: inset 0 0 0 1px var(--color-border-subtle); }
+.jo-ba__flow.has-back { padding-right: var(--jo-ba-gutter); }
+.jo-ba__steps { list-style: none; margin: 0; padding: 0; }
+.jo-ba__step { display: flex; flex-direction: column; align-items: center; }
+.jo-ba__node { box-sizing: border-box; width: 100%; min-height: 64px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px; border-radius: var(--radius-control); background: var(--color-bg); box-shadow: 0 0 0 1px var(--color-border-subtle); font-size: 15px; line-height: 21px; color: var(--color-text-primary); text-wrap: balance; }
+.jo-ba__node.is-key { font-family: var(--font-sans-medium); font-weight: 500; box-shadow: 0 0 0 1.5px var(--color-text-primary); }
+.jo-ba__arrow { display: block; margin: 6px 0; color: var(--color-text-tertiary); }
+.jo-ba__back { position: absolute; top: calc(var(--space-3) + 32px); bottom: calc(var(--space-3) + 32px); left: calc(100% - var(--jo-ba-gutter)); width: calc(var(--jo-ba-gutter) - 12px); color: var(--color-text-tertiary); }
+.jo-ba__backline { position: absolute; left: 4px; top: 0; width: 16px; height: 100%; overflow: visible; }
+.jo-ba__backhead { position: absolute; left: 1px; top: -5px; color: var(--color-text-tertiary); }
+.jo-ba__backlabel { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); font-size: 13px; line-height: 18px; color: var(--color-text-secondary); }
+.jo-ba__caption { margin-top: var(--space-1); text-wrap: pretty; }
 @media (max-width: 767px) {
-  .jo-flaw .cs-figure-hint { display: block; font-size: 12px; line-height: 1.72; color: var(--color-text-tertiary); margin: 4px 0 0; }
-  .jo-flaw__inner { width: calc(100% / var(--jo-flaw-crop, 1)); }
+  .jo-ba { grid-template-columns: minmax(0, 1fr); row-gap: 0; }
+  .jo-ba__panel + .jo-ba__panel .jo-ba__title { margin-top: var(--space-4); }
+  .jo-ba__flow { padding: var(--space-2); }
+  .jo-ba__back { top: calc(var(--space-2) + 32px); bottom: calc(var(--space-2) + 32px); }
 }
 
 .jo-outbox { margin: 24px 0; padding: var(--space-3); border-radius: var(--radius-control); box-shadow: inset 0 0 0 1px var(--color-border-subtle); max-width: 40rem; }
@@ -3266,14 +3278,6 @@ html[data-theme="dark"] .jo-opts__card.is-chosen { background: var(--color-bg); 
 
 @media (max-width: 767px) {
   .jo-preview { grid-template-columns: minmax(0, 1fr); }
-  .jo-oloop { padding: var(--space-3); }
-  .jo-oloop__row { grid-template-columns: minmax(0, 1fr); gap: 0; }
-  .jo-oloop__cell { flex-direction: column; }
-  .jo-oloop__arrow { transform: rotate(90deg); margin: 6px 0; }
-  .jo-oloop__back { margin: 8px 0 0; height: auto; }
-  .jo-oloop__backline { display: none; }
-  .jo-oloop__backlabel { position: static; transform: none; display: block; text-align: center; }
-  .jo-oloop__backlabel::before { content: "\21BA  "; }
   .jo-qr__row { grid-template-columns: minmax(0, 1fr); }
   .jo-qr__arrow { transform: rotate(90deg); margin: 0 auto; }
   .jo-qr__rule { margin-top: 0; }
@@ -3290,12 +3294,12 @@ html[data-theme="dark"] .jo-opts__card.is-chosen { background: var(--color-bg); 
 .jp-stack > .jp-card { grid-area: 1 / 1; align-self: center; }
 .jp-stack > [inert] { visibility: hidden; }
 .jp-versions .jp-card { overflow: visible; clip-path: inset(-2px -2px -2px -40px round 10px); }
-/* The prototype's import grid: a band header with 8px corners, regular weight, no rule under it.
+/* The prototype's import grid (hero and tabs): a band header with 8px corners, regular weight, no rule under it.
    SKU and Qty are narrower than the prototype's (72 and 50 vs 92 and 72), and Row is 40, so the full
    product name fits on one line; Status is 202 (190 in the prototype) so Change to 36 and Keep 360 fit on one line. */
-.jp-versions .jp-csv { --jp-cols: 40px 72px minmax(0, 1fr) 50px 202px; padding: 8px; }
-.jp-versions .jp-csv__head { background: var(--jp-band); border-radius: var(--jp-radius); font-weight: 400; }
-.jp-versions .jp-csv__head::after { display: none; }
+.jp-csv, .jp-versions .jp-csv { --jp-cols: 40px 72px minmax(0, 1fr) 50px 202px; padding: 8px; }
+.jp-csv__head { background: var(--jp-band); border-radius: var(--jp-radius); font-weight: 400; }
+.jp-csv__head::after { display: none; }
 .jp-versions .jp-csv__row { position: relative; }
 .jp-versions .jp-csv__rowcell { position: static; }
 .jp-versions .jp .jp-csv__mark { left: -36px; right: auto; top: 50%; transform: translateY(-50%); }
@@ -3348,3 +3352,61 @@ html[data-theme="dark"] .jo-annot__well { background: #1B1F23; }
   .is-marked > .jp-rep { height: 760px; overflow: visible; clip-path: inset(-2px -2px -2px -24px round 10px); }
   .jp .jp-rep__mark { left: -36px; }
 }
+
+/* v12: demo pointer. Lives in the loop's zoomed stage, above the product UI, never takes input. */
+.jp-scale { position: relative; }
+.jp-cursor { position: absolute; left: 0; top: 0; z-index: 6; pointer-events: none; transition: transform var(--jp-cursor-travel) var(--jp-cursor-ease), opacity 180ms ease-out; will-change: transform; }
+.jp-cursor.is-off { opacity: 0; }
+.jp-cursor__glyph { position: relative; display: block; transform-origin: 0 0; transition: transform var(--jp-cursor-press) ease-out; filter: var(--jp-cursor-shadow); }
+.jp-cursor.is-press .jp-cursor__glyph { transform: scale(var(--jp-cursor-press-scale)); }
+.jp-cursor__svg { position: absolute; display: block; overflow: visible; }
+/* Hotspots: the arrow's tip, the hand's fingertip, the I-beam's middle. */
+.jp-cursor__svg--arrow { left: -1px; top: -1px; }
+.jp-cursor__svg--hand { left: -7.5px; top: -1.2px; }
+.jp-cursor__svg--text { left: -6px; top: -10px; }
+@media (prefers-reduced-motion: reduce) { .jp-cursor { display: none; } }
+
+/* v12: phone spacing. One rule set for every product figure (hero loop, import tabs, credit meter,
+   rep panel): a 16px well, 56px under the loops for the play or reset control, and a 28px gutter
+   on the left of the annotated ones for the markers. Inside, the product UI keeps the prototype's
+   own spacing: grid cells 8px 10px in an 8px inset, the rep sheet's 24px sides, and the
+   prototype's 44px touch targets on buttons and text links (its rule under 1100px). */
+.cs-layout { --jp-well-pad-m: 16px; --jp-well-ctrl-m: 56px; --jp-gutter-m: 28px; }
+@media (max-width: 767px) {
+  .jp-well--hero, .jp-well--inline, .jp-well--tabs, .jp-well--rep { padding: var(--jp-well-pad-m) var(--jp-well-pad-m) var(--jp-well-ctrl-m); }
+  .jo-annot__well { padding: var(--jp-well-pad-m); }
+  .jp-well--tabs, .jp-well--rep:has(.is-marked), .jo-annot__well { padding-left: calc(var(--jp-well-pad-m) + var(--jp-gutter-m)); }
+  .jp-well__play, .jp-well__reset { right: 12px; bottom: 12px; }
+
+  /* Import grid, hero and tabs alike. */
+  .jp-csv, .jp-versions .jp-csv { --jp-cols: 40px minmax(0, 1fr) 44px; padding: 8px; }
+  .jp-csv__head > div, .jp-csv__row > div, .jp-versions .jp-csv__head > div, .jp-versions .jp-csv__row > div { padding: 8px 10px; }
+  .jp-csv__row > div, .jp-versions .jp-csv__row > div { align-items: flex-start; }
+  .jp-csv__row > div > .jp-csv__t { -webkit-line-clamp: unset; display: block; }
+  .jp-csv__row > .jp-csv__status, .jp-versions .jp-csv__row > .jp-csv__status { padding: 0 10px 10px; }
+  .jp-csv__row.is-decision > .jp-csv__status, .jp-versions .jp-csv__row.is-decision > .jp-csv__status { padding: 0 10px 10px; min-height: 74px; }
+  .jp-csv__acts .jp-btn, .jp-csv__keep { min-height: 44px; }
+  .jp-csv__keep { display: inline-flex; align-items: center; }
+  /* Markers go back to the gutter, as on desktop. */
+  .jp-versions .jp-csv__rowcell { display: flex; position: static; }
+  .jp-versions .jp .jp-csv__mark { position: absolute; left: -36px; top: 8px; transform: none; width: 20px; height: 20px; font-size: 11px; }
+  .jp-cartv1 { padding: 8px 10px; }
+
+  /* Credit meter: the gutter is the well's own padding. */
+  .jo-annot__well .jo-annot__shot { width: 100%; margin-left: 0; }
+  .jo-annot__well .jo-annot__shot--phone { padding: 10px; }
+  .jo-annot__well .jo-annot__marker { left: -28px; }
+  .jo-annot__well .jo-annot__marker::after { width: 6px; }
+
+  /* Rep sheet: 16px sides (the prototype's sheet is 24px at 92vw; this one is 70vw, so 24px would
+     leave a 190px column at 360), and the prototype's 44px buttons. */
+  .jp-ac-title, .jp-op-body { padding-inline: 16px; }
+  .jp-op-foot { margin-inline: 16px; }
+  .jp-rep .jp-btn { min-height: 44px; }
+  .jp-rep .jp-text-link { min-height: 44px; display: inline-flex; align-items: center; }
+  /* Tall enough for the tallest loop state at this width, so no state moves the page. */
+  .is-marked > .jp-rep { height: 784px; clip-path: inset(-2px -2px -2px -40px round 10px); }
+  .jp .jp-rep__mark { left: -44px; width: 20px; height: 20px; font-size: 11px; }
+}
+@media (max-width: 374px) { .is-marked > .jp-rep { height: 820px; } }
+.jp-cursor.is-instant { transition: none; }

@@ -34,29 +34,58 @@ export function PhaseMarker({ children }: { children: ReactNode }) {
   );
 }
 
-/* The old order loop as three nodes and the email that sends it back. */
-export function OrderLoop({ nodes, back, label }: { nodes: readonly string[]; back: string; label: string }) {
+/* Impact: the order flow before the portal and with it, as two matching three-step panels. */
+export type FlowPanel = {
+  title: string;
+  steps: readonly [string, string, string];
+  /** Label on the dashed line that sends the order back to the first step. */
+  back?: string;
+  caption: string;
+};
+
+function DownArrow() {
   return (
-    <div className="jo-oloop" role="img" aria-label={`${label}: ${nodes.join(", then ")}. Problems go back as ${back}.`}>
-      <div className="jo-oloop__row">
-        {nodes.map((n, i) => (
-          <div key={n} className="jo-oloop__cell">
-            <span className={`jo-oloop__node${i === 1 ? " is-key" : ""}`}>{n}</span>
-            {i < nodes.length - 1 ? (
-              <svg className="jo-oloop__arrow" width="28" height="12" viewBox="0 0 28 12" aria-hidden="true">
-                <path d="M1 6h24M20 1.5 25.5 6 20 10.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+    <svg className="jo-ba__arrow" width="12" height="20" viewBox="0 0 12 20" aria-hidden="true">
+      <path d="M6 1v16M1.5 12.5 6 17l4.5-4.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function BeforeAfter({ before, after, label }: { before: FlowPanel; after: FlowPanel; label: string }) {
+  return (
+    <figure className="jo-ba" aria-label={label}>
+      {[before, after].map((p, pi) => (
+        <div key={p.title} className={`jo-ba__panel${pi === 1 ? " is-after" : ""}`}>
+          <p className="jo-ba__title">{p.title}</p>
+          <div
+            className={`jo-ba__flow${p.back ? " has-back" : ""}`}
+            role="img"
+            aria-label={`${p.title}: ${p.steps.join(", then ")}.${p.back ? ` Problems go back by ${p.back}.` : ""}`}
+          >
+            <ol className="jo-ba__steps" aria-hidden="true">
+              {p.steps.map((step, i) => (
+                <li key={step} className="jo-ba__step">
+                  <span className={`jo-ba__node${i === 1 ? " is-key" : ""}`}>{step}</span>
+                  {i < p.steps.length - 1 ? <DownArrow /> : null}
+                </li>
+              ))}
+            </ol>
+            {p.back ? (
+              <div className="jo-ba__back" aria-hidden="true">
+                <svg className="jo-ba__backline" viewBox="0 0 20 100" preserveAspectRatio="none">
+                  <path d="M1 100H14V0H1" fill="none" stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke" strokeDasharray="4 3" />
+                </svg>
+                <svg className="jo-ba__backhead" width="8" height="10" viewBox="0 0 8 10">
+                  <path d="M6.5 1 1.5 5l5 4" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="jo-ba__backlabel">{p.back}</span>
+              </div>
             ) : null}
           </div>
-        ))}
-      </div>
-      <div className="jo-oloop__back" aria-hidden="true">
-        <svg viewBox="0 0 100 14" preserveAspectRatio="none" className="jo-oloop__backline">
-          <path d="M84 1v7H16V1" fill="none" stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke" strokeDasharray="4 3" />
-        </svg>
-        <span className="jo-oloop__backlabel">{back}</span>
-      </div>
-    </div>
+          <figcaption className="cs-figcaption jo-ba__caption">{p.caption}</figcaption>
+        </div>
+      ))}
+    </figure>
   );
 }
 
