@@ -289,3 +289,4 @@ Defaults: specific headings and copy, section order details, figure choices and 
 - Delivery-date answer: C+B combination (one-click in-place depth, B wording, asks as second expandable line), Mudit 2026-11-23
 - Delivery-date trial (D, dotted ink underline triggers) goes in the /dialogue depth section as the single interactive moment, Mudit 2026-11-23
 - 2026-11-24 (Mudit): the data viz deep dive opens on the live product's raw markdown table (the before), so the PostHog reference lands as the turn, then our Current templates.
+- 2026-11-24 (Mudit): depth final is D, click a point; the composer DepthMenu, footer picker, tab row and chips stay as explorations for the case study.
