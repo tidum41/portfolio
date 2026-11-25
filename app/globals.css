@@ -1862,7 +1862,8 @@ html[data-theme="dark"] .project-image {
   padding: var(--space-4);
   border-radius: var(--radius-control);
   border: 1px solid var(--color-border-subtle);
-  background: var(--color-bg-secondary);
+  /* Was var(--color-bg-secondary), which is not defined, so it rendered with no fill. Same look, now explicit. */
+  background: none;
 }
 .cs-pill-btn {
   min-height: 44px;
@@ -2633,4 +2634,717 @@ html[data-theme="dark"] {
 .mux-media-slot video::-webkit-media-controls-overlay-play-button {
   display: none !important;
   -webkit-appearance: none;
+}
+
+/* ─── JOOLA case study v8 proposal (scoped to .jo-cs) ─────────────────
+   Semantic tokens for the recreated artifacts and comparison strips.
+   Product screens keep their own type (FK Grotesk Neue, baked into the
+   captures); site-built figures use Helvetica Neue through --font-sans. */
+:root {
+  --jo-artifact-bg:      #FFFFFF;
+  --jo-artifact-line:    #E6E6E6;
+  --jo-artifact-head:    #F4F4F4;
+  --jo-artifact-ink:     var(--color-text-primary);
+  --jo-artifact-muted:   var(--color-text-muted);
+  --jo-marker-bg:        var(--color-text-primary);
+  --jo-marker-ink:       var(--color-bg);
+  --jo-mark-hilite:      rgba(46, 46, 46, 0.06);
+  --jo-strip-gap:        var(--space-2);
+}
+html[data-theme="dark"] {
+  --jo-artifact-bg:      #16191C;
+  --jo-artifact-line:    rgba(255, 255, 255, 0.08);
+  --jo-artifact-head:    #1B1F23;
+  --jo-mark-hilite:      rgba(255, 255, 255, 0.06);
+}
+@media (max-width: 767px) {
+  /* Shorter headings on phones so a claim never towers over its figure. */
+  .jo-cs { --fs-h2: 24px; --fs-lg: 17px; }
+}
+
+/* Recreated old loop */
+.jo-loop {
+  border-radius: var(--radius-control);
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+  background: var(--color-placeholder);
+  padding: var(--space-3);
+  display: grid;
+  grid-template-columns: 1fr 1.25fr 1fr;
+  gap: var(--space-2);
+  align-items: start;
+}
+.jo-artifact {
+  position: relative;
+  background: var(--jo-artifact-bg);
+  border-radius: var(--radius-control);
+  box-shadow: 0 0 0 1px var(--jo-artifact-line);
+  padding: 14px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--jo-artifact-ink);
+  min-width: 0;
+}
+.jo-artifact__kind { font-size: 11px; line-height: 16px; color: var(--jo-artifact-muted); margin: 0 0 8px; }
+.jo-artifact__meta { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; margin: 0 0 10px; }
+.jo-artifact__meta dt { color: var(--jo-artifact-muted); }
+.jo-artifact__meta dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.jo-artifact__body { margin: 0 0 10px; }
+.jo-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 26px; padding: 0 10px; border-radius: var(--radius-control);
+  box-shadow: 0 0 0 1px var(--jo-artifact-line); background: var(--jo-artifact-head);
+  font-size: 12px;
+}
+.jo-sheet { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 12px; line-height: 16px; }
+.jo-sheet th, .jo-sheet td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--jo-artifact-line); white-space: nowrap; }
+.jo-sheet th { background: var(--jo-artifact-head); color: var(--jo-artifact-muted); font-weight: 400; }
+.jo-sheet td.num, .jo-sheet th.num { text-align: right; }
+.jo-sheet td.name { max-width: 0; width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.jo-thread { display: flex; flex-direction: column; gap: 10px; }
+.jo-msg { position: relative; }
+.jo-msg__who { font-size: 11px; line-height: 16px; color: var(--jo-artifact-muted); }
+.jo-msg__text { margin: 0; }
+.jo-hilite { background: var(--jo-mark-hilite); border-radius: 4px; padding: 0 2px; margin: 0 -2px; }
+.jo-marker {
+  position: absolute;
+  width: 20px; height: 20px; border-radius: 999px;
+  display: inline-grid; place-items: center;
+  background: var(--jo-marker-bg); color: var(--jo-marker-ink);
+  font-family: var(--font-sans-medium); font-size: 11px; line-height: 1; font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.jo-marker--inline { position: static; flex-shrink: 0; }
+.jo-legend {
+  list-style: none; margin: var(--space-2) 0 0; padding: 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px var(--space-3);
+}
+.jo-legend li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 20px; color: var(--color-text-secondary); }
+@media (max-width: 767px) {
+  .jo-loop { grid-template-columns: minmax(0, 1fr); padding: var(--space-2); }
+  .jo-legend { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Sales team card over blurred quotes */
+.jo-sales {
+  position: relative;
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+  background: var(--color-placeholder);
+  padding: var(--space-5) var(--space-3);
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+}
+.jo-sales__blur { position: absolute; inset: 0; z-index: -1; }
+.jo-sales__blur img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.jo-sales__blur--dark { display: none; }
+html[data-theme="dark"] .jo-sales__blur--light { display: none; }
+html[data-theme="dark"] .jo-sales__blur--dark { display: block; }
+.jo-sales__card {
+  width: min(100%, 520px);
+  background: var(--jo-artifact-bg);
+  border-radius: var(--radius-control);
+  box-shadow: 0 0 0 1px var(--jo-artifact-line), 0 8px 24px rgba(0, 0, 0, 0.06);
+  padding: var(--space-3);
+}
+.jo-sales__title { font-family: var(--font-sans-medium); font-weight: 500; font-size: 16px; line-height: 22px; margin: 0 0 4px; color: var(--color-text-primary); }
+.jo-sales__sub { font-size: 12px; line-height: 18px; color: var(--color-text-muted); margin: 0 0 var(--space-2); }
+.jo-sales__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.jo-sales__item { display: grid; grid-template-columns: 104px 1fr; gap: 12px; font-size: 14px; line-height: 20px; }
+.jo-sales__label { color: var(--color-text-muted); font-size: 12px; line-height: 20px; }
+.jo-sales__text { color: var(--color-text-primary); margin: 0; }
+@media (max-width: 767px) {
+  .jo-sales { padding: var(--space-3) var(--space-2); }
+  .jo-sales__item { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
+
+/* Comparison strip: options or versions side by side */
+.jo-strip {
+  display: grid;
+  grid-template-columns: repeat(var(--jo-strip-cols, 3), minmax(0, 1fr));
+  gap: var(--space-3) var(--jo-strip-gap);
+  margin: 24px 0 28px;
+}
+.jo-strip .cs-figure { margin: 0 0 10px; }
+.jo-strip__tag { font-size: 12px; line-height: 18px; color: var(--color-text-tertiary); margin: 0 0 2px; display: flex; gap: 8px; align-items: center; }
+.jo-strip__pill {
+  font-size: 11px; line-height: 18px; padding: 0 6px; border-radius: 999px;
+  background: var(--color-text-primary); color: var(--color-bg);
+}
+.jo-strip__title { font-family: var(--font-sans-medium); font-weight: 500; font-size: 14px; line-height: 20px; color: var(--color-text-primary); margin: 0 0 2px; }
+.jo-strip__why { font-size: 13px; line-height: 19px; color: var(--color-text-secondary); margin: 0; }
+.jo-needs { font-style: italic; color: var(--color-text-muted); }
+@media (max-width: 767px) {
+  .jo-strip { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .jo-strip [data-mobile="hide"] { display: none; }
+}
+
+/* Bridge line between sections: one sentence that hands the order on. */
+.jo-bridge { font-size: var(--fs-body); line-height: var(--lh-body); color: var(--color-text-tertiary); margin: 0; max-width: 40rem; }
+
+/* Phone-only detail crops: full bleed so product text stays readable. */
+@media (max-width: 767px) {
+  .cs-figure--detail .cs-figure-zoom-trigger,
+  .cs-figure--detail > .cs-figure-media { margin-inline: calc(-1 * var(--page-px)); width: calc(100% + 2 * var(--page-px)); }
+  .cs-figure--detail .cs-figure-media { border-radius: 0; box-shadow: inset 0 1px 0 var(--color-border-subtle), inset 0 -1px 0 var(--color-border-subtle); }
+  .cs-figure--detail .cs-figure-media img { aspect-ratio: var(--cs-detail-ar); }
+}
+.cs-figure-hint { display: none; }
+@media (max-width: 767px) {
+  .cs-figure--detail .cs-figure-hint { display: block; font-size: 12px; line-height: 1.72; color: var(--color-text-tertiary); margin: 8px 0 0; }
+}
+
+/* Lightbox on phones: full screen, centred, pinch to zoom. */
+@media (max-width: 767px) {
+  .cs-lightbox-stage { padding: 0; align-items: center; touch-action: none; overflow: hidden; }
+  .cs-lightbox-frame { width: 100%; }
+  .cs-lightbox-media { border-radius: 0; box-shadow: none; transform-origin: 0 0; will-change: transform; }
+  .cs-lightbox-meta { padding: 0 var(--page-px); }
+}
+.cs-lightbox-zoomhint { display: none; }
+@media (max-width: 767px) and (hover: none) {
+  .cs-lightbox-zoomhint { display: inline; }
+}
+.jo-lessons { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-3); max-width: 46rem; }
+.jo-lessons .jo-strip__why + .jo-strip__why { margin-top: 4px; }
+@media (max-width: 767px) { .jo-lessons { grid-template-columns: minmax(0, 1fr); } }
+
+/* ─── JOOLA v9: one-point visuals (step flows, rules, annotated screen) ─── */
+.jo-cs {
+  --jo-pill-bg:         #EFEFEF;
+  --jo-pill-ink:        var(--color-text-primary);
+  --jo-pill-pain-bg:    #FDECEA;
+  --jo-pill-pain-ink:   #B42318;
+  --jo-pill-final-bg:   #E8EEFF;
+  --jo-pill-final-ink:  #2440B3;
+  --jo-arrow:           #B5B5B5;
+}
+html[data-theme="dark"] .jo-cs {
+  --jo-pill-bg:         #24282C;
+  --jo-pill-pain-bg:    rgba(240, 82, 72, 0.16);
+  --jo-pill-pain-ink:   #FF8A80;
+  --jo-pill-final-bg:   rgba(96, 128, 255, 0.18);
+  --jo-pill-final-ink:  #A9BBFF;
+  --jo-arrow:           #5A5F64;
+}
+.jo-panel, .jo-flowcmp__panel {
+  border-radius: var(--radius-control);
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+  background: var(--color-placeholder);
+  padding: var(--space-4) var(--space-3);
+}
+.jo-flow__steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; row-gap: 10px; }
+.jo-flow__item { display: flex; align-items: center; }
+.jo-pill {
+  display: inline-block; border-radius: 999px; padding: 7px 14px;
+  font-size: 14px; line-height: 20px; background: var(--jo-pill-bg); color: var(--jo-pill-ink);
+}
+.jo-pill--pain { background: var(--jo-pill-pain-bg); color: var(--jo-pill-pain-ink); }
+.jo-pill--final { background: var(--jo-pill-final-bg); color: var(--jo-pill-final-ink); }
+.jo-flow__arrow { width: 28px; height: 10px; flex-shrink: 0; position: relative; }
+.jo-flow__arrow::before { content: ""; position: absolute; left: 6px; right: 8px; top: 50%; height: 1px; background: var(--jo-arrow); }
+.jo-flow__arrow::after { content: ""; position: absolute; right: 6px; top: 50%; width: 6px; height: 6px; border-top: 1px solid var(--jo-arrow); border-right: 1px solid var(--jo-arrow); transform: translateY(-50%) rotate(45deg); }
+.jo-flow__loop { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 13px; line-height: 18px; color: var(--jo-pill-pain-ink); }
+.jo-flow__loopicon { width: 14px; height: 14px; border: 1.5px solid currentColor; border-radius: 999px; border-left-color: transparent; flex-shrink: 0; }
+.jo-flowcmp__panel { display: grid; gap: var(--space-4); }
+.jo-flowcmp__head { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px; }
+.jo-flowcmp__tag { font-size: 12px; line-height: 18px; color: var(--color-text-tertiary); }
+.jo-flowcmp__row.is-final .jo-flowcmp__tag { color: var(--jo-pill-final-ink); }
+.jo-flowcmp__title { font-family: var(--font-sans-medium); font-weight: 500; font-size: 15px; line-height: 20px; color: var(--color-text-primary); }
+.jo-tradeoff { margin: 10px 0 0; font-size: 14px; line-height: 20px; color: var(--color-text-secondary); }
+.jo-tradeoff__label { color: var(--jo-pill-pain-ink); margin-right: 8px; }
+.jo-cs > section > div > .jo-tradeoff, .jo-cs .jo-tradeoff--body { font-size: var(--fs-body); line-height: var(--lh-body); max-width: 40rem; margin: 0 0 var(--cs-para-gap); }
+.jo-rules { list-style: none; margin: 0 0 var(--cs-para-gap); padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+.jo-rules__card { border-radius: var(--radius-control); box-shadow: inset 0 0 0 1px var(--color-border-subtle); background: var(--color-placeholder); padding: var(--space-3); }
+.jo-rules__who { font-size: 12px; line-height: 18px; color: var(--color-text-tertiary); margin: 0 0 6px; }
+.jo-rules__text { font-family: var(--font-sans-medium); font-weight: 500; font-size: 17px; line-height: 24px; color: var(--color-text-primary); margin: 0; }
+.jo-annot { max-width: 460px; }
+.jo-annot--wide { max-width: 640px; }
+.jo-annot__legend.jo-callouts--sm li { font-size: 13px; line-height: 20px; }
+.jo-annot__shot { position: relative; border-radius: var(--radius-control); overflow: hidden; box-shadow: inset 0 0 0 1px var(--color-border-subtle); }
+.jo-annot__marker { left: 2px; transform: translateY(-50%); box-shadow: 0 0 0 2px var(--color-bg); }
+.jo-annot__legend { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: 10px; }
+.jo-annot__legend li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 20px; color: var(--color-text-secondary); }
+.jo-fig-narrow { max-width: 640px; }
+.jo-fig-narrow.jo-fig-table { max-width: 560px; }
+.jo-fig-shot .cs-figure-media { background: #FFFFFF; }
+@media (max-width: 767px) {
+  .jo-panel, .jo-flowcmp__panel { padding: var(--space-3) var(--space-2); }
+  .jo-flow__steps { flex-direction: column; align-items: flex-start; }
+  .jo-flow__item { flex-direction: column; align-items: flex-start; }
+  .jo-flow__arrow { width: 10px; height: 18px; margin-left: 18px; }
+  .jo-flow__arrow::before { left: 50%; right: auto; top: 3px; bottom: 6px; width: 1px; height: auto; }
+  .jo-flow__arrow::after { left: 50%; right: auto; top: auto; bottom: 5px; transform: translateX(-50%) rotate(135deg); }
+  .jo-rules { grid-template-columns: minmax(0, 1fr); }
+  .jo-annot { max-width: none; }
+}
+/* v9 flow: equal columns on desktop so arrows never dangle at a line end. */
+@media (min-width: 768px) {
+  .jo-flow__steps { flex-wrap: nowrap; align-items: stretch; }
+  .jo-flow__item { flex: 1 1 0; min-width: 0; align-items: center; }
+  .jo-flow__item .jo-pill { flex: 1 1 auto; align-self: stretch; display: flex; align-items: center; border-radius: 12px; padding: 10px 14px; }
+}
+.jo-fig-shot .cs-figure-media, .jo-annot__shot { outline: 1px solid var(--color-border-subtle); outline-offset: -1px; }
+/* v9 annotated screen: markers sit in a gutter, never on the product text. */
+.jo-annot__shot { margin-left: 30px; overflow: visible; }
+.jo-annot__shot img { border-radius: var(--radius-control); }
+.jo-annot__marker { left: -30px; box-shadow: none; }
+.jo-annot__marker::after { content: ""; position: absolute; left: 22px; top: 50%; width: 8px; height: 1px; background: var(--jo-marker-bg); }
+.jo-strip--narrow { max-width: 640px; }
+@media (max-width: 767px) { .jo-strip--narrow { max-width: none; } }
+@media (max-width: 767px) {
+  .jo-annot { margin-inline: calc(-1 * var(--page-px)); }
+  .jo-annot__shot { margin-left: 30px; }
+  .jo-annot__shot img { border-radius: 0; }
+  .jo-annot__legend, .jo-annot .cs-figcaption { padding-inline: var(--page-px); }
+  .jo-fig-narrow { max-width: none; }
+}
+
+
+/* ─── JOOLA v10: product UI ported from the v18 prototype (scoped to .jp) ───
+   Tokens and rules copied from the prototype's app.css, v18.css, csv-import.css, admin-care.css,
+   credit.css, identity.css and rep-orders.css (CsvImportDialog, ApprovalQueuePage). Product UI stays
+   light in both site themes, like the captures, and uses FK Grotesk Neue. Site figures keep Helvetica Neue.
+   Motion is only what the prototype has: its .btn hover and press, its panel and record entry. */
+@font-face { font-family: "FK Grotesk Neue"; src: url("/fonts/fk-grotesk-neue-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "FK Grotesk Neue"; src: url("/fonts/fk-grotesk-neue-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+.jp {
+  --jp-ink: #1a1a1a;
+  --jp-muted: #5c5c66;
+  --jp-faint: #8a8a96;
+  --jp-line: #e6e8ef;
+  --jp-band: #f4f5f7;
+  --jp-wash: #eceef2;
+  --jp-surface: #ffffff;
+  --jp-accent: #2c3ee0;
+  --jp-accent-hover: #2434c7;
+  --jp-danger: #c62828;
+  --jp-danger-bg: rgba(198, 40, 40, 0.1);
+  --jp-danger-border: rgba(198, 40, 40, 0.28);
+  --jp-amber: #8a6100;
+  --jp-green-ink: #146c43;
+  --jp-green-bg: rgba(25, 135, 84, 0.12);
+  --jp-success: #12824a;
+  --jp-radius: 8px;
+  --jp-radius-status: 4px;
+  --jp-ease: cubic-bezier(0.2, 0, 0, 1);
+  --jp-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --jp-motion: 200ms;
+  color-scheme: light;
+  font-family: "FK Grotesk Neue", var(--font-sans);
+  color: var(--jp-ink);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+.jp *, .jp *::before, .jp *::after { box-sizing: border-box; }
+.jp p, .jp h2, .jp h3, .jp dl, .jp dd, .jp ul { margin: 0; padding: 0; }
+.jp h2, .jp h3 { font-family: inherit; letter-spacing: normal; text-transform: none; color: inherit; }
+.jp ul { list-style: none; }
+.jp-tnum { font-variant-numeric: tabular-nums; }
+.jp-card { background: var(--jp-surface); border-radius: var(--jp-radius); box-shadow: 0 0 0 1px var(--jp-line), 0 1px 2px rgba(16, 24, 40, 0.04); overflow: hidden; }
+
+/* Status pill (app.css .status-pill). Green keeps a transparent border, danger carries its own. */
+.jp-pill { display: inline-flex; align-items: center; height: 22px; padding: 2px 8px 0; border: 1px solid transparent; border-radius: var(--jp-radius-status); font-size: 13px; font-weight: 400; line-height: 16px; white-space: nowrap; }
+.jp-pill--green { background: var(--jp-green-bg); color: var(--jp-green-ink); }
+.jp-pill--danger { background: var(--jp-danger-bg); border-color: var(--jp-danger-border); color: var(--jp-danger); }
+
+/* Buttons (app.css .btn). 2px of top padding is the prototype's optical centring. */
+.jp-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 2px 16px 0; border: 1px solid transparent; border-radius: var(--jp-radius); font: inherit; font-size: 13px; font-weight: 500; line-height: 16px; white-space: nowrap; appearance: none; cursor: default; will-change: transform; transition: background-color var(--jp-motion) var(--jp-ease), color var(--jp-motion) var(--jp-ease), border-color var(--jp-motion) var(--jp-ease), opacity var(--jp-motion) var(--jp-ease), transform 150ms ease-out; }
+.jp-btn--sm { height: 32px; padding: 2px 12px 0; }
+.jp-btn--primary { background: var(--jp-accent); color: #fff; }
+.jp-btn--primary.is-hover, .jp-btn--primary.is-pressed { background: var(--jp-accent-hover); }
+.jp-btn--outline { background: #fff; border-color: var(--jp-line); color: var(--jp-ink); }
+.jp-btn--outline.is-hover, .jp-btn--outline.is-pressed { background: var(--jp-band); }
+.jp-btn.is-pressed { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) {
+  .jp-btn--primary:hover { background: var(--jp-accent-hover); }
+  .jp-btn--outline:hover { background: var(--jp-band); }
+}
+button.jp-btn { cursor: pointer; }
+button.jp-btn:active { transform: scale(0.97); }
+.jp-btn:focus-visible, .jp-csv__keep:focus-visible { outline: 2px solid var(--jp-accent); outline-offset: 2px; }
+/* Short actions (progress.css .btn--busy): both faces share one cell, so the button keeps its width. */
+.jp-btn--busy { display: inline-grid; grid-template-columns: auto; flex-shrink: 0; }
+.jp-btn__face { grid-area: 1 / 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.jp-btn__face--busy { visibility: hidden; }
+.jp-btn--busy.is-loading .jp-btn__face { visibility: hidden; }
+.jp-btn--busy.is-loading .jp-btn__face--busy { visibility: visible; }
+.jp-btn--primary.is-loading { background: var(--jp-wash); border-color: var(--jp-line); color: var(--jp-muted); }
+.jp-btn--outline.is-disabled { opacity: 0.45; }
+.jp-btn__spinner { flex-shrink: 0; width: 12px; height: 12px; border: 1.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: jp-spin 700ms linear infinite; }
+
+/* Text link (app.css .text-link) */
+.jp-text-link { color: var(--jp-accent); border-radius: 2px; }
+
+/* Import grid (csv-import.css, v18.css). Cells fill the row, so a state change cannot move a box. */
+.jp-csv { --jp-cols: 48px 92px minmax(0, 1fr) 72px 204px; font-size: 13px; line-height: 18px; }
+.jp-csv__head, .jp-csv__row { display: grid; grid-template-columns: var(--jp-cols); }
+.jp-csv__head { position: relative; align-items: center; height: 40px; background: #fff; color: var(--jp-muted); font-size: 12px; font-weight: 500; line-height: 16px; }
+.jp-csv__head::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--jp-line); }
+.jp-csv__head > div, .jp-csv__row > div { display: flex; align-items: center; min-width: 0; padding: 8px 10px; }
+.jp-csv__body { margin-top: 2px; }
+.jp-csv__row { min-height: 40px; }
+.jp-csv__t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jp-csv__end { justify-content: flex-end; font-variant-numeric: tabular-nums; }
+.jp-csv__end > span { white-space: nowrap; }
+.jp-csv__row.is-skipped > div:not(:last-child) { color: var(--jp-muted); }
+.jp-csv__status { white-space: nowrap; }
+/* The flagged row reserves its full 72px in both states (10px, 14px why, 6px, 32px button, 10px). */
+.jp-csv__row.is-decision { min-height: 72px; }
+.jp-csv__row.is-decision > .jp-csv__status { padding-block: 10px; }
+.jp-csv__flag { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.jp-csv__why { font-size: 12px; line-height: 14px; color: var(--jp-amber); }
+.jp-csv__acts { display: flex; align-items: center; gap: 12px; }
+.jp-csv__keep { padding: 0; border: 0; background: none; font: inherit; font-size: 13px; line-height: 18px; color: var(--jp-muted); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; appearance: none; cursor: pointer; }
+.jp-csv__keep:focus-visible { border-radius: 4px; }
+
+/* Earlier version, V1: the cart after the first import (cart-notice.is-error, cart-lines__head) */
+.jp-notice { display: flex; align-items: center; min-height: 40px; padding: 8px 10px; border: 1px solid var(--jp-line); border-radius: var(--jp-radius); background: var(--jp-band); font-size: 12px; line-height: 1.4; }
+.jp-notice--error { background: var(--jp-danger-bg); border-color: var(--jp-danger-border); color: var(--jp-danger); }
+.jp-cartv1 { --jp-cart-cols: minmax(0, 1fr) 72px 112px; padding: 12px; display: grid; gap: 8px; }
+.jp-cartv1__head, .jp-cartv1__line { display: grid; grid-template-columns: var(--jp-cart-cols); column-gap: 16px; align-items: center; }
+.jp-cartv1__head { position: relative; height: 40px; color: var(--jp-muted); font-size: 12px; font-weight: 500; line-height: 16px; }
+.jp-cartv1__head::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--jp-line); }
+.jp-cartv1__line { min-height: 56px; }
+.jp-cartv1__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jp-cartv1__end { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Rep decision panel (admin-care.css .ac-*, app.css .order-panel). 460px wide, 598px tall: the
+   prototype's panel when nothing is expanded, so the well never changes height between states. */
+.jp-rep { display: flex; flex-direction: column; width: 460px; height: 598px; overflow: hidden; background: #fff; border-radius: var(--jp-radius); box-shadow: 0 0 0 1px var(--jp-line), 0 1px 2px rgba(16, 24, 40, 0.04); animation: jp-panel-in 120ms var(--jp-ease); }
+.jp-avatar { display: inline-flex; align-items: center; justify-content: center; flex: none; padding: calc(var(--av, 32px) * 0.11); border: 1px solid var(--jp-line); border-radius: 50%; background: #fff; overflow: hidden; }
+.jp-avatar img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.jp-ac-title { display: flex; align-items: center; gap: 12px; padding: 20px 24px 16px; flex-shrink: 0; }
+.jp .jp-ac-title__name { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 500; line-height: 20px; overflow-wrap: anywhere; }
+.jp-ac-title__so { flex-shrink: 0; font-size: 12px; line-height: 16px; color: var(--jp-muted); white-space: nowrap; }
+.jp-op-body { display: flex; flex-direction: column; gap: 24px; flex: 0 1 auto; min-height: 0; padding: 8px 24px 20px; }
+.jp-rep.is-record .jp-op-body { gap: 28px; padding-bottom: 28px; }
+.jp-ac-sec { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.jp-ac-key { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.jp-ac-key__label { font-size: 12px; line-height: 16px; color: var(--jp-muted); }
+.jp-ac-key__amt { font-size: 28px; font-weight: 500; line-height: 36px; color: var(--jp-ink); overflow-wrap: anywhere; }
+.jp-ac-key__amt.is-danger { color: var(--jp-danger); }
+.jp-ac-key__sub { margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--jp-muted); }
+.jp-ac-info { display: flex; flex-direction: column; gap: 14px; }
+.jp-rq-credit { display: flex; flex-direction: column; gap: 12px; }
+/* Credit bar (app.css, credit.css): grey is open invoices, blue is covered by credit, red is over. */
+.jp-credit-bar { position: relative; width: 100%; height: 6px; margin-top: 8px; border-radius: 999px; background-color: var(--jp-wash); background-image: linear-gradient(to right, var(--jp-faint) 0, var(--jp-faint) var(--credit-used, 0%), var(--jp-accent) var(--credit-used, 0%), var(--jp-accent) calc(var(--credit-used, 0%) + var(--credit-within, 0%)), var(--jp-danger) calc(var(--credit-used, 0%) + var(--credit-within, 0%)), var(--jp-danger) calc(var(--credit-used, 0%) + var(--credit-within, 0%) + var(--credit-over, 0%)), var(--jp-wash) calc(var(--credit-used, 0%) + var(--credit-within, 0%) + var(--credit-over, 0%)), var(--jp-wash) 100%); }
+.jp-credit-bar.is-over::after { content: ""; position: absolute; top: -3px; bottom: -3px; left: var(--credit-limit, 100%); width: 2px; margin-left: -1px; border-radius: 1px; background: var(--jp-ink); }
+.jp-credit-bar + .jp-credit-legend { margin-top: -4px; }
+.jp-credit-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 12px; line-height: 16px; color: var(--jp-muted); white-space: nowrap; }
+.jp-credit-legend__item { display: inline-flex; align-items: center; gap: 4px; }
+.jp-credit-legend__item i { flex: none; width: 8px; height: 8px; border-radius: 2px; }
+.jp-credit-legend__item.is-used i { background: var(--jp-faint); }
+.jp-credit-legend__item.is-order i { background: var(--jp-accent); }
+.jp-credit-legend__item.is-over i { background: var(--jp-danger); }
+.jp-credit-legend__amt { color: var(--jp-ink); }
+.jp-credit-legend__limit { margin-left: auto; }
+.jp-ac-history { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
+.jp-ac-history > div { display: flex; flex-direction: column; gap: 2px; }
+.jp-ac-history dt { font-size: 12px; line-height: 16px; color: var(--jp-muted); }
+.jp-ac-history dd { font-size: 13px; line-height: 18px; color: var(--jp-ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.jp-ac-policy { font-size: 12px; line-height: 16px; color: var(--jp-muted); }
+.jp-ac-lines__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 24px; font-size: 13px; }
+.jp-ac-lines__toggle { display: inline-flex; align-items: center; min-height: 24px; font-size: 12px; }
+/* Decision area: a seam above it, inset to the 24px content edges, like the prototype's footer. */
+.jp-op-foot { display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; margin-inline: 24px; padding: 20px 0; border-top: 1px solid var(--jp-line); }
+.jp-op-foot--record { padding: 0 0 20px; border-top-color: transparent; }
+.jp-field-label { font-weight: 500; color: var(--jp-ink); }
+.jp-ac-reason .jp-field-label { font-size: 13px; line-height: 20px; }
+.jp-ac-labelrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 20px; }
+.jp-ac-help { font-size: 12px; line-height: 16px; color: var(--jp-muted); }
+.jp-ac-reasonbox { position: relative; }
+.jp-input { display: flex; align-items: center; width: 100%; height: 36px; padding: 2px 12px 0; border: 1px solid var(--jp-line); border-radius: var(--jp-radius); background: #fff; color: var(--jp-ink); font-size: 14px; }
+.jp-input.is-focus { border-color: var(--jp-muted); }
+.jp-input__ph { color: var(--jp-faint); }
+/* The native caret, drawn, because the loop never takes real focus. */
+.jp-input.is-focus .jp-input__val::after { content: ""; display: inline-block; width: 1px; height: 17px; margin-left: 1px; vertical-align: text-bottom; background: var(--jp-ink); }
+.jp-input.is-focus .jp-input__ph::before { content: ""; display: inline-block; width: 1px; height: 17px; margin-right: -1px; vertical-align: text-bottom; background: var(--jp-ink); }
+/* Quick reasons (select__list.is-up) */
+.jp-select__list { position: absolute; z-index: 50; bottom: calc(100% + 6px); left: 0; right: 0; display: flex; flex-direction: column; gap: 2px; padding: 4px; border-radius: 12px; background: #fff; box-shadow: 0 0 0 1px var(--jp-line), 0 12px 32px rgba(26, 26, 26, 0.12); transform-origin: bottom center; animation: jp-menu-in 140ms var(--jp-ease); }
+.jp-select__opt { display: flex; align-items: center; min-height: 36px; padding: 0 10px 0 12px; border-radius: 8px; font-size: 14px; line-height: 18px; color: var(--jp-ink); }
+.jp-ac-type { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.jp-ac-type__head { font-size: 13px; line-height: 16px; }
+.jp-ac-radios { display: flex; flex-wrap: wrap; gap: 8px; }
+.jp-ac-radio { display: inline-flex; align-items: center; height: 32px; padding: 2px 12px 0; border: 1px solid var(--jp-line); border-radius: var(--jp-radius); background: #fff; font-size: 13px; font-weight: 500; line-height: 16px; color: var(--jp-muted); }
+.jp-ac-radio.is-on { background: var(--jp-band); border-color: var(--jp-ink); color: var(--jp-ink); }
+.jp-ac-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; }
+.jp-ac-addnote { display: inline-flex; align-items: center; flex: 0 0 auto; min-height: 24px; margin-right: auto; font-size: 12px; }
+.jp-ac-why { flex: 1 1 auto; min-width: 0; margin-right: auto; }
+.jp-op-foot--record .jp-ac-actions { justify-content: flex-end; }
+/* Decision record: a plain heading with a 16px check (x when rejected), then what happens next and the facts. The panel around it does not move. */
+.jp-ac-done { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.jp .jp-ac-done__title { display: inline-flex; align-items: center; gap: 6px; }
+.jp-ac-done__icon { flex: none; color: var(--jp-success); }
+.jp-ac-done__icon.is-rejected { color: var(--jp-danger); }
+.jp-ac-done__next { animation: jp-text-in 200ms var(--jp-ease) 120ms both; }
+.jp-ac-done__next { font-size: 13px; line-height: 16px; color: var(--jp-muted); }
+.jp-ac-done__link { white-space: nowrap; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.jp-ro-intake { display: flex; flex-direction: column; gap: 12px; }
+.jp .jp-ac-decision__title { margin: 0; font-size: 13px; font-weight: 500; line-height: 16px; color: var(--jp-ink); }
+.jp-ro-record { display: flex; flex-direction: column; gap: 8px; }
+.jp-ro-record > div { display: grid; grid-template-columns: 112px minmax(0, 1fr); column-gap: 12px; font-size: 13px; line-height: 16px; }
+.jp-ro-record dt { color: var(--jp-muted); }
+.jp-ro-record dd { display: flex; align-items: flex-start; gap: 6px; color: var(--jp-ink); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+
+@keyframes jp-panel-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes jp-menu-in { from { opacity: 0; transform: scale(0.96); } }
+@keyframes jp-text-in { from { opacity: 0; transform: translateY(4px); } }
+@keyframes jp-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .jp *, .jp *::before, .jp *::after { animation: none !important; transition: none !important; }
+  .jp-btn__spinner { border-right-color: currentColor; opacity: 0.5; }
+}
+
+/* Wells: the soft stage a product moment sits on. Site tokens, so it follows the theme. */
+.jp-well { position: relative; display: grid; place-items: center; border-radius: var(--radius-control); background: var(--color-placeholder); box-shadow: inset 0 0 0 1px var(--color-border-subtle); overflow: hidden; }
+html[data-theme="dark"] .jp-well { background: #1B1F23; }
+.jp-well__stage { display: grid; place-items: center; width: 100%; min-width: 0; }
+.jp-well--hero { aspect-ratio: 2 / 1; }
+.jp-well--inline, .jp-well--tabs { padding: var(--space-5) var(--space-3); }
+.jp-well--rep { padding: var(--space-5) var(--space-3); }
+.jp-well__play { position: absolute; right: 12px; bottom: 12px; width: 32px; height: 32px; border-radius: 999px; border: 0; display: grid; place-items: center; color: var(--color-text-secondary); background: var(--color-bg); box-shadow: 0 0 0 1px var(--color-border-subtle); cursor: pointer; opacity: 0.85; }
+.jp-well__play:hover { opacity: 1; }
+.jp-well__play:focus-visible, .jp-well--tabs:focus-visible, .jp-well__reset:focus-visible { outline: 2px solid var(--color-text-tertiary); outline-offset: 2px; }
+/* Resets the Final tab's row. Page chrome, absolutely placed, so showing it never moves the well. */
+.jp-well__reset { position: absolute; right: 12px; bottom: 12px; min-height: 32px; padding: 0 12px; border: 0; border-radius: 999px; font: inherit; font-family: var(--font-sans); font-size: 13px; color: var(--color-text-secondary); background: var(--color-bg); box-shadow: 0 0 0 1px var(--color-border-subtle); cursor: pointer; }
+.jp-well__reset[hidden] { display: none; }
+.jp-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: -1px; }
+
+/* One 704px card for the hero and the version tabs (the prototype's 704px preview), one 460px panel for the rep.
+   Zoom steps keep each at its lane's width; the well pads 24px each side. */
+.jp-scale .jp-card { width: 704px; }
+@media (min-width: 768px) {
+  .jp-scale--hero, .jp-scale--tabs { zoom: 0.92; }
+}
+@media (min-width: 1024px) { .jp-scale--hero { zoom: 1.25; } }
+@media (min-width: 1200px) { .jp-scale--hero, .jp-scale--tabs { zoom: 1; } }
+@media (min-width: 1440px) { .jp-scale--hero, .jp-scale--tabs { zoom: 1.2; } }
+@media (min-width: 1680px) { .jp-scale--hero, .jp-scale--tabs { zoom: 1.4; } }
+@media (min-width: 1920px) { .jp-scale--hero, .jp-scale--tabs { zoom: 1.6; } .jp-scale--rep { zoom: 1.15; } }
+@media (min-width: 2400px) { .jp-scale--hero, .jp-scale--tabs { zoom: 1.9; } }
+@media (max-width: 767px) {
+  .jp-well--hero { aspect-ratio: auto; padding: var(--space-4) 12px var(--space-6); }
+  .jp-well--inline, .jp-well--tabs, .jp-well--rep { padding: var(--space-3) 12px var(--space-6); }
+  .jp-well--tabs { padding-bottom: var(--space-6); }
+  .jp-scale { width: 100%; }
+  .jp-scale .jp-card { width: 100%; }
+  /* Phones: Row, Product (two lines at most) and Qty on the first line, the status below under the product.
+     The hidden cells and the status cell use two-class selectors: the cell rule `.jp-csv__head > div` has
+     higher specificity than a single class, so a lone `.jp-csv__sku { display: none }` never applied.
+     The flagged row's status line reserves 62px (52px of content, 10px below) in both states. */
+  .jp-csv { --jp-cols: 48px minmax(0, 1fr) 44px; }
+  .jp-csv__head > div, .jp-csv__row > div { padding-inline: 8px; }
+  .jp-csv__head > .jp-csv__sku, .jp-csv__row > .jp-csv__sku, .jp-csv__head > .jp-csv__statushead { display: none; }
+  .jp-csv__row > div > .jp-csv__t { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; overflow-wrap: break-word; }
+  .jp-csv__row > .jp-csv__status { grid-column: 2 / -1; padding: 0 8px 10px; }
+  .jp-csv__row.is-decision { min-height: 0; }
+  .jp-csv__row.is-decision > .jp-csv__status { padding: 0 8px 10px; min-height: 62px; }
+  /* Rep panel on a phone reflows, as the prototype's does (its sheet is min(460px, 92vw) wide and never scales).
+     Side padding drops from 24px to 16px so the title fits on one line; text keeps its real sizes. */
+  .jp-rep { width: 100%; max-width: 460px; height: 712px; margin-inline: auto; }
+  .jp-ac-title { padding-inline: 16px; }
+  .jp-op-body { padding-inline: 16px; flex-shrink: 0; }
+  .jp-op-foot { margin-inline: 16px; }
+  .jp-rep:not(.is-record) .jp-op-foot { margin-top: auto; }
+  .jp-ac-history { grid-template-columns: minmax(0, 1fr); }
+  .jp-ac-actions { flex-wrap: wrap; }
+  .jp-ac-addnote { flex-basis: 100%; margin-right: 0; }
+  .jp-ac-actions > .jp-btn { flex: 1 1 0; }
+  .jp-cartv1 { --jp-cart-cols: minmax(0, 1fr) 44px 88px; }
+  .jp-cartv1__head, .jp-cartv1__line { column-gap: 8px; }
+  .jp-cartv1__name { white-space: normal; overflow-wrap: anywhere; }
+}
+
+/* Version tabs */
+.jp-tabs { display: inline-flex; gap: 4px; padding: 4px; margin: 0 0 var(--space-2); border-radius: var(--radius-control); background: var(--color-placeholder); box-shadow: inset 0 0 0 1px var(--color-border-subtle); }
+.jp-tabs__tab { font: inherit; font-family: var(--font-sans); font-size: 14px; line-height: 20px; color: var(--color-text-secondary); background: none; border: 0; border-radius: 6px; padding: 6px 14px; min-height: 36px; cursor: pointer; }
+.jp-tabs__tab[aria-selected="true"] { background: var(--color-bg); color: var(--color-text-primary); box-shadow: 0 0 0 1px var(--color-border-subtle); }
+.jp-tabs__tab:focus-visible { outline: 2px solid var(--color-text-tertiary); outline-offset: 1px; }
+html[data-theme="dark"] .jp-tabs { background: #1B1F23; }
+.jp-versions__cap { display: grid; gap: 4px; margin-top: 10px; max-width: 40rem; }
+.jp-versions__what { margin: 0; }
+.jp-versions__cost, .jp-versions__note { font-size: 14px; line-height: 20px; color: var(--color-text-secondary); }
+.jp-versions__label { color: var(--color-text-tertiary); margin-right: 8px; }
+
+/* ─── JOOLA v10: story figures (site type, site tokens) ─── */
+/* Phase markers already divide the page, so sections sit one step closer on desktop (space-8, not space-10). */
+@media (min-width: 1200px) { .jo-cs { --section-gap: var(--space-8); } }
+.jo-cs .jo-tradeoff__label { color: var(--color-text-tertiary); }
+.jo-tnum { font-variant-numeric: tabular-nums; }
+.jo-hero-loop { margin: 0; }
+.jo-preview { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); margin: 0 0 var(--space-5); }
+.jo-preview__card { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; padding: var(--space-2) var(--space-3); border-radius: var(--radius-control); box-shadow: inset 0 0 0 1px var(--color-border-subtle); text-decoration: none; color: inherit; transition: background-color 160ms ease; }
+.jo-preview__card:hover { background: var(--color-placeholder); }
+.jo-preview__card:focus-visible { outline: 2px solid var(--color-text-tertiary); outline-offset: 2px; }
+.jo-preview__n { grid-row: 1 / 3; font-size: 13px; line-height: 20px; color: var(--color-text-tertiary); }
+.jo-preview__side { font-size: 12px; line-height: 18px; color: var(--color-text-tertiary); }
+.jo-preview__title { font-family: var(--font-sans-medium); font-weight: 500; font-size: 15px; line-height: 22px; color: var(--color-text-primary); }
+.jo-phase { display: flex; align-items: center; gap: 12px; margin: 0 0 var(--space-5); font-size: 12px; line-height: 18px; letter-spacing: 0.04em; color: var(--color-text-tertiary); }
+.jo-phase__rule { flex: 1; height: 1px; background: var(--color-border-subtle); }
+
+.jo-oloop { border-radius: var(--radius-control); background: var(--color-placeholder); box-shadow: inset 0 0 0 1px var(--color-border-subtle); padding: var(--space-5) var(--space-4) var(--space-4); }
+html[data-theme="dark"] .jo-oloop, html[data-theme="dark"] .jo-qr__rule, html[data-theme="dark"] .jo-opts__card { background: #1B1F23; }
+.jo-oloop__row { display: grid; grid-template-columns: 1fr 1.3fr 1fr; align-items: center; }
+.jo-oloop__cell { display: flex; align-items: center; min-width: 0; }
+.jo-oloop__cell:last-child { justify-content: stretch; }
+.jo-oloop__node { flex: 1; min-width: 0; text-align: center; padding: 14px 12px; border-radius: var(--radius-control); background: var(--color-bg); box-shadow: 0 0 0 1px var(--color-border-subtle); font-size: 15px; line-height: 21px; color: var(--color-text-primary); }
+.jo-oloop__node.is-key { font-family: var(--font-sans-medium); font-weight: 500; box-shadow: 0 0 0 1.5px var(--color-text-primary); }
+.jo-oloop__arrow { flex: 0 0 28px; margin: 0 8px; color: var(--color-text-tertiary); }
+.jo-oloop__back { position: relative; height: 40px; margin: 0 calc(100% / 6.6); color: var(--color-text-tertiary); }
+.jo-oloop__backline { position: absolute; inset: 0 0 auto; width: 100%; height: 22px; }
+.jo-oloop__backlabel { position: absolute; left: 50%; top: 22px; transform: translateX(-50%); font-size: 13px; line-height: 18px; color: var(--color-text-secondary); white-space: nowrap; }
+
+.jo-qr { display: grid; gap: var(--space-2); margin: 24px 0 8px; }
+.jo-qr__row { display: grid; grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr); gap: var(--space-2); align-items: center; }
+.jo-qr__theme { font-size: 12px; line-height: 18px; color: var(--color-text-tertiary); margin: 0 0 6px; }
+.jo-qr__snips { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.jo-qr__snip { display: block; border-radius: var(--radius-control); overflow: hidden; box-shadow: 0 0 0 1px var(--color-border-subtle); }
+.jo-qr__snip img { width: 100%; height: auto; display: block; }
+.jo-qr__snip .jo-theme-dark { display: none; }
+html[data-theme="dark"] .jo-qr__snip .jo-theme-light { display: none; }
+html[data-theme="dark"] .jo-qr__snip .jo-theme-dark { display: block; }
+.jo-qr__arrow { color: var(--color-text-tertiary); margin-top: 18px; }
+.jo-qr__rule { align-self: stretch; display: flex; flex-direction: column; justify-content: center; margin-top: 24px; padding: var(--space-2) var(--space-3); border-radius: var(--radius-control); background: var(--color-placeholder); box-shadow: inset 0 0 0 1px var(--color-border-subtle); }
+.jo-qr__who { font-size: 12px; line-height: 18px; color: var(--color-text-tertiary); margin: 0 0 4px; }
+.jo-qr__text { font-family: var(--font-sans-medium); font-weight: 500; font-size: 16px; line-height: 23px; color: var(--color-text-primary); margin: 0; }
+
+.jo-qa { margin: 24px 0; padding-left: var(--space-3); box-shadow: inset 2px 0 0 var(--color-text-primary); max-width: 40rem; }
+.jo-qa__q { font-family: var(--font-sans-medium); font-weight: 500; font-size: var(--fs-body); line-height: var(--lh-body); color: var(--color-text-primary); margin: 0 0 4px; }
+.jo-qa__a { font-size: var(--fs-body); line-height: var(--lh-body); color: var(--color-text-secondary); margin: 0; }
+
+.jo-opts { list-style: none; padding: 0; margin: 24px 0 8px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+.jo-opts__card { padding: var(--space-3); border-radius: var(--radius-control); background: var(--color-placeholder); box-shadow: inset 0 0 0 1px var(--color-border-subtle); display: grid; align-content: start; gap: 6px; }
+.jo-opts__card.is-chosen { background: var(--color-bg); box-shadow: inset 0 0 0 1.5px var(--color-text-primary); }
+html[data-theme="dark"] .jo-opts__card.is-chosen { background: var(--color-bg); }
+.jo-opts__tag { font-size: 12px; line-height: 18px; color: var(--color-text-tertiary); margin: 0; }
+.jo-opts__title { font-family: var(--font-sans-medium); font-weight: 500; font-size: 17px; line-height: 24px; color: var(--color-text-primary); margin: 0 0 4px; }
+.jo-opts__line { display: grid; grid-template-columns: 16px 1fr; gap: 6px; font-size: 14px; line-height: 20px; color: var(--color-text-secondary); margin: 0; }
+.jo-opts__sign { color: var(--color-text-primary); font-family: var(--font-sans-medium); }
+
+.jo-tl { display: grid; grid-template-columns: 168px 168px minmax(0, 1fr); gap: var(--space-3); align-items: start; margin: 24px 0 8px; }
+.jo-tl__shot { border-radius: var(--radius-control); overflow: hidden; box-shadow: 0 0 0 1px var(--color-border-subtle); background: #fff; }
+.jo-tl__tag { font-size: 12px; line-height: 18px; color: var(--color-text-tertiary); margin: 8px 0 2px; }
+.jo-tl__verdict { font-size: 13px; line-height: 19px; color: var(--color-text-secondary); margin: 0; }
+.jo-tl__final { min-width: 0; }
+.jo-tl + .jo-bridge { margin-top: var(--space-4); }
+.jo-callouts { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: 8px; }
+.jo-callouts li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 20px; color: var(--color-text-secondary); }
+/* Annotation legends under a figure: 13px, neutral ink. */
+.jo-callouts--sm li { font-size: 13px; line-height: 20px; }
+/* Annotation markers drawn on live product UI (case-study layer, not product UI). Absolute, so they never move the UI. */
+.jp-csv__rowcell { position: relative; }
+.jp .jp-csv__mark { right: 2px; top: 50%; transform: translateY(-50%); }
+.jp-ac-key, .jp-ac-actions { position: relative; }
+.jp .jp-rep__mark { left: -22px; top: -2px; }
+.jp .jp-ac-actions > .jp-rep__mark { top: 50%; transform: translateY(-50%); }
+@media (max-width: 767px) {
+  .jp .jp-rep__mark { left: -16px; width: 16px; height: 16px; font-size: 10px; top: 0; }
+  .jp .jp-ac-actions > .jp-rep__mark { top: auto; bottom: 10px; transform: none; }
+}
+
+.jo-flaw__frame { position: relative; overflow: hidden; border-radius: var(--radius-control); box-shadow: inset 0 0 0 1px var(--color-border-subtle); background: #fff; }
+.jo-flaw__inner { position: relative; display: block; }
+.jo-flaw__box { position: absolute; border-radius: 6px; box-shadow: 0 0 0 2px var(--color-text-primary); background: rgba(0, 0, 0, 0.03); }
+.jo-flaw__label { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-family: var(--font-sans-medium); font-weight: 500; font-size: 14px; line-height: 20px; color: var(--color-text-primary); }
+.jo-flaw__dot { width: 10px; height: 10px; border-radius: 3px; box-shadow: 0 0 0 2px var(--color-text-primary); }
+@media (max-width: 767px) {
+  .jo-flaw .cs-figure-hint { display: block; font-size: 12px; line-height: 1.72; color: var(--color-text-tertiary); margin: 4px 0 0; }
+  .jo-flaw__inner { width: calc(100% / var(--jo-flaw-crop, 1)); }
+}
+
+.jo-outbox { margin: 24px 0; padding: var(--space-3); border-radius: var(--radius-control); box-shadow: inset 0 0 0 1px var(--color-border-subtle); max-width: 40rem; }
+.jo-outbox__title { font-family: var(--font-sans-medium); font-weight: 500; font-size: 15px; line-height: 22px; color: var(--color-text-primary); margin: 0 0 4px; }
+.jo-outbox__body { font-size: 14px; line-height: 21px; color: var(--color-text-secondary); margin: 0; }
+.jo-rep-row { display: grid; grid-template-columns: minmax(0, 1fr) 15rem; gap: var(--space-4); align-items: center; }
+
+@media (max-width: 767px) {
+  .jo-preview { grid-template-columns: minmax(0, 1fr); }
+  .jo-oloop { padding: var(--space-3); }
+  .jo-oloop__row { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .jo-oloop__cell { flex-direction: column; }
+  .jo-oloop__arrow { transform: rotate(90deg); margin: 6px 0; }
+  .jo-oloop__back { margin: 8px 0 0; height: auto; }
+  .jo-oloop__backline { display: none; }
+  .jo-oloop__backlabel { position: static; transform: none; display: block; text-align: center; }
+  .jo-oloop__backlabel::before { content: "\21BA  "; }
+  .jo-qr__row { grid-template-columns: minmax(0, 1fr); }
+  .jo-qr__arrow { transform: rotate(90deg); margin: 0 auto; }
+  .jo-qr__rule { margin-top: 0; }
+  .jo-opts { grid-template-columns: minmax(0, 1fr); }
+  .jo-tl { grid-template-columns: 1fr 1fr; }
+  .jo-tl__final { grid-column: 1 / -1; }
+  .jo-rep-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
+}
+
+/* v11b: import tabs, credit meter and rep panel audit.
+   Annotation markers sit in a gutter outside the product UI, never on its text. The card is clipped with
+   clip-path instead of overflow so the gutter stays visible while the card keeps its 8px corners. */
+.jp-stack { display: grid; }
+.jp-stack > .jp-card { grid-area: 1 / 1; align-self: center; }
+.jp-stack > [inert] { visibility: hidden; }
+.jp-versions .jp-card { overflow: visible; clip-path: inset(-2px -2px -2px -40px round 10px); }
+/* The prototype's import grid: a band header with 8px corners, regular weight, no rule under it.
+   SKU and Qty are narrower than the prototype's (72 and 50 vs 92 and 72), and Row is 40, so the full
+   product name fits on one line; Status is 202 (190 in the prototype) so Change to 36 and Keep 360 fit on one line. */
+.jp-versions .jp-csv { --jp-cols: 40px 72px minmax(0, 1fr) 50px 202px; padding: 8px; }
+.jp-versions .jp-csv__head { background: var(--jp-band); border-radius: var(--jp-radius); font-weight: 400; }
+.jp-versions .jp-csv__head::after { display: none; }
+.jp-versions .jp-csv__row { position: relative; }
+.jp-versions .jp-csv__rowcell { position: static; }
+.jp-versions .jp .jp-csv__mark { left: -36px; right: auto; top: 50%; transform: translateY(-50%); }
+/* Prototype cart header: no rule under it. */
+.jp-versions .jp-cartv1__head::after { display: none; }
+.jp-versions__cap { gap: 6px; }
+.jp-versions__cap .jo-callouts { margin: 0; }
+/* Room for the gutter at the zoom steps where the card nearly fills the well. */
+@media (min-width: 1200px) and (max-width: 1439px) { .jp-scale--tabs { zoom: 0.92; } }
+@media (min-width: 1440px) and (max-width: 1679px) { .jp-scale--tabs { zoom: 1.12; } }
+@media (max-width: 767px) {
+  .jp-versions .jp-csv { --jp-cols: 52px minmax(0, 1fr) 44px; padding: 6px; }
+  .jp-versions .jp-csv__head > div, .jp-versions .jp-csv__row > div { padding-inline: 6px; }
+  /* Row, product and qty line up on the first line of the product name. */
+  .jp-versions .jp-csv__row > div { align-items: flex-start; }
+  .jp-versions .jp-csv__row > .jp-csv__end { justify-content: flex-end; }
+  /* Phones have no gutter: the marker follows the row number inside the Row cell. */
+  .jp-versions .jp-csv__rowcell { display: flex; gap: 4px; }
+  .jp-versions .jp .jp-csv__mark { position: static; transform: none; width: 18px; height: 18px; font-size: 10px; }
+  .jp-versions .jp-csv__row > .jp-csv__status { padding: 0 6px 10px; }
+}
+
+/* Credit meter: in the same gray well as the other product figures, at its captured size, markers in the gutter. */
+.jo-annot.jo-annot--wide { max-width: none; }
+.jo-annot__well { display: grid; place-items: center; padding: var(--space-5) var(--space-3); border-radius: var(--radius-control); background: var(--color-placeholder); box-shadow: inset 0 0 0 1px var(--color-border-subtle); }
+html[data-theme="dark"] .jo-annot__well { background: #1B1F23; }
+.jo-annot__well .jo-annot__shot { width: min(100% - 30px, 648px); margin-left: 30px; outline: 0; box-shadow: 0 0 0 1px var(--color-border-subtle); border-radius: var(--radius-control); }
+.jo-annot__shot--phone { display: none; }
+@media (max-width: 767px) {
+  .jo-annot { margin-inline: 0; }
+  .jo-annot__well { padding: var(--space-3) 12px; }
+  .jo-annot--phone .jo-annot__shot--wide { display: none; }
+  .jo-annot--phone .jo-annot__shot--phone { display: block; }
+  .jo-annot__well .jo-annot__shot { width: calc(100% - 30px); }
+  .jo-annot__well .jo-annot__shot img { border-radius: var(--radius-control); }
+  .jo-annot__legend, .jo-annot .cs-figcaption { padding-inline: 0; }
+}
+
+/* Rep panel: markers in the gutter left of the panel (desktop), aligned with the facts and the action row. */
+@media (min-width: 768px) {
+  .is-marked > .jp-rep { overflow: visible; clip-path: inset(-2px -2px -2px -64px round 10px); }
+  .jp .jp-rep__mark { left: -56px; }
+}
+/* The phone capture is the bare meter, so it gets the card's white and padding around it. */
+.jo-annot__well .jo-annot__shot--phone { padding: 12px; background: #fff; }
+/* Phones: a 32px gutter on the well's left holds the rep panel markers outside the panel. */
+@media (max-width: 767px) {
+  /* The narrower panel wraps two more lines, so it is 48px taller; every loop state keeps that height. */
+  .jp-well--rep:has(.is-marked) { padding-left: 32px; }
+  .is-marked > .jp-rep { height: 760px; overflow: visible; clip-path: inset(-2px -2px -2px -24px round 10px); }
+  .jp .jp-rep__mark { left: -36px; }
 }

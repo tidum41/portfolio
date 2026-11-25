@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useModalDialog } from "@/lib/useModalDialog";
+import { usePinchZoom } from "@/lib/usePinchZoom";
 
 type Props = {
   src: string;
@@ -35,6 +36,10 @@ export default function CaseStudyLightbox({ src, alt, open, onClose, aspectRatio
   const rootRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const [visible, setVisible] = useState(false);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const mediaRef = useRef<HTMLDivElement>(null);
+  // Phones only: pinch, pan and double tap on the image. Desktop keeps the fitted view.
+  const gesturedRef = usePinchZoom({ enabled: open, stageRef, targetRef: mediaRef, query: "(max-width: 767px)" });
 
   useModalDialog({
     open,
@@ -60,6 +65,10 @@ export default function CaseStudyLightbox({ src, alt, open, onClose, aspectRatio
   if (!open) return null;
 
   const onBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
+    if (gesturedRef.current) {
+      gesturedRef.current = false;
+      return;
+    }
     const target = e.target as Element;
     if (!target.closest(".cs-lightbox-media, .cs-lightbox-close")) onClose();
   };
@@ -81,14 +90,15 @@ export default function CaseStudyLightbox({ src, alt, open, onClose, aspectRatio
           <span>Close</span>
         </button>
       </div>
-      <div className="cs-lightbox-stage">
+      <div ref={stageRef} className="cs-lightbox-stage">
         <div className="cs-lightbox-frame">
-          <div className="cs-lightbox-media">
+          <div ref={mediaRef} className="cs-lightbox-media">
             <Image src={src} alt={alt} width={2400} height={Math.round(2400 / aspectRatio)} sizes="(max-width: 1248px) 100vw, 1200px" />
           </div>
           <div className="cs-lightbox-meta">
             <span>{caption}</span>
             <span className="cs-lightbox-hint">Esc to close</span>
+            <span className="cs-lightbox-zoomhint">Pinch to zoom</span>
           </div>
         </div>
       </div>

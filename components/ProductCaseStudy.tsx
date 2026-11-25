@@ -1,12 +1,10 @@
-import type { CSSProperties, ReactNode } from "react";
-import Image from "next/image";
+import type { ReactNode } from "react";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
-import CaseStudyRequest from "@/components/CaseStudyRequest";
 import CaseStudyTOC from "@/components/CaseStudyTOC";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import JoolaPartialBody, { JOOLA_PARTIAL_TOC } from "@/components/JoolaPartialBody";
-import { JOOLA_HERO_HEIGHT, JOOLA_HERO_SRC, JOOLA_HERO_WIDTH, JOOLA_TITLE } from "@/lib/caseStudies/joola";
-import { CASE_STUDY_MEDIA_SIZES } from "@/lib/caseStudyLayout";
+import ChangeQuantityLoop from "@/components/joola/product/ChangeQuantityLoop";
+import { JOOLA_TITLE } from "@/lib/caseStudies/joola";
 
 const TEAM = [
   { name: "Vinay Bulusu", role: "PM", href: "https://www.linkedin.com/in/vinay-bulusu-442395b9/" },
@@ -18,7 +16,8 @@ const TEAM = [
 
 /**
  * JOOLA uses the BruinLease case-study open: title, hero, then metadata.
- * `body` is the slot for later sections, between that open and the NDA request.
+ * The hero is a looping product moment (Change to 36), not a screenshot.
+ * `body` is the slot for the sections after that open.
  */
 export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
   return (
@@ -59,23 +58,11 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
               },
             ]}
           >
-            <div className="cs-hero-media-frame" style={{ "--cs-hero-ar": JOOLA_HERO_WIDTH / JOOLA_HERO_HEIGHT } as CSSProperties}>
-              <Image
-                src={JOOLA_HERO_SRC}
-                alt="New order screen from the JOOLA wholesale prototype: Maya Collins at Dick's Sporting Goods has a draft of 6 lines, each with product, SKU, account price, quantity stepper and line total."
-                width={JOOLA_HERO_WIDTH}
-                height={JOOLA_HERO_HEIGHT}
-                priority
-                fetchPriority="high"
-                sizes={CASE_STUDY_MEDIA_SIZES}
-                style={{ width: "100%", height: "auto", display: "block" }}
-              />
-            </div>
+            {/* v10 hero: the key moment, live from the ported prototype components (strategy 1 and 8). */}
+            <ChangeQuantityLoop size="hero" />
           </CaseStudyOpen>
 
           {body ?? <JoolaPartialBody />}
-
-          <CaseStudyRequest />
 
           <CaseStudyPager href="/joola" />
         </div>
