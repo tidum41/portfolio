@@ -1406,9 +1406,8 @@ html[data-theme="dark"] .project-image {
                        --site-max-w centred). TOC = cols 1-2; content lane
                        (hero + figures) = cols 3-10 (2/3 vw - 40px, ≥760px),
                        lane cap 1600px. Prose keeps its 40rem cap, left.
-   Tablet 768-1199   : TOC hidden. Content spans the margins; every block
-                       except the hero sits in a centred 750px lane, the hero
-                       runs full width between the margins.
+   Tablet 768-1199   : TOC hidden. Back, title, hero, and metadata share a
+                       centred --content-max-w (750px) lane.
    Mobile (≤767px)   : [content 1fr] — TOC hidden
    The 1200px cutoff matches rachelchen.tech's lg breakpoint.
    ─────────────────────────────────────────────────────────────────── */
@@ -1502,7 +1501,7 @@ html[data-theme="dark"] .project-image {
   line-height: 1.5;
 }
 /* Below 1200px: TOC aside hidden; single full-width track, 750px lane for
-   everything except the hero (which runs margin to margin). */
+   Back, title, hero, and metadata. */
 @media (max-width: 1199px) {
   .cs-aside { display: none !important; }
   .cs-layout { grid-template-columns: minmax(0, 1fr); column-gap: 0; }
@@ -1511,6 +1510,7 @@ html[data-theme="dark"] .project-image {
 @media (min-width: 768px) and (max-width: 1199px) {
   .cs-layout .cs-content > *:not(.cs-hero-header),
   .cs-layout .cs-content .cs-hero-pre-media,
+  .cs-layout .cs-content .cs-hero-media-wrap,
   .cs-layout .cs-content .cs-meta-grid {
     max-width: var(--content-max-w);
     margin-inline: auto;
@@ -1543,10 +1543,12 @@ html[data-theme="dark"] .project-image {
    CaseStudyAlignDials (DialKit panel "CS Align"). Defaults below match
    the last hard-coded optical nudges; tweak live, then lock in code. */
 :root {
-  --cs-align-m-back:    0px;
   --cs-align-m-title:   -2px;
-  --cs-align-d-back:    0px;
   --cs-align-d-title:   -2px;
+  /* Shared alignment var: Back chevron and the title's first glyph use the
+     same optical nudge so they share a left edge. */
+  --cs-align-m-back:    var(--cs-align-m-title);
+  --cs-align-d-back:    var(--cs-align-d-title);
 }
 .cs-mobile-back {
   display: none;
@@ -1668,11 +1670,17 @@ html[data-theme="dark"] .project-image {
 }
 
 /* Desktop nudges (≥768) — CaseStudyAlignDials injects live !important
-   overrides on top of these var-based fallbacks. Title only: the Back
-   control carries no translate nudge (its chevron canvas is tight). */
+   overrides on top of these var-based fallbacks. Title and in-content
+   Back share --cs-align-d-back / --cs-align-d-title. */
 @media (min-width: 768px) {
   .cs-hero-title {
     transform: translateX(var(--cs-align-d-title, 0px));
+  }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  /* In-content Back only; the desktop sidebar Back stays in the TOC rail. */
+  .cs-back-mobile {
+    transform: translateX(var(--cs-align-d-back, 0px));
   }
 }
 
@@ -1689,6 +1697,9 @@ html[data-theme="dark"] .project-image {
   .cs-back-mobile {
     margin: 0 !important;
     padding: 0 !important;
+    /* Sit the chevron and label on the bottom of the 44px hit box so the
+       visible gap down to the title is only --space-1. */
+    align-items: flex-end !important;
   }
 }
 
@@ -1701,6 +1712,8 @@ html[data-theme="dark"] .project-image {
   .cs-back-mobile {
     margin: 0 !important;
     padding: 0 !important;
+    align-items: flex-end !important;
+    transform: translateX(var(--cs-align-m-back, 0px));
   }
   .cs-hero-header { margin-bottom: var(--space-4) !important; }
   /* One lane with the hero media: no horizontal inset on wraps. */
@@ -1749,7 +1762,7 @@ html[data-theme="dark"] .project-image {
   margin-top: 4px;
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
+@media (min-width: 768px) and (max-width: 1199px) {
   .cs-meta-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px 24px;
