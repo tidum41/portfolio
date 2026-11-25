@@ -19,6 +19,8 @@ import { ANA_TRANSCRIPT, QUOTE_LIST_FRIDAY, QUOTE_LIST_NEW, remainingCount } fro
 import { COUNT_ANSWER, FRIDAY, QUESTION, TOTAL } from "@/components/dialogue/live/DeliveryDateTrial";
 import "./continued.css";
 
+const FRIDAY_REMAINDER = FRIDAY - 1; // 225 minus Ana is 224
+
 export const OPTS = ["a", "b", "c", "cs"] as const;
 export type Opt = (typeof OPTS)[number];
 export const PHASES = ["start", "landed", "next"] as const;
@@ -124,30 +126,34 @@ function ThreadPanel({ opt, phase }: { opt: Opt; phase: Phase }) {
       <div className={`dialogue-product-root dp-chat-panel-typography dlg-live dlg-stage dlg-trial__panel ${dialogueProductFontClassName}`}>
         <div className="dlg-trial__body">
           <UserMessageBubble>{QUESTION}</UserMessageBubble>
-          <p className="dlg-trial__line">
+          <p className="dlg-trial__line" data-spot="r1-folded">
             <Point open={t.r1} opened={t.asked || t.r1} target="r1-count" onClick={() => set({ r1: !t.r1, clip1: t.r1 ? false : t.clip1 })}>{`${FRIDAY} of ${TOTAL} shoppers`}</Point>
             {" "}read it as this Friday.
           </p>
           <Wrap open={t.r1}>
-            <AnswerCard still sideOpen="friday" answer={COUNT_ANSWER} />
-            <div className="dp-clip-quotes">
-              <QuoteRow q={ANA} open={t.clip1} onTap={() => set({ clip1: !t.clip1 })} playSec={4} transcript={ANA_TRANSCRIPT} />
+            <div data-spot="r1-pinned">
+              <AnswerCard still sideOpen="friday" answer={COUNT_ANSWER} />
+              <div className="dp-clip-quotes">
+                <QuoteRow q={ANA} open={t.clip1} onTap={() => set({ clip1: !t.clip1 })} playSec={4} transcript={ANA_TRANSCRIPT} />
+              </div>
+              <p className="dlg-trial__more">+{FRIDAY_REMAINDER} more who read it as this Friday</p>
             </div>
-            <p className="dlg-trial__more">+{remainingCount(FRIDAY, 1)} more who read it as this Friday</p>
           </Wrap>
           {t.asked && scoped ? (
             <>
-              <ScopedQuestion />
               {opt === "c" ? (
-                <>
+                <div data-spot="c-scope">
+                  <ScopedQuestion />
                   <div className="dp-clip-quotes" data-target="r2-ana">
                     <QuoteRow q={ANA} open={t.clip2} onTap={() => set({ clip2: !t.clip2 })} playSec={4} transcript={ANA_TRANSCRIPT} />
                   </div>
-                  <p className="dlg-trial__more">+{remainingCount(FRIDAY, 1)} more who read it as this Friday</p>
-                </>
+                  <p className="dlg-trial__more">+{FRIDAY_REMAINDER} more who read it as this Friday</p>
+                </div>
               ) : (
                 <>
+                  <ScopedQuestion />
                   <p className="dlg-trial__line">Reasons among the 225 who read it as this Friday.</p>
+                  <div data-spot="cs-themes">
                   <ChartVizCard>
                     <div className="dlg-cont__rank-plot">
                       <ChartBarList rows={SCALE_ROWS} max={1} />
@@ -167,6 +173,7 @@ function ThreadPanel({ opt, phase }: { opt: Opt; phase: Phase }) {
                     </div>
                     <p className="dp-chart-bars__note">Counts among the 225 are [PLACEHOLDER]. Theme names come from the Friday-reader quotes in MOCK-DATA 4c.</p>
                   </ChartVizCard>
+                  </div>
                   <Wrap open={!!openTheme}>
                     {openTheme ? (
                       <>

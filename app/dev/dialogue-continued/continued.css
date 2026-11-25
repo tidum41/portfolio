@@ -18,17 +18,69 @@
 .dlg-cont__q { align-self: flex-end; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; max-width: 91.6667%; }
 .dlg-cont__q .dp-user-bubble { align-self: stretch; max-width: none; }
 .dlg-cont__chip { padding: 4px 10px; }
-.dlg-cont__rank-plot { position: relative; --dp-chart-label-width: 168px; }
-.dlg-cont__rank-plot .dp-chart-bars__row { min-height: 48px; overflow: visible; }
-.dlg-cont__rank-plot .dp-chart-bars__label { overflow: visible; }
-.dlg-cont__rank-plot .dp-chart-bars__value { width: auto; min-width: 7.5em; overflow: visible; }
+.dlg-cont__rank-plot { position: relative; --dp-chart-label-width: 148px; --dp-chart-value-width: auto; min-width: 0; }
+.dlg-cont__rank-plot .dp-chart-bars__row,
+.dlg-cont .dlg-cont__rank-plot .dp-chart-bars__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(24px, 1fr) max-content;
+  column-gap: 8px;
+  min-height: 44px;
+  min-width: 0;
+  overflow: hidden;
+}
+.dlg-cont__rank-plot .dp-chart-bars__label {
+  width: auto;
+  max-width: 100%;
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+}
+.dlg-cont__rank-plot .dp-chart-bars__value {
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+.dlg-cont .dp-chart-viz-card,
+.dlg-cont .dp-chart-viz-card__inner { overflow: visible; min-width: 0; }
+.dlg-cont .dp-chart-bars__note {
+  display: block;
+  max-width: 100%;
+  margin-top: 8px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  text-wrap: wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 .dlg-cont__rank-hits { position: absolute; inset: 0; display: flex; flex-direction: column; }
 .dlg-cont__rank-hit { flex: 1 1 0; width: 100%; margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: var(--dp-radius-chip, 8px); }
 .dlg-cont__rank-hit:hover { background: color-mix(in srgb, var(--dp-warm, #f5f2ee) 70%, transparent); }
 .dlg-cont__rank-hit:focus-visible { outline: 2px solid var(--dp-brand, #b43f7f); outline-offset: 2px; }
 .dlg-cont__composer-input { flex: 1 1 auto; min-width: 0; width: 100%; margin: 0; padding: 0; border: 0; background: transparent; font: inherit; color: var(--dp-ink, #1c1917); outline: none; resize: none; line-height: 1.35; min-height: 3.2em; }
 .dlg-cont__composer-input::placeholder { color: var(--dp-muted, #57534e); }
-.dlg-cont .dp-study-chat__composer-send { cursor: pointer; border: 0; }
+.dlg-cont .dp-study-chat__composer-send,
+.dlg-cont .dp-study-chat__composer-send:hover,
+.dlg-cont .dp-study-chat__composer-send:active,
+.dlg-cont .dp-study-chat__composer-send:focus {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  border: 0;
+  background: var(--dp-ink, #1c1917);
+  color: var(--dp-bg, #faf9f7);
+  border-radius: var(--dp-radius-chip, 8px);
+  box-shadow: none;
+  outline: none;
+  overflow: hidden;
+}
+.dlg-cont .dp-study-chat__composer-send:focus-visible {
+  outline: 2px solid var(--dp-brand, #b43f7f);
+  outline-offset: 2px;
+}
 @media (max-width: 1180px) {
   .dlg-cont-grid:not([data-solo]) { grid-template-columns: repeat(2, minmax(0, 423px)); justify-content: center; }
 }
