@@ -3,6 +3,7 @@
 import { useState, useEffect, useLayoutEffect as _useLayoutEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { markInstantBack } from "@/lib/instantNav";
+import { useCaseStudyOpticalAlign } from "@/lib/useCaseStudyOpticalAlign";
 
 // SSR-safe useLayoutEffect, matching the pattern used elsewhere in this codebase.
 const useLayoutEffect = typeof window !== "undefined" ? _useLayoutEffect : useEffect;
@@ -39,6 +40,9 @@ export default function CaseStudyTOC({
 }) {
   const router  = useRouter();
   const rafRef  = useRef<number | null>(null);
+  const backRef = useRef<HTMLAnchorElement>(null);
+  // In-content Back only. Aligns the chevron tip to the title's first ink.
+  useCaseStudyOpticalAlign(backRef, mobileBackOnly);
   // Defaults to the first section rather than "" — a fresh mount (client nav
   // or hard reload) is essentially always scrolled to the top, so this
   // matches what updateActive() would compute anyway. Without it, first
@@ -167,6 +171,7 @@ export default function CaseStudyTOC({
         onClick={handleBack}
         onMouseEnter={() => { if (canHover()) setBackHovered(true); }}
         onMouseLeave={() => setBackHovered(false)}
+        ref={backRef}
         className="cs-back-mobile"
         aria-label="Back to work"
         style={{
