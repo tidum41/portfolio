@@ -2,7 +2,6 @@ import type { CSSProperties, ReactNode } from "react";
 import Image from "next/image";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
 import CaseStudyRequest from "@/components/CaseStudyRequest";
-import CaseStudyTOC from "@/components/CaseStudyTOC";
 import CaseStudyPager from "@/components/CaseStudyPager";
 import { JOOLA_HERO_SRC, JOOLA_TITLE } from "@/lib/caseStudies/joola";
 import { CASE_STUDY_MEDIA_SIZES } from "@/lib/caseStudyLayout";
@@ -23,15 +22,7 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
   return (
     <div style={{ fontFamily: "var(--font-sans)" }}>
       <div className="cs-layout">
-        <aside className="cs-aside">
-          <CaseStudyTOC items={[]} backHref="/" />
-        </aside>
-
         <div className="cs-content" style={{ minWidth: 0 }}>
-          <div className="cs-mobile-back">
-            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
-          </div>
-
           <CaseStudyOpen
             title={JOOLA_TITLE}
             metadata={[

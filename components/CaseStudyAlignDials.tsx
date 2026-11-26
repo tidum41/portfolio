@@ -14,11 +14,9 @@ const STYLE_ID = "cs-align-dials-live";
 export default function CaseStudyAlignDials() {
   const dk = useDialKit("CS Align", {
     Mobile: {
-      backX:    [0, -48, 48, 1],
       titleX:   [-2, -48, 48, 1],
     },
     Desktop: {
-      backX:    [0, -48, 48, 1],
       titleX:   [-2, -48, 48, 1],
     },
   });
@@ -32,13 +30,8 @@ export default function CaseStudyAlignDials() {
     const css = `
 /* CS Align — live DialKit overrides */
 :root {
-  --cs-align-m-back: ${m.backX}px;
   --cs-align-m-title: ${m.titleX}px;
-  --cs-align-d-back: ${d.backX}px;
   --cs-align-d-title: ${d.titleX}px;
-}
-.cs-back-desktop {
-  transform: translateX(${d.backX}px) !important;
 }
 @media (min-width: 768px) {
   .cs-hero-title {
@@ -46,9 +39,6 @@ export default function CaseStudyAlignDials() {
   }
 }
 @media (max-width: 767px) {
-  .cs-back-mobile {
-    transform: translateX(${m.backX}px) !important;
-  }
   .cs-hero-title {
     transform: translateX(${m.titleX}px) !important;
   }

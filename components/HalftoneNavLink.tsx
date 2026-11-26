@@ -208,11 +208,11 @@ export default function HalftoneNavLink({
       !!nextEl &&
       !!nextEl.closest("[data-nav-word]") &&
       !e.currentTarget.contains(nextEl);
-    // The flex gap between words is the <nav> itself. Don't start the
+    // The flex gap between words is the nav's item group. Don't start the
     // ease-out there — the next word's enter snaps this one instead.
     const inWordGap =
       !!nextEl &&
-      !!nextEl.closest("nav.site-nav") &&
+      !!nextEl.closest(".site-nav-items") &&
       !nextEl.closest("button");
     if (!ontoSibling && !inWordGap) onHoverEnd?.();
     if (pendingNavSettleRef.current || settleTimeoutRef.current) return;

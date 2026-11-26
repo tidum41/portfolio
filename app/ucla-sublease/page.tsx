@@ -428,15 +428,10 @@ export default function BruinLeasePage() {
         <aside className="cs-aside">
           <CaseStudyTOC
             items={FB.tocItems.map((t) => ({ id: t.id, label: t.label }))}
-            backHref="/"
           />
         </aside>
 
         <div className="cs-content" style={{ minWidth: 0 }}>
-          <div className="cs-mobile-back">
-            <CaseStudyTOC items={[]} backHref="/" mobileBackOnly />
-          </div>
-
           <CaseStudyOpen
             title={FB.heroTitle}
             metadata={FB.metadata}
