@@ -11,7 +11,8 @@ type Saved = {
   left: string;
   right: string;
   width: string;
-  paddingRight: string;
+  htmlOverflowY: string;
+  htmlScrollbarGutter: string;
 };
 
 let count = 0;
@@ -23,8 +24,7 @@ export function lockScroll(): void {
   if (count > 1) return;
   const body = document.body;
   const y = window.scrollY;
-  // Pinning the body removes a classic scrollbar; pad it back so the page does not shift.
-  const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+  const html = document.documentElement;
   saved = {
     y,
     position: body.style.position,
@@ -32,14 +32,18 @@ export function lockScroll(): void {
     left: body.style.left,
     right: body.style.right,
     width: body.style.width,
-    paddingRight: body.style.paddingRight,
+    htmlOverflowY: html.style.overflowY,
+    htmlScrollbarGutter: html.style.scrollbarGutter,
   };
   body.style.position = "fixed";
   body.style.top = `-${y}px`;
   body.style.left = "0";
   body.style.right = "0";
   body.style.width = "100%";
-  if (scrollbar > 0) body.style.paddingRight = `${scrollbar}px`;
+  // The page behind is hidden, so drop the (disabled) scrollbar track too: a full-screen
+  // overlay should not leave a grey strip down the right edge on classic-scrollbar browsers.
+  html.style.overflowY = "hidden";
+  html.style.scrollbarGutter = "auto";
 }
 
 export function unlockScroll(): void {
@@ -54,7 +58,8 @@ export function unlockScroll(): void {
   body.style.left = s.left;
   body.style.right = s.right;
   body.style.width = s.width;
-  body.style.paddingRight = s.paddingRight;
+  document.documentElement.style.overflowY = s.htmlOverflowY;
+  document.documentElement.style.scrollbarGutter = s.htmlScrollbarGutter;
   // `html { scroll-behavior: smooth }` would animate this restore; it must be instant.
   window.scrollTo({ top: s.y, left: 0, behavior: "instant" });
 }
