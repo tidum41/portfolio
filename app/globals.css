@@ -187,6 +187,19 @@
   --hero-pt:   var(--space-7); /* 80 */
   --hero-pb:   var(--space-6); /* 64 */
   --card-gap:  var(--space-5);
+
+  /* Interaction sizing (role-named). --size-hit-min is the smallest hit area any
+     control may have; visual size is never changed to meet it (see .hit-min). */
+  --size-hit-min: 44px;
+
+  /* Lightbox (full-screen image viewer). Same scrim in light and dark: the image is
+     the subject, so the chrome around it is always dark. */
+  --color-lightbox-scrim:        #000000; /* opaque: no page text ghosting through behind the image */
+  --color-lightbox-control-bg:   rgba(255, 255, 255, 0.14);
+  --color-lightbox-control-bg-hover: rgba(255, 255, 255, 0.24);
+  --color-lightbox-control-ink:  #FFFFFF;
+  --lightbox-edge:               var(--space-1); /* gap between image area and screen / safe-area edge */
+  --lightbox-enter:              180ms;
 }
 
 /* ─── Base reset ──────────────────────────────────────────────────── */
@@ -689,12 +702,7 @@ html[data-theme="light"] {
   transition: opacity 120ms ease;
   will-change: opacity;
 }
-.popup-close-btn::before {
-  content: "";
-  position: absolute;
-  /* 24px icon + 10px each side = 44px tap target (padding expand, icon stays). */
-  inset: -10px;
-}
+/* 44px hit area comes from the shared .hit-min rule above (icon stays 24px). */
 @media (hover: hover) and (pointer: fine) {
   .popup-close-btn:hover svg { opacity: 1; }
   .popup-close-btn:active { transform: scale(0.96); }
@@ -1230,29 +1238,36 @@ html[data-theme="dark"] .interactive-badge {
    not just accidental-tap forgiveness on touchscreens. */
 /* Text links keep their visual box. The hit area is at least 44×44 and
    does not change gap, alignment, or line height. */
+/* `.hit-min` is the shared utility; the selectors below are the existing controls that
+   share it (no extra class needed in markup). The ::before is centred on the control and
+   is at least --size-hit-min in both axes, so a small glyph keeps its look but gets a
+   44px target. Do not use per-control `inset: -Npx` hacks: they grow past neighbours and
+   lose the hit test to whatever is later in the DOM. */
 nav a,
 a.nav-link,
 a.footer-link,
-button.footer-link {
+button.footer-link,
+.theme-toggle-btn,
+.volume-toggle-btn,
+.popup-close-btn,
+.hit-min {
   position: relative;
 }
 nav a::before,
 a.nav-link::before,
 a.footer-link::before,
-button.footer-link::before {
+button.footer-link::before,
+.theme-toggle-btn::before,
+.volume-toggle-btn::before,
+.popup-close-btn::before,
+.hit-min::before {
   content: "";
   position: absolute;
   left: 50%;
   top: 50%;
-  width: max(100%, 44px);
-  height: max(100%, 44px);
+  width: max(100%, var(--size-hit-min));
+  height: max(100%, var(--size-hit-min));
   transform: translate(-50%, -50%);
-}
-.theme-toggle-btn::before,
-.volume-toggle-btn::before {
-  content: "";
-  position: absolute;
-  inset: -20px;
 }
 .phone-mockup-play-btn::before {
   content: "";
@@ -1986,41 +2001,97 @@ html[data-theme="dark"] .project-image {
   }
 }
 
-.cs-lightbox-backdrop {
+/* ─── Lightbox: full-screen image viewer ─────────────────────────────
+   Portalled to <body>, page frozen behind it (lib/scrollLock). The stage is the whole
+   screen minus safe-area insets; the image is object-fit: contain inside it, so it is
+   as large as the screen allows at every size and orientation. Close lives in its own
+   corner and the stage reserves room for it, so the two never overlap: a strip above
+   the image in portrait, a column to its right in short landscape. */
+.cs-lightbox {
   position: fixed;
   inset: 0;
   z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(0, 0, 0, 0.72);
+  background: var(--color-lightbox-scrim);
+  overscroll-behavior: contain;
+  animation: cs-lightbox-in var(--lightbox-enter) var(--ease-out);
 }
-.cs-lightbox-dialog {
+@keyframes cs-lightbox-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.cs-lightbox-stage {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  /* touch-action none: the lightbox owns pinch / pan; the page must not zoom or scroll. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  padding-top: calc(env(safe-area-inset-top, 0px) + var(--size-hit-min) + var(--lightbox-edge) * 2);
+  padding-right: calc(env(safe-area-inset-right, 0px) + var(--lightbox-edge));
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--lightbox-edge));
+  padding-left: calc(env(safe-area-inset-left, 0px) + var(--lightbox-edge));
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .cs-lightbox-stage {
+    padding-top: calc(env(safe-area-inset-top, 0px) + var(--lightbox-edge));
+    padding-right: calc(env(safe-area-inset-right, 0px) + var(--size-hit-min) + var(--lightbox-edge) * 2);
+  }
+}
+.cs-lightbox-pan {
   position: relative;
-  max-width: min(1200px, 100%);
-  max-height: 100%;
-  overflow: auto;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.cs-lightbox-pan[data-animate="true"] {
+  transition: transform 220ms var(--ease-out);
+}
+.cs-lightbox-img {
+  object-fit: contain;
+  pointer-events: none;
+  transition: opacity var(--lightbox-enter) var(--ease-out);
+}
+/* Large image fades in over the already-cached in-page copy, so opening never shows a black wait. */
+.cs-lightbox-img[data-loaded="false"] { opacity: 0; }
+.cs-lightbox-img--preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 .cs-lightbox-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: calc(env(safe-area-inset-top, 0px) + var(--lightbox-edge));
+  right: calc(env(safe-area-inset-right, 0px) + var(--lightbox-edge));
   z-index: 1;
-  min-height: 44px;
-  min-width: 44px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--color-border-subtle);
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-hit-min);
+  height: var(--size-hit-min);
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-lightbox-control-bg);
+  color: var(--color-lightbox-control-ink);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 120ms ease;
 }
-.cs-lightbox-media {
-  border-radius: var(--radius-control);
-  overflow: hidden;
-  background: var(--color-bg-primary);
+.cs-lightbox-close:focus-visible {
+  outline: 2px solid var(--color-lightbox-control-ink);
+  outline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cs-lightbox-close:hover { background: var(--color-lightbox-control-bg-hover); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-lightbox { animation: none; }
+  .cs-lightbox-pan[data-animate="true"] { transition: none; }
+  .cs-lightbox-img { transition: none; }
+  .cs-lightbox-close { transition: none; }
 }
 
 /* No section nav: same lane (cols 3-10) with the TOC columns left empty;
