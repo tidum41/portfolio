@@ -111,6 +111,17 @@ function firstGlyph(title: Element): { node: Text; index: number; ch: string } |
   return null;
 }
 
+/**
+ * Canvas `font` shorthand. Chromium and Firefox both return an empty
+ * `getComputedStyle().font` for these titles (custom family, weight 500).
+ * Assigning "" leaves the context on `10px sans-serif`, so
+ * `actualBoundingBoxLeft` is 0 and the Back nudge goes the wrong way.
+ * Always compose from longhands.
+ */
+function canvasFontFrom(cs: CSSStyleDeclaration): string {
+  return `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`.trim();
+}
+
 /** Typographic origin of the first glyph plus canvas ink bearing. */
 function measureTitleInk(
   title: Element,
@@ -125,7 +136,14 @@ function measureTitleInk(
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
   const cs = getComputedStyle(title);
-  ctx.font = cs.font;
+  const font = canvasFontFrom(cs);
+  ctx.font = font;
+  // If the context rejected the font and stayed on the 10px default, bail
+  // rather than apply a backwards nudge.
+  const sizePx = parseFloat(cs.fontSize);
+  if (sizePx > 12 && ctx.font.includes("10px") && !ctx.font.includes(cs.fontSize)) {
+    return null;
+  }
   const spacing = cs.letterSpacing;
   if (spacing && spacing !== "normal" && "letterSpacing" in ctx) {
     (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = spacing;
