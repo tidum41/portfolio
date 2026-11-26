@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type Ref } from "react";
 import { useRouter } from "next/navigation";
 import { markInstantBack } from "@/lib/instantNav";
 
@@ -12,7 +12,17 @@ import { markInstantBack } from "@/lib/instantNav";
  * the nav links. Under 480px the row has no room for the label, so Back is
  * the chevron alone (the aria-label names it).
  */
-export default function CaseStudyBack({ href = "/" }: { href?: string }) {
+export default function CaseStudyBack({
+  href = "/",
+  ref,
+  inert,
+}: {
+  href?: string;
+  ref?: Ref<HTMLAnchorElement>;
+  /** Takes this copy out of focus order and the accessibility tree (the
+      sticky bar's Back is the live one while the nav row is scrolled away). */
+  inert?: boolean;
+}) {
   const router = useRouter();
 
   // Instant, in-place back: skip the hard reload and fade, restore the prior
@@ -31,7 +41,14 @@ export default function CaseStudyBack({ href = "/" }: { href?: string }) {
   );
 
   return (
-    <a href={href} onClick={onClick} className="nav-link nav-back" aria-label="Back to work">
+    <a
+      ref={ref}
+      href={href}
+      onClick={onClick}
+      className="nav-link nav-back"
+      aria-label="Back to work"
+      inert={inert}
+    >
       {/* Tight 8x12 canvas so the ink is the box: no built-in icon padding. */}
       <svg
         className="nav-back-arrow"

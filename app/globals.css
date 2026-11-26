@@ -173,9 +173,14 @@
   --section-gap:     var(--cs-section-gap);
   --section-pb:      0px;
   --nav-h:           72px; /* 24+24 pad + ~24 line */
+  /* Nav row height: 16 + 44 + 16 (see .site-nav), plus the notch inset. The
+     sticky Back bar is this tall, so sticky or scrolled-to content clears it. */
+  --nav-bar-h:       calc(var(--space-4) + 44px + env(safe-area-inset-top));
 
   /* Easing curves — exact from MotionWrappers.tsx */
   --ease-out:       cubic-bezier(0.0, 0.0, 0.2, 1);
+  /* Sticky case-study Back bar: fade in/out (instant under reduced motion). */
+  --duration-bar-fade: 250ms;
   --spring-panel:   cubic-bezier(0.16, 1, 0.3, 1);
   --expand-ease:    cubic-bezier(0.25, 0, 0, 1);
   --subtitle-ease:  cubic-bezier(0.4, 0, 0.2, 1);
@@ -485,6 +490,13 @@ html.theme-switching *::after {
    so desktop padding stays 16px and the bar is 76px tall (16 + 44 + 16).
    The min-height below is main's own rule: it sizes the line box, and
    the ::before covers the rest of the 44px target without a min-width. ── */
+/* The nav row's frame: the shared site band and page margin. The sticky Back
+   bar uses the same frame so its Back lands on the nav's x and y. */
+.site-nav-frame {
+  max-width: var(--site-max-w);
+  margin: 0 auto;
+  padding-inline: var(--page-px);
+}
 .site-nav {
   padding-top: calc(16px + env(safe-area-inset-top));
   padding-bottom: 16px;
@@ -1435,7 +1447,7 @@ html[data-theme="dark"] .project-image {
 .cs-aside {
   grid-column: 1 / span 2;
   position: sticky;
-  top: 60px;
+  top: calc(var(--nav-bar-h) + var(--space-3)); /* clear the sticky Back bar */
   align-self: start;
   padding-right: var(--space-3); /* breathing room between TOC and content */
 }
@@ -2549,4 +2561,38 @@ html[data-theme="dark"] {
 .mux-media-slot video::-webkit-media-controls-overlay-play-button {
   display: none !important;
   -webkit-appearance: none;
+}
+
+/* Sticky case-study Back bar (CaseStudyBackBar): fixed over the top edge,
+   same height and Back position as the nav row. Page background and the
+   subtle border token read in light and dark; content scrolls under it. */
+.nav-back-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40; /* the nav's own layer */
+  background: var(--color-bg);
+  box-shadow: 0 1px 0 var(--color-border-subtle);
+  opacity: 0;
+  visibility: hidden;
+  /* Hide: fade out, then drop visibility so it leaves focus order. */
+  transition:
+    opacity var(--duration-bar-fade) var(--ease-out),
+    visibility 0s linear var(--duration-bar-fade);
+}
+.nav-back-bar[data-shown="true"] {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--duration-bar-fade) var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-back-bar,
+  .nav-back-bar[data-shown="true"] {
+    transition: none;
+  }
+}
+/* A scroll-to target (TOC links) lands below the bar, not under it. */
+html:has(.cs-layout) {
+  scroll-padding-top: var(--nav-bar-h);
 }

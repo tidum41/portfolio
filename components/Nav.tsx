@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import VolumeControl from "./VolumeControl";
 import HalftoneNavLink from "./HalftoneNavLink";
 import CaseStudyBack from "./CaseStudyBack";
+import CaseStudyBackBar from "./CaseStudyBackBar";
 import { useDialKit } from "dialkit";
 import { hrefToPrimaryTab } from "@/lib/instantNav";
 import { afterIntroIdle } from "@/lib/introReady";
@@ -27,6 +28,20 @@ export default function Nav({
   const router = useRouter();
   const currentTab = useResolvedPrimaryTab(pathname);
   const isCaseStudy = CASE_STUDY_PAGES.some((p) => p.href === pathname);
+  // The nav row scrolls away with the page. When its Back leaves the viewport
+  // the sticky bar (CaseStudyBackBar) takes over. IntersectionObserver, not a
+  // scroll listener: no per-frame work. It fires once on observe, so a
+  // reload at a scrolled position resolves on the first callback.
+  const backRef = useRef<HTMLAnchorElement>(null);
+  const [backAway, setBackAway] = useState(false);
+  useEffect(() => {
+    const el = backRef.current;
+    if (!isCaseStudy || !el) return;
+    const io = new IntersectionObserver(([entry]) => setBackAway(!entry.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [isCaseStudy]);
+  const showBar = isCaseStudy && backAway;
   // One hovered word at a time. Each link used to run its own 0.32s morph,
   // so the word you just left was still in the hover shape while the next
   // one started. A sibling enter replaces this; leaving the bar clears it
@@ -182,12 +197,12 @@ export default function Nav({
 
   return (
     <header className="intro-hide" style={{ background: "transparent", position: "relative", zIndex: 40 }}>
-      <div data-nav-container style={{ maxWidth: "var(--site-max-w)", margin: "0 auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
+      <div data-nav-container className="site-nav-frame">
         <nav
           className="site-nav flex items-center"
           aria-label="Main navigation"
         >
-          {isCaseStudy && <CaseStudyBack />}
+          {isCaseStudy && <CaseStudyBack ref={backRef} inert={showBar} />}
           {/* The word gap lives on this group, not the <nav>, so Back (left)
               is spaced by free space only and the row fits at 360px. */}
           <div className="site-nav-items flex items-center">
@@ -215,6 +230,7 @@ export default function Nav({
           </div>
         </nav>
       </div>
+      {isCaseStudy && <CaseStudyBackBar shown={showBar} />}
     </header>
   );
 }
