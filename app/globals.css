@@ -3410,3 +3410,162 @@ html[data-theme="dark"] .jo-annot__well { background: #1B1F23; }
 }
 @media (max-width: 374px) { .is-marked > .jp-rep { height: 820px; } }
 .jp-cursor.is-instant { transition: none; }
+
+/* v17: import beats. One viewport per still. Annotations use --jp-annotation only. */
+:root { --jp-annotation: #E4006E; --jp-ground: #EFEEEA; --jp-nav-h: 76px; }
+.jp-kicker {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-sans-medium);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.jp-beat {
+  min-height: calc(100vh - var(--jp-nav-h));
+  min-height: calc(100dvh - var(--jp-nav-h));
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-bottom: var(--space-2);
+  box-sizing: border-box;
+}
+.jp-beat + .jp-beat { margin-top: var(--space-6); } /* 64px: previous frame clears the 76px nav */
+.jp-beat__label {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-sans-medium);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--color-text-muted);
+}
+.jp-frame {
+  position: relative;
+  background: var(--jp-ground);
+  border-radius: var(--radius-control);
+  padding: var(--jp-inset, 32px);
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+  --jp-inset: 32px;
+}
+.jp-still { overflow: visible; }
+.jp-still {
+  position: relative;
+  display: block;
+  width: var(--jp-still-w);
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1050 / 996;
+}
+.jp-still__zoom {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+.jp-still img, .jp-still--start img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.jp-still--start { width: 760px; max-width: 100%; aspect-ratio: 760 / 416; }
+.jp-ring {
+  position: absolute;
+  box-sizing: border-box;
+  border: 3px solid var(--jp-annotation);
+  pointer-events: none;
+}
+.jp-leader {
+  position: absolute;
+  height: 2px;
+  background: var(--jp-annotation);
+  pointer-events: none;
+  top: var(--jp-tag-cy);
+  left: var(--jp-ring-right);
+  width: calc(100% - var(--jp-ring-right) + var(--jp-inset, 32px) + 24px);
+}
+.jp-tag {
+  position: absolute;
+  left: calc(100% + var(--jp-inset, 32px) + 24px);
+  top: var(--jp-tag-cy);
+  transform: translateY(-50%);
+  max-width: 120px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--jp-annotation);
+  color: #fff;
+  font-family: var(--font-sans-medium);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.jp-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+.jp-actions a {
+  font-family: var(--font-sans-medium);
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--color-text-primary);
+  text-underline-offset: 2px;
+}
+.jp-try-slot { display: none; }
+
+/* Desktop 1200+: still height is set so the beat fits under the nav. Tags hang into cols 11-12. */
+@media (min-width: 1200px) {
+  .jp-beat--version {
+    --jp-chrome: 40px;
+    --jp-inset: 32px;
+    --jp-still-h: calc(100vh - var(--jp-nav-h) - var(--jp-chrome) - (2 * var(--jp-inset)));
+    --jp-still-h: calc(100dvh - var(--jp-nav-h) - var(--jp-chrome) - (2 * var(--jp-inset)));
+    --jp-still-w: calc(var(--jp-still-h) * 1050 / 996);
+  }
+  .cs-content { overflow: visible; }
+  .jp-frame--version { overflow: visible; }
+}
+@media (min-width: 1200px) and (max-width: 1439px) {
+  .jp-beat--version, .jp-frame { --jp-inset: 24px; }
+}
+
+/* Tablet and phone: tag sits just above the frame, outside the UI. No leader. 16px inset. */
+@media (max-width: 1199px) {
+  .jp-frame { padding: 16px; width: 100%; --jp-inset: 16px; }
+  .jp-frame--version { margin-top: 40px; }
+  .jp-still { width: 100%; }
+  .jp-leader { display: none; }
+  .jp-tag {
+    left: 0;
+    top: calc(-1 * var(--jp-inset, 16px) - 8px);
+    transform: translateY(-100%);
+    max-width: 100%;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 767px) {
+  .jp-beat {
+    min-height: 0;
+    padding-bottom: 0;
+  }
+  .jp-frame { padding: 16px; }
+  .jp-zoom-hint {
+    margin: var(--space-1) 0 0;
+    font-size: var(--fs-meta);
+    line-height: 18px;
+    color: var(--color-text-muted);
+  }
+}
+@media (min-width: 768px) { .jp-zoom-hint { display: none; } }
+
+

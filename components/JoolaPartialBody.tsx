@@ -3,7 +3,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import CaseStudyBody from "@/components/CaseStudyBody";
 import AnnotatedFigure from "@/components/joola/AnnotatedFigure";
 import { BeforeAfter, Callouts, OptionCards, QuoteRules, type FlowPanel, type OptionCard, type QuoteRule } from "@/components/joola/StoryParts";
-import ImportVersions, { type ImportVersion } from "@/components/joola/product/ImportVersions";
+import ImportBeats from "@/components/joola/product/ImportBeats";
 import RepApproveLoop from "@/components/joola/product/RepApproveLoop";
 
 /**
@@ -60,16 +60,6 @@ const QUOTE_RULES: readonly QuoteRule[] = [
   { theme: "Rep time", quotes: ["q3", "q4"], who: "For reps", rule: "Exceptions get handled on screen instead of over email." },
 ];
 
-const IMPORT_VERSIONS: readonly ImportVersion[] = [
-  { id: "v1", tab: "V1 alert", caption: "The buyer has to leave the portal and open her order form to find the problem." },
-  { id: "v2", tab: "V2 preview", caption: "It flags the SKU JOOLA doesn't carry, but 360 still reaches the cart." },
-  {
-    id: "final",
-    tab: "Final",
-    caption: "Try it.",
-    notes: ["Row 18 waits for Change to 36 or Keep 360.", "The SKU JOOLA doesn't carry is skipped."],
-  },
-];
 
 const BEFORE: FlowPanel = {
   title: "Before",
@@ -117,9 +107,11 @@ export default function JoolaPartialBody() {
       </Section>
 
       <Section id="import">
-        <H2 id="import">{`Importing the order form`}</H2>
-        <CaseStudyBody>{`Maya Collins, a buyer at Dick's Sporting Goods, imports her usual order form. It has one typo, 360 paddles instead of 36.`}</CaseStudyBody>
-        <ImportVersions versions={IMPORT_VERSIONS} earlierNote={`Earlier versions, recreated in the prototype.`} label="Three versions of the import, on rows 18 and 22 of Maya's order form" />
+        <ImportBeats
+          heading={
+            <H2 id="import">{`Buyers already send the form. I wanted the problems in it to be visible at upload, before a rep retypes the lines.`}</H2>
+          }
+        />
       </Section>
 
       <Section id="credit">
