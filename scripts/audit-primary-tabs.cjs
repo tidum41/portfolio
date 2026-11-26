@@ -348,7 +348,7 @@ async function main() {
     if (onCase.work.display !== "none") {
       ok = fail("Case study: work shell should be hidden", onCase) && ok;
     }
-    const backBtn = await page.$(".cs-back-desktop, .cs-back-mobile");
+    const backBtn = await page.$(".nav-back");
     if (backBtn) {
       await backBtn.click();
       await page.waitForFunction(() => location.pathname === "/", null, { timeout: 10000 });

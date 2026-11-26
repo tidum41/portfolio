@@ -40,7 +40,6 @@ export default function CaseStudyLoadingSilhouette({
         </aside>
 
         <div className="cs-content" style={{ minWidth: 0 }}>
-          <div className="cs-mobile-back" style={{ height: 28, marginBottom: "var(--space-1)" }} />
           {hero}
         </div>
       </div>

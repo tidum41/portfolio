@@ -5,10 +5,12 @@ import { usePathname, useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import VolumeControl from "./VolumeControl";
 import HalftoneNavLink from "./HalftoneNavLink";
+import CaseStudyBack from "./CaseStudyBack";
 import { useDialKit } from "dialkit";
 import { hrefToPrimaryTab } from "@/lib/instantNav";
 import { afterIntroIdle } from "@/lib/introReady";
 import { useResolvedPrimaryTab } from "@/lib/usePrimaryTab";
+import { CASE_STUDY_PAGES } from "@/lib/caseStudyRegistry";
 
 const links = [
   { href: "/",         label: "Work" },
@@ -24,6 +26,7 @@ export default function Nav({
   const pathname = usePathname();
   const router = useRouter();
   const currentTab = useResolvedPrimaryTab(pathname);
+  const isCaseStudy = CASE_STUDY_PAGES.some((p) => p.href === pathname);
   // One hovered word at a time. Each link used to run its own 0.32s morph,
   // so the word you just left was still in the hover shape while the next
   // one started. A sibling enter replaces this; leaving the bar clears it
@@ -181,30 +184,35 @@ export default function Nav({
     <header className="intro-hide" style={{ background: "transparent", position: "relative", zIndex: 40 }}>
       <div data-nav-container style={{ maxWidth: "var(--site-max-w)", margin: "0 auto", paddingLeft: "var(--page-px)", paddingRight: "var(--page-px)" }}>
         <nav
-          className="site-nav flex items-center justify-end"
+          className="site-nav flex items-center"
           aria-label="Main navigation"
         >
-          <VolumeControl dk={dk} />
-          <ThemeToggle dk={dk} />
-          {links.map(({ href, label }) => {
-            const isActive = hrefToPrimaryTab(href) === currentTab;
-            return (
-              <HalftoneNavLink
-                key={href}
-                href={href}
-                label={label}
-                isActive={isActive}
-                dk={dk}
-                resting={words[label]}
-                navHovered={hoveredHref === href}
-                snapRest={hoveredHref !== null && hoveredHref !== href}
-                onHoverStart={() => setHoveredHref(href)}
-                onHoverEnd={() =>
-                  setHoveredHref((current) => (current === href ? null : current))
-                }
-              />
-            );
-          })}
+          {isCaseStudy && <CaseStudyBack />}
+          {/* The word gap lives on this group, not the <nav>, so Back (left)
+              is spaced by free space only and the row fits at 360px. */}
+          <div className="site-nav-items flex items-center">
+            <VolumeControl dk={dk} />
+            <ThemeToggle dk={dk} />
+            {links.map(({ href, label }) => {
+              const isActive = hrefToPrimaryTab(href) === currentTab;
+              return (
+                <HalftoneNavLink
+                  key={href}
+                  href={href}
+                  label={label}
+                  isActive={isActive}
+                  dk={dk}
+                  resting={words[label]}
+                  navHovered={hoveredHref === href}
+                  snapRest={hoveredHref !== null && hoveredHref !== href}
+                  onHoverStart={() => setHoveredHref(href)}
+                  onHoverEnd={() =>
+                    setHoveredHref((current) => (current === href ? null : current))
+                  }
+                />
+              );
+            })}
+          </div>
         </nav>
       </div>
     </header>
