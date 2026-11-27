@@ -3,11 +3,9 @@ import type { ImportRow, Resolution } from "./data";
 
 /**
  * The import preview grid from the v18 prototype (CsvImportDialog, `csv-grid`), ported with
- * its markup, columns and copy. Three deliberate deviations, all so the grid never moves:
- *  - the product name stays on one line and truncates (the prototype wraps a flagged name),
- *  - the flagged row keeps its 72px height after it is resolved, with every cell stretched,
- *    so only the quantity text and the status cell's contents change,
- *  - the status column is 204px wide (190px in the prototype) so "Keep 360" stays on one line.
+ * its markup, columns, and Option B quantity flag: 2px amber left rule, "Usually 36" inline
+ * after the truncated product name, tinted qty cell, and two equal 22px outline buttons
+ * (Change to 36 / Keep 360) in the status column, keeping a uniform 40px row height with no jump.
  */
 
 /** The look of the Change button: at rest, with the pointer over it, or pressed. Loops set it; people use the real states. */
@@ -52,37 +50,41 @@ export default function ImportRows({ rows, resolution = "open", look = "rest", o
             <div
               key={r.row}
               role="row"
-              className={`jp-csv__row${r.status === "unknown" ? " is-skipped" : ""}${decision ? " is-decision" : ""}`}
+              className={`jp-csv__row${r.status === "unknown" ? " is-skipped" : ""}${decision ? " is-decision" : ""}${open ? " is-flagged" : ""}`}
             >
               <div role="cell" className={marks?.[r.row] ? "jp-csv__rowcell" : undefined}>
                 <span className="jp-csv__t jp-tnum">{r.row}</span>
                 {marks?.[r.row] ? <span className="jo-marker jp-csv__mark" aria-hidden="true">{marks[r.row]}</span> : null}
               </div>
               <div role="cell" className="jp-csv__sku"><span className="jp-csv__t jp-tnum">{r.sku}</span></div>
-              <div role="cell" title={r.name}><span className="jp-csv__t">{r.name}</span></div>
-              <div role="cell" className="jp-csv__end"><span className="jp-tnum">{qty}</span></div>
+              <div role="cell" className={open ? "jp-csv__product" : undefined} title={r.name}>
+                <span className="jp-csv__t">{r.name}</span>
+                {open ? <span className="jp-csv__usual">Usually {r.usual}</span> : null}
+              </div>
+              <div role="cell" className={`jp-csv__end${open ? " jp-csv__qty is-flagged" : ""}`}>
+                <span className="jp-tnum">{qty}</span>
+              </div>
               <div role="cell" className="jp-csv__status">
                 {r.status === "flagged" && open ? (
-                  <span className="jp-csv__flag">
-                    <span className="jp-csv__why">Usually {r.usual}, check quantity</span>
-                    <span className="jp-csv__acts">
-                      <button
-                        type="button"
-                        className={`jp-btn jp-btn--outline jp-btn--sm${LOOK_CLASS[look]}`}
-                        tabIndex={interactive ? 0 : -1}
-                        onClick={() => onResolve?.("changed")}
-                      >
-                        Change to {r.usual}
-                      </button>
-                      <button
-                        type="button"
-                        className="jp-csv__keep"
-                        tabIndex={interactive ? 0 : -1}
-                        onClick={() => onResolve?.("kept")}
-                      >
-                        Keep {r.qty}
-                      </button>
-                    </span>
+                  <span className="jp-csv__acts">
+                    <button
+                      type="button"
+                      data-action="change"
+                      className={`jp-btn jp-btn--outline jp-csv__act${LOOK_CLASS[look]}`}
+                      tabIndex={interactive ? 0 : -1}
+                      onClick={() => onResolve?.("changed")}
+                    >
+                      Change to {r.usual}
+                    </button>
+                    <button
+                      type="button"
+                      data-action="keep"
+                      className="jp-btn jp-btn--outline jp-csv__act"
+                      tabIndex={interactive ? 0 : -1}
+                      onClick={() => onResolve?.("kept")}
+                    >
+                      Keep {r.qty}
+                    </button>
                   </span>
                 ) : r.status === "unknown" ? (
                   <StatusPill tone="danger">SKU not found (skipped)</StatusPill>

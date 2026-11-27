@@ -10,7 +10,7 @@ import type { Resolution } from "./data";
 
 type State = { look: ButtonLook; resolution: Resolution; cursor: CursorCue };
 
-const CHANGE = ".is-decision .jp-btn--outline";
+const CHANGE = '.is-decision [data-action="change"]';
 const AWAY: CursorCue = { phase: "away" };
 const TO_CHANGE: CursorCue = { phase: "travel", target: CHANGE };
 const ON_CHANGE: CursorCue = { phase: "over", target: CHANGE };
@@ -47,7 +47,7 @@ export default function ChangeQuantityLoop({ size = "hero" }: { size?: "hero" | 
       onToggle={() => setPlaying((p) => !p)}
       reduced={reduced}
       className={`jp-well--${size}`}
-      description="Rows 16 to 22 of Maya's import. Row 18, 360 Scorpeus paddles, says Usually 36, check quantity. Change to 36 is pressed and the row turns Ready at 36."
+      description="Rows 16 to 22 of Maya's import. Row 18, 360 Scorpeus paddles, says Usually 36. Change to 36 is pressed and the row turns Ready at 36."
     >
       <div ref={stage} className={`jp jp-scale jp-scale--${size}`}>
         <div className="jp-card">

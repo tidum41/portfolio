@@ -1,150 +1,179 @@
 "use client";
 
-import { useState, type CSSProperties, ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import CaseStudyLightbox from "@/components/CaseStudyLightbox";
+import OrderFormSlice from "@/components/joola/product/OrderFormSlice";
 import { CASE_STUDY_MEDIA_SIZES } from "@/lib/caseStudyLayout";
 
-/** Ring box in the 1050x996 crop, already 4px outside the element. */
-export type CropRing = { x: number; y: number; w: number; h: number; r: number };
+type StillSpec = {
+  readonly src: string;
+  readonly width: number;
+  readonly height: number;
+  readonly alt: string;
+};
 
-const CROP = { w: 1050, h: 996 };
+type SingleVersionBeat = {
+  readonly id: "v1" | "v2";
+  readonly label: string;
+  readonly line: string;
+  readonly still: StillSpec;
+};
 
-const VERSIONS = [
+type FinalSubFrame = {
+  readonly id: "final-a" | "final-b";
+  readonly line: string;
+  readonly still: StillSpec;
+};
+
+const START_LINE = "Every sheet carries shipping details above the product rows.";
+
+const START_STILL: StillSpec = {
+  src: "/images/joola/v20/import-start.png",
+  width: 1520,
+  height: 776,
+  alt: "Import order form dialog. A file-up icon sits next to Add your order form, with Drag and drop it here, or choose a file. CSV or Excel (.xlsx). and a Choose file button.",
+};
+
+const SINGLE_VERSIONS: readonly SingleVersionBeat[] = [
   {
     id: "v1",
     label: "V1",
-    src: "/images/joola/v19/import-v1.png",
-    alt: "Review after the first import. The four imported lines are in the order summary. Ship to is the account default, Customer PO and the date fields are empty, and Notes for JOOLA shows only a placeholder.",
-    tag: "Header not read",
-    line: "The lines were added. The ship-to, PO, dates, and comments on the sheet were not.",
-    // Ship to, Customer PO, requested ship date, and cancel date, 4px outside, in the 220,0 crop.
-    ring: { x: 24, y: 116, w: 616, h: 160, r: 12 },
-    // Horizontal run in the empty band above the order summary (card top is y=120).
-    leaderY: 100,
+    line: "The lines came in. The header didn't, so a rep still retyped ship-to, PO, and dates.",
+    still: {
+      src: "/images/joola/v20/import-v1.png",
+      width: 2084,
+      height: 1050,
+      alt: "Review and place order after a V1 import. The four imported lines appear in the order summary on the right ($98,580.78 total), while Ship to stays on the account default and Customer PO, Requested ship date, and Cancel if not shipped by remain empty.",
+    },
   },
   {
     id: "v2",
     label: "V2",
-    src: "/images/joola/v19/import-v2.png",
-    alt: "Import preview after upload. The file is joola-order-form.csv. Rows 16 to 22 are listed, and row 22 is marked SKU not found and skipped. The form header is not shown.",
-    tag: "Preview first",
-    line: "The rows are checked first, so a bad SKU is visible before the order changes.",
-    ring: { x: 55, y: 495.5, w: 712, h: 208, r: 12 },
+    line: "Rows are checked at upload, so a dead SKU shows up while the sheet is still open.",
+    still: {
+      src: "/images/joola/v20/import-v2.png",
+      width: 1520,
+      height: 964,
+      alt: "V2 Import order form dialog showing joola-order-form.csv. Rows 16, 17, 18, and 20 are marked Ready, while row 22 (Compact Pickleball Practice Net) is marked SKU not found (skipped).",
+    },
+  },
+];
+
+const FINAL_FRAMES: readonly FinalSubFrame[] = [
+  {
+    id: "final-a",
+    line: "The header is read in too.",
+    still: {
+      src: "/images/joola/v20/import-final-a.png",
+      width: 1512,
+      height: 756,
+      alt: "Final import preview header block. Autofilled from import shows Ship to West distribution center, PO DSG-31807, Requested ship date Nov 24, 2026, Cancel date Dec 12, 2026, email, and comments, above From your account details.",
+    },
   },
   {
-    id: "final",
-    label: "Final",
-    src: "/images/joola/v19/import-final.png",
-    alt: "Final import preview. An Autofilled from import block lists ship-to, PO, dates, and comments from the sheet. Row 18 shows Usually 36 with Change to 36 and Keep 360. Row 22 is skipped as a SKU not found.",
-    tag: "Header read",
-    line: "The header is read in, and a quantity well above the usual waits for a decision.",
-    // Autofilled from import block, 4px outside, in the 220,0 crop.
-    ring: { x: 55, y: 262.5, w: 720, h: 278, r: 12 },
+    id: "final-b",
+    line: "A quantity well above the usual waits for a decision before checkout.",
+    still: {
+      src: "/images/joola/v20/import-final-b.png",
+      width: 1512,
+      height: 748,
+      alt: "Final import preview rows. Row 18 for 360 Scorpeus paddles has a 2px amber left rule, Usually 36 beside the product name, a tinted qty cell, and Change to 36 and Keep 360 buttons. The footer reads Flag quantities above 5x your usual and Add 3 ready lines.",
+    },
   },
-] as const;
+];
 
-function ringStyle(ring: CropRing): CSSProperties {
-  return {
-    left: `${(ring.x / CROP.w) * 100}%`,
-    top: `${(ring.y / CROP.h) * 100}%`,
-    width: `${(ring.w / CROP.w) * 100}%`,
-    height: `${(ring.h / CROP.h) * 100}%`,
-    borderRadius: ring.r,
-  };
-}
-
-function tagVars(ring: CropRing, leaderY?: number): CSSProperties {
-  const cy = ((leaderY ?? ring.y + ring.h / 2) / CROP.h) * 100;
-  const right = ((ring.x + ring.w) / CROP.w) * 100;
-  // Stem meets the ring on its right edge, below the 12px corner, still in the gap left of the summary.
-  const join = ((ring.y + 16) / CROP.h) * 100;
-  return {
-    ["--jp-tag-cy" as string]: `${cy}%`,
-    ["--jp-ring-right" as string]: `${right}%`,
-    ["--jp-leader-join" as string]: `${join}%`,
-  };
-}
-
-function VersionBeat({
-  label,
-  src,
-  alt,
-  tag,
-  line,
-  ring,
-  leaderY,
+function ZoomableStill({
+  still,
+  className,
 }: {
-  label: string;
-  src: string;
-  alt: string;
-  tag: string;
-  line: string;
-  ring: CropRing;
-  leaderY?: number;
+  still: StillSpec;
+  className: string;
 }) {
   const [open, setOpen] = useState(false);
-  const elbow = leaderY !== undefined;
   return (
-    <div className="jp-beat jp-beat--version">
+    <>
+      <div className={className} style={{ aspectRatio: `${still.width} / ${still.height}` }}>
+        <button
+          type="button"
+          className="jp-still__zoom"
+          onClick={() => setOpen(true)}
+          aria-label={`Enlarge: ${still.alt}`}
+        >
+          <Image
+            src={still.src}
+            alt={still.alt}
+            width={still.width}
+            height={still.height}
+            sizes={CASE_STUDY_MEDIA_SIZES}
+          />
+        </button>
+      </div>
+      <CaseStudyLightbox
+        src={still.src}
+        alt={still.alt}
+        open={open}
+        onClose={() => setOpen(false)}
+        aspectRatio={still.width / still.height}
+      />
+    </>
+  );
+}
+
+function VersionBeat({ id, label, line, still }: SingleVersionBeat) {
+  return (
+    <div className={`jp-beat jp-beat--version jp-beat--${id}`}>
       <p className="jp-beat__label">{label}</p>
       <p className="jp-beat__line">{line}</p>
       <div className="jp-frame jp-frame--version">
-        <div className={`jp-still${elbow ? " jp-still--elbow" : ""}`} style={tagVars(ring, leaderY)}>
-          <button type="button" className="jp-still__zoom" onClick={() => setOpen(true)} aria-label={`Enlarge: ${alt}`}>
-            <Image
-              src={src}
-              alt={alt}
-              width={1050}
-              height={996}
-              sizes={CASE_STUDY_MEDIA_SIZES}
-            />
-          </button>
-          <span className="jp-ring" style={ringStyle(ring)} aria-hidden="true" />
-          {elbow ? <span className="jp-leader jp-leader--stem" aria-hidden="true" /> : null}
-          <span className="jp-leader" aria-hidden="true" />
-          <span className="jp-tag">{tag}</span>
-        </div>
+        <ZoomableStill still={still} className={`jp-still jp-still--${id}`} />
       </div>
       <p className="jp-zoom-hint">Tap to see the full screen</p>
-      <CaseStudyLightbox src={src} alt={alt} open={open} onClose={() => setOpen(false)} aspectRatio={1050 / 996} />
+    </div>
+  );
+}
+
+function FinalBeat() {
+  return (
+    <div className="jp-beat jp-beat--final">
+      <p className="jp-beat__label">Final</p>
+      <div className="jp-final-split">
+        {FINAL_FRAMES.map((frame) => (
+          <div key={frame.id} className="jp-final-sub">
+            <p className="jp-beat__line">{frame.line}</p>
+            <div className="jp-frame jp-frame--final">
+              <ZoomableStill still={frame.still} className={`jp-still jp-still--${frame.id}`} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="jp-zoom-hint">Tap either frame to see it larger</p>
     </div>
   );
 }
 
 export default function ImportBeats({ heading }: { heading: ReactNode }) {
-  const [startOpen, setStartOpen] = useState(false);
   return (
     <div className="jp-beats">
       <div className="jp-beat jp-beat--start">
         <p className="jp-kicker">Importing orders</p>
         {heading}
         <p className="jp-beat__label">Start</p>
+        <p className="jp-beat__line">{START_LINE}</p>
         <div className="jp-frame jp-frame--start">
-          <div className="jp-still jp-still--start">
-            <button type="button" className="jp-still__zoom" onClick={() => setStartOpen(true)} aria-label="Enlarge: Import order form dialog">
-              <Image
-                src="/images/joola/v19/import-start.png"
-                alt="Import order form dialog. A file-up icon sits next to Add your order form, the format line is on one line, and a Use a sample form link sits under the drop zone."
-                width={1520}
-                height={832}
-                sizes={CASE_STUDY_MEDIA_SIZES}
-              />
-            </button>
+          <div className="jp-start-pair">
+            <OrderFormSlice className="jp-start-pair__sheet" />
+            <div className="jp-start-pair__upload">
+              <ZoomableStill still={START_STILL} className="jp-still jp-still--start" />
+            </div>
           </div>
-          <CaseStudyLightbox
-            src="/images/joola/v19/import-start.png"
-            alt="Import order form dialog. A file-up icon sits next to Add your order form, the format line is on one line, and a Use a sample form link sits under the drop zone."
-            open={startOpen}
-            onClose={() => setStartOpen(false)}
-            aspectRatio={1520 / 832}
-          />
-        <p className="jp-zoom-hint">Tap to see the full screen</p>
         </div>
+        <p className="jp-zoom-hint">Tap to see the full screen</p>
       </div>
-      {VERSIONS.map((v) => (
+      {SINGLE_VERSIONS.map((v) => (
         <VersionBeat key={v.id} {...v} />
       ))}
+      <FinalBeat />
       <p className="jp-actions">
         <a href="/images/joola/v17/sample-import-v2.mp4">Watch the walkthrough</a>
       </p>

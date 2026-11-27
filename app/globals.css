@@ -2924,11 +2924,13 @@ html[data-theme="dark"] .jo-cs {
   --jp-danger-bg: rgba(198, 40, 40, 0.1);
   --jp-danger-border: rgba(198, 40, 40, 0.28);
   --jp-amber: #8a6100;
+  --jp-amber-bg: rgba(238, 186, 54, 0.18);
   --jp-green-ink: #146c43;
   --jp-green-bg: rgba(25, 135, 84, 0.12);
   --jp-success: #12824a;
   --jp-radius: 8px;
   --jp-radius-status: 4px;
+  --jp-chip-h: 22px;
   --jp-ease: cubic-bezier(0.2, 0, 0, 1);
   --jp-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --jp-motion: 200ms;
@@ -2976,7 +2978,7 @@ html[data-theme="dark"] .jo-cs {
 }
 button.jp-btn { cursor: pointer; }
 button.jp-btn:active { transform: scale(0.97); }
-.jp-btn:focus-visible, .jp-csv__keep:focus-visible { outline: 2px solid var(--jp-accent); outline-offset: 2px; }
+.jp-btn:focus-visible { outline: 2px solid var(--jp-accent); outline-offset: 2px; }
 /* Short actions (progress.css .btn--busy): both faces share one cell, so the button keeps its width. */
 .jp-btn--busy { display: inline-grid; grid-template-columns: auto; flex-shrink: 0; }
 .jp-btn__face { grid-area: 1 / 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
@@ -3003,14 +3005,62 @@ button.jp-btn:active { transform: scale(0.97); }
 .jp-csv__end > span { white-space: nowrap; }
 .jp-csv__row.is-skipped > div:not(:last-child) { color: var(--jp-muted); }
 .jp-csv__status { white-space: nowrap; }
-/* The flagged row reserves its full 72px in both states (10px, 14px why, 6px, 32px button, 10px). */
-.jp-csv__row.is-decision { min-height: 72px; }
-.jp-csv__row.is-decision > .jp-csv__status { padding-block: 10px; }
-.jp-csv__flag { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.jp-csv__why { font-size: 12px; line-height: 14px; color: var(--jp-amber); }
-.jp-csv__acts { display: flex; align-items: center; gap: 12px; }
-.jp-csv__keep { padding: 0; border: 0; background: none; font: inherit; font-size: 13px; line-height: 18px; color: var(--jp-muted); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; appearance: none; cursor: pointer; }
-.jp-csv__keep:focus-visible { border-radius: 4px; }
+/* Option B flagged row: uniform 40px height, 2px amber left rule, inline "Usually 36", tinted qty cell, equal 22px outline actions. */
+.jp-csv__row.is-flagged { position: relative; }
+.jp-csv__row.is-flagged::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--jp-amber);
+  z-index: 1;
+  pointer-events: none;
+}
+.jp-csv__row.is-flagged .jp-csv__product {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.jp-csv__row.is-flagged .jp-csv__product > .jp-csv__t { flex: 1 1 auto; }
+.jp-csv__usual {
+  flex: none;
+  font-size: var(--fs-caption);
+  line-height: 16px;
+  color: var(--jp-amber);
+  white-space: nowrap;
+}
+.jp-csv__row.is-flagged .jp-csv__qty.is-flagged {
+  background: var(--jp-amber-bg);
+  font-weight: 500;
+}
+.jp-csv__acts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  white-space: nowrap;
+}
+.jp-csv__act {
+  position: relative;
+  height: var(--jp-chip-h);
+  min-height: var(--jp-chip-h);
+  padding: 2px var(--space-1) 0;
+  border-radius: var(--jp-radius-status);
+  font-size: var(--fs-caption);
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex: none;
+}
+/* Stretch the hit area to the 40px row without changing layout height. */
+.jp-csv__act::before {
+  content: "";
+  position: absolute;
+  inset: -9px 0;
+}
 
 /* Earlier version, V1: the cart after the first import (cart-notice.is-error, cart-lines__head) */
 .jp-notice { display: flex; align-items: center; min-height: 40px; padding: 8px 10px; border: 1px solid var(--jp-line); border-radius: var(--jp-radius); background: var(--jp-band); font-size: 12px; line-height: 1.4; }
@@ -3153,7 +3203,7 @@ html[data-theme="dark"] .jp-well { background: #1B1F23; }
   .jp-csv__row > div > .jp-csv__t { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; overflow-wrap: break-word; }
   .jp-csv__row > .jp-csv__status { grid-column: 2 / -1; padding: 0 8px 10px; }
   .jp-csv__row.is-decision { min-height: 0; }
-  .jp-csv__row.is-decision > .jp-csv__status { padding: 0 8px 10px; min-height: 62px; }
+  .jp-csv__row.is-decision > .jp-csv__status { padding: 0 8px 10px; min-height: 32px; }
   /* Rep panel on a phone reflows, as the prototype's does (its sheet is min(460px, 92vw) wide and never scales).
      Side padding drops from 24px to 16px so the title fits on one line; text keeps its real sizes. */
   .jp-rep { width: 100%; max-width: 460px; height: 712px; margin-inline: auto; }
@@ -3384,9 +3434,10 @@ html[data-theme="dark"] .jo-annot__well { background: #1B1F23; }
   .jp-csv__row > div, .jp-versions .jp-csv__row > div { align-items: flex-start; }
   .jp-csv__row > div > .jp-csv__t { -webkit-line-clamp: unset; display: block; }
   .jp-csv__row > .jp-csv__status, .jp-versions .jp-csv__row > .jp-csv__status { padding: 0 10px 10px; }
-  .jp-csv__row.is-decision > .jp-csv__status, .jp-versions .jp-csv__row.is-decision > .jp-csv__status { padding: 0 10px 10px; min-height: 74px; }
-  .jp-csv__acts .jp-btn, .jp-csv__keep { min-height: 44px; }
-  .jp-csv__keep { display: inline-flex; align-items: center; }
+  .jp-csv__row.is-decision > .jp-csv__status, .jp-versions .jp-csv__row.is-decision > .jp-csv__status { padding: 0 10px 10px; min-height: 32px; }
+  .jp-csv__row.is-decision { min-height: 102px; }
+  .jp-csv__row.is-flagged .jp-csv__product { flex-wrap: wrap; gap: 2px var(--space-1); }
+  .jp-csv__row.is-flagged .jp-csv__act { height: var(--jp-chip-h); min-height: var(--jp-chip-h); }
   /* Markers go back to the gutter, as on desktop. */
   .jp-versions .jp-csv__rowcell { display: flex; position: static; }
   .jp-versions .jp .jp-csv__mark { position: absolute; left: -36px; top: 8px; transform: none; width: 20px; height: 20px; font-size: 11px; }
@@ -3411,12 +3462,13 @@ html[data-theme="dark"] .jo-annot__well { background: #1B1F23; }
 @media (max-width: 374px) { .is-marked > .jp-rep { height: 820px; } }
 .jp-cursor.is-instant { transition: none; }
 
-/* v17: import beats. One viewport per still. Annotations use --jp-annotation only. */
-:root { --jp-annotation: #E4006E; --jp-ground: #EFEEEA; --jp-nav-h: 76px; }
+/* v20: import beats. One viewport per beat, crops without ring/tag annotations, blurred partial order form, split Final. */
+:root { --jp-ground: #EFEEEA; --jp-nav-h: 76px; }
+.jp-beats { --jp-beat-gap: 40px; }
 .jp-kicker {
   margin: 0 0 var(--space-2);
   font-family: var(--font-sans-medium);
-  font-size: var(--fs-label);
+  font-size: var(--fs-caption);
   font-weight: 500;
   line-height: 16px;
   letter-spacing: var(--ls-label);
@@ -3432,17 +3484,17 @@ html[data-theme="dark"] .jo-annot__well { background: #1B1F23; }
   padding-bottom: var(--space-2);
   box-sizing: border-box;
 }
-.jp-beat + .jp-beat { margin-top: var(--space-6); } /* 64px: previous frame clears the 76px nav */
+.jp-beat + .jp-beat { margin-top: var(--jp-beat-gap); }
 .jp-beat__label {
   margin: 0 0 var(--space-1);
   font-family: var(--font-sans-medium);
-  font-size: var(--fs-label);
+  font-size: var(--fs-sm);
   font-weight: 500;
   line-height: 16px;
   color: var(--color-text-muted);
 }
 .jp-beat__line {
-  margin: 0 0 var(--space-1);
+  margin: 0 0 var(--space-2);
   max-width: 42em;
   font-family: var(--font-sans);
   font-size: var(--fs-body);
@@ -3454,125 +3506,282 @@ html[data-theme="dark"] .jo-annot__well { background: #1B1F23; }
   position: relative;
   background: var(--jp-ground);
   border-radius: var(--radius-control);
-  padding: var(--jp-inset, 32px);
-  width: fit-content;
+  padding: var(--jp-inset, var(--space-4));
+  width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  overflow: visible;
-  --jp-inset: 32px;
+  overflow: hidden;
+  --jp-inset: var(--space-4);
 }
-.jp-still { overflow: visible; }
+.jp-frame--version,
+.jp-frame--final {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .jp-still {
   position: relative;
   display: block;
-  width: var(--jp-still-w);
+  width: 100%;
   max-width: 100%;
   height: auto;
-  aspect-ratio: 1050 / 996;
 }
 .jp-still__zoom {
   display: block;
   width: 100%;
   padding: 0;
   border: 0;
+  border-radius: var(--radius-control);
   background: transparent;
   cursor: zoom-in;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--jp-line);
 }
-.jp-still img, .jp-still--start img {
+.jp-still__zoom:focus-visible {
+  outline: 2px solid var(--color-text-tertiary);
+  outline-offset: 2px;
+}
+.jp-still img {
   display: block;
   width: 100%;
   height: auto;
 }
-.jp-still--start { width: 760px; max-width: 100%; aspect-ratio: 760 / 416; }
-.jp-ring {
-  position: absolute;
-  box-sizing: border-box;
-  border: 3px solid var(--jp-annotation);
-  pointer-events: none;
+
+/* Start beat: blurred partial order form beside the "Add your order form" upload dialog. */
+.jp-start-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+  gap: var(--space-2);
+  align-items: stretch;
+  width: 100%;
 }
-.jp-leader {
-  position: absolute;
-  height: 2px;
-  background: var(--jp-annotation);
-  pointer-events: none;
-  top: var(--jp-tag-cy);
-  left: var(--jp-ring-right);
-  width: calc(100% - var(--jp-ring-right) + var(--jp-inset, 32px) + 24px);
+.jp-start-pair__upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
 }
-/* Vertical stem for an elbow: from the clear horizontal run down to the ring's right edge. */
-.jp-leader--stem {
-  width: 2px;
-  height: calc(var(--jp-leader-join) - var(--jp-tag-cy));
+.jp-still--start { width: 100%; }
+
+/* Blurred partial CSV/Excel order form (OrderFormSlice) */
+.jp-sheet {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--jp-surface);
+  border-radius: var(--jp-radius);
+  box-shadow: 0 0 0 1px var(--jp-line);
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 15px;
 }
-.jp-tag {
-  position: absolute;
-  left: calc(100% + var(--jp-inset, 32px) + 24px);
-  top: var(--jp-tag-cy);
-  transform: translateY(-50%);
-  max-width: 120px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background: var(--jp-annotation);
-  color: #fff;
-  font-family: var(--font-sans-medium);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 16px;
+.jp-sheet__chrome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  padding: 6px 10px;
+  background: var(--jp-band);
+  border-bottom: 1px solid var(--jp-line);
+  font-size: 11px;
+  line-height: 14px;
+}
+.jp-sheet__file { font-weight: 500; color: var(--jp-ink); }
+.jp-sheet__tab { color: var(--jp-faint); }
+.jp-sheet__mask {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-mask-image:
+    linear-gradient(to right, #000 0%, #000 84%, transparent 100%),
+    linear-gradient(to bottom, #000 0%, #000 82%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, #000 0%, #000 84%, transparent 100%),
+    linear-gradient(to bottom, #000 0%, #000 82%, transparent 100%);
+  mask-composite: intersect;
+}
+.jp-sheet__cols {
+  display: grid;
+  grid-template-columns: 26px 128px minmax(100px, 1fr) 54px 52px;
+  background: var(--jp-band);
+  border-bottom: 1px solid var(--jp-line);
+  font-size: 10px;
+  line-height: 18px;
+  color: var(--jp-faint);
+}
+.jp-sheet__cols > span {
+  padding: 0 6px;
+  border-right: 1px solid var(--jp-line);
   white-space: nowrap;
-  pointer-events: none;
 }
+.jp-sheet__rn {
+  text-align: center;
+  color: var(--jp-faint);
+  font-size: 10px;
+  padding: 0 !important;
+  justify-content: center;
+}
+.jp-sheet__zone--header {
+  background: var(--jp-surface);
+  border-bottom: 2px solid var(--jp-line);
+}
+.jp-sheet__hrow {
+  display: grid;
+  grid-template-columns: 26px 128px minmax(0, 1fr);
+  align-items: center;
+  min-height: 22px;
+  border-bottom: 1px solid var(--jp-wash);
+}
+.jp-sheet__hrow:last-child { border-bottom: 0; }
+.jp-sheet__hrow > span {
+  display: block;
+  min-width: 0;
+  line-height: 22px;
+  padding: 0 6px;
+  border-right: 1px solid var(--jp-wash);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.jp-sheet__hlabel { color: var(--jp-muted); background: var(--jp-band); }
+.jp-sheet__hval { color: var(--jp-ink); font-weight: 500; border-right: 0 !important; }
+.jp-sheet__zone--products {
+  background: var(--jp-surface);
+}
+.jp-sheet__prow {
+  display: grid;
+  grid-template-columns: 26px 58px minmax(118px, 1fr) 52px 50px 38px;
+  align-items: center;
+  min-height: 22px;
+  border-bottom: 1px solid var(--jp-wash);
+}
+.jp-sheet__prow > span {
+  display: block;
+  min-width: 0;
+  line-height: 22px;
+  padding: 0 6px;
+  border-right: 1px solid var(--jp-wash);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.jp-sheet__prow--head {
+  background: var(--jp-band);
+  color: var(--jp-muted);
+  font-weight: 500;
+  border-bottom-color: var(--jp-line);
+}
+.jp-sheet__pcat {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: center;
+  min-height: 20px;
+  background: var(--jp-band);
+  border-bottom: 1px solid var(--jp-wash);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--jp-muted);
+}
+.jp-sheet__pcat > span {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 6px;
+  border-right: 1px solid var(--jp-wash);
+}
+.jp-sheet__desc { color: var(--jp-ink); }
+.jp-sheet__end { text-align: right; }
+.jp-sheet .is-blur {
+  filter: blur(4px);
+  user-select: none;
+}
+
+/* Final split beat: two focused frames inside one viewport-sized beat. */
+.jp-final-split {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+.jp-final-sub {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.jp-final-sub .jp-beat__line { margin-bottom: var(--space-1); }
+
 .jp-actions {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-top: var(--space-3);
+  margin-top: var(--jp-beat-gap);
 }
 .jp-actions a {
   font-family: var(--font-sans-medium);
-  font-size: 14px;
+  font-size: var(--fs-meta);
   line-height: 18px;
   color: var(--color-text-primary);
   text-underline-offset: 2px;
 }
-.jp-try-slot { display: none; }
 
-/* Desktop 1200+: still height is set so the beat fits under the nav. Tags hang into cols 11-12. */
+/* Desktop 1200+: size each beat's frame(s) so label, line, and visual fit in one viewport at 1440x900 and 1280x800. */
 @media (min-width: 1200px) {
   .jp-beat--version {
-    --jp-chrome: 70px;
-    --jp-inset: 32px;
-    --jp-still-h: calc(100vh - var(--jp-nav-h) - var(--jp-chrome) - (2 * var(--jp-inset)));
-    --jp-still-h: calc(100dvh - var(--jp-nav-h) - var(--jp-chrome) - (2 * var(--jp-inset)));
-    --jp-still-w: calc(var(--jp-still-h) * 1050 / 996);
+    --jp-chrome: 80px;
+    --jp-inset: var(--space-4);
+    --jp-max-still-h: calc(100vh - var(--jp-nav-h) - var(--jp-chrome) - (2 * var(--jp-inset)));
+    --jp-max-still-h: calc(100dvh - var(--jp-nav-h) - var(--jp-chrome) - (2 * var(--jp-inset)));
   }
-  .cs-content { overflow: visible; }
-  .jp-frame--version { overflow: visible; }
+  .jp-still--v1 {
+    width: min(100%, calc(var(--jp-max-still-h) * 2084 / 1050));
+  }
+  .jp-still--v2 {
+    width: min(760px, 100%, calc(var(--jp-max-still-h) * 1520 / 964));
+  }
+  .jp-beat--final {
+    --jp-final-chrome: 140px;
+    --jp-final-inset: var(--space-3);
+    --jp-final-still-h: calc((100vh - var(--jp-nav-h) - var(--jp-final-chrome)) / 2 - (2 * var(--jp-final-inset)));
+    --jp-final-still-h: calc((100dvh - var(--jp-nav-h) - var(--jp-final-chrome)) / 2 - (2 * var(--jp-final-inset)));
+  }
+  .jp-frame--final { padding: var(--jp-final-inset) var(--space-4); }
+  .jp-still--final-a {
+    width: min(756px, 100%, calc(var(--jp-final-still-h) * 1512 / 756));
+  }
+  .jp-still--final-b {
+    width: min(756px, 100%, calc(var(--jp-final-still-h) * 1512 / 748));
+  }
 }
 @media (min-width: 1200px) and (max-width: 1439px) {
-  .jp-beat--version, .jp-frame { --jp-inset: 24px; }
+  .jp-frame { --jp-inset: var(--space-3); padding: var(--space-3); }
+  .jp-beat--version { --jp-inset: var(--space-3); }
+  .jp-beat--final { --jp-final-inset: var(--space-2); }
+  .jp-frame--final { padding: var(--space-2) var(--space-3); }
 }
 
-/* Tablet and phone: tag sits just above the frame, outside the UI. No leader. 16px inset. */
+/* Tablet 768-1199: centered 750px lane, 16px frame inset, zero clipping. */
 @media (max-width: 1199px) {
-  .jp-frame { padding: 16px; width: 100%; --jp-inset: 16px; }
-  .jp-frame--version { margin-top: 40px; }
-  .jp-still { width: 100%; }
-  .jp-leader { display: none; }
-  .jp-tag {
-    left: 0;
-    top: calc(-1 * var(--jp-inset, 16px) - 8px);
-    transform: translateY(-100%);
-    max-width: 100%;
-    white-space: nowrap;
-  }
+  .jp-beat { min-height: 0; padding-bottom: 0; }
+  .jp-frame { padding: var(--space-2); --jp-inset: var(--space-2); }
+  .jp-still--v1,
+  .jp-still--v2,
+  .jp-still--final-a,
+  .jp-still--final-b { width: 100%; }
 }
 
+/* Mobile <=767: single column everywhere, 16px inset, zero horizontal scroll. */
 @media (max-width: 767px) {
-  .jp-beat {
-    min-height: 0;
-    padding-bottom: 0;
-  }
-  .jp-frame { padding: 16px; }
+  .jp-start-pair { grid-template-columns: minmax(0, 1fr); }
+  .jp-sheet__cols { grid-template-columns: 24px 122px minmax(72px, 1fr) 44px; }
+  .jp-sheet__cols > span:nth-child(5) { display: none; }
+  .jp-sheet__hrow { grid-template-columns: 24px 122px minmax(0, 1fr); }
+  .jp-sheet__prow { grid-template-columns: 24px 56px minmax(92px, 1fr) 44px 36px; }
+  .jp-sheet__prow > span:nth-child(5) { display: none; }
+  .jp-sheet__end { text-align: right; }
   .jp-zoom-hint {
     margin: var(--space-1) 0 0;
     font-size: var(--fs-meta);
