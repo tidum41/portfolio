@@ -3499,6 +3499,11 @@ html[data-theme="dark"] .jo-annot__well { background: #1B1F23; }
   left: var(--jp-ring-right);
   width: calc(100% - var(--jp-ring-right) + var(--jp-inset, 32px) + 24px);
 }
+/* Vertical stem for an elbow: from the clear horizontal run down to the ring's right edge. */
+.jp-leader--stem {
+  width: 2px;
+  height: calc(var(--jp-leader-join) - var(--jp-tag-cy));
+}
 .jp-tag {
   position: absolute;
   left: calc(100% + var(--jp-inset, 32px) + 24px);

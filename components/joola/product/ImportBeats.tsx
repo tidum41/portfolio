@@ -20,6 +20,8 @@ const VERSIONS = [
     line: "The lines were added. The ship-to, PO, dates, and comments on the sheet were not.",
     // Ship to, Customer PO, requested ship date, and cancel date, 4px outside, in the 220,0 crop.
     ring: { x: 24, y: 116, w: 616, h: 160, r: 12 },
+    // Horizontal run in the empty band above the order summary (card top is y=120).
+    leaderY: 100,
   },
   {
     id: "v2",
@@ -52,12 +54,15 @@ function ringStyle(ring: CropRing): CSSProperties {
   };
 }
 
-function tagVars(ring: CropRing): CSSProperties {
-  const cy = ((ring.y + ring.h / 2) / CROP.h) * 100;
+function tagVars(ring: CropRing, leaderY?: number): CSSProperties {
+  const cy = ((leaderY ?? ring.y + ring.h / 2) / CROP.h) * 100;
   const right = ((ring.x + ring.w) / CROP.w) * 100;
+  // Stem meets the ring on its right edge, below the 12px corner, still in the gap left of the summary.
+  const join = ((ring.y + 16) / CROP.h) * 100;
   return {
     ["--jp-tag-cy" as string]: `${cy}%`,
     ["--jp-ring-right" as string]: `${right}%`,
+    ["--jp-leader-join" as string]: `${join}%`,
   };
 }
 
@@ -68,6 +73,7 @@ function VersionBeat({
   tag,
   line,
   ring,
+  leaderY,
 }: {
   label: string;
   src: string;
@@ -75,14 +81,16 @@ function VersionBeat({
   tag: string;
   line: string;
   ring: CropRing;
+  leaderY?: number;
 }) {
   const [open, setOpen] = useState(false);
+  const elbow = leaderY !== undefined;
   return (
     <div className="jp-beat jp-beat--version">
       <p className="jp-beat__label">{label}</p>
       <p className="jp-beat__line">{line}</p>
       <div className="jp-frame jp-frame--version">
-        <div className="jp-still" style={tagVars(ring)}>
+        <div className={`jp-still${elbow ? " jp-still--elbow" : ""}`} style={tagVars(ring, leaderY)}>
           <button type="button" className="jp-still__zoom" onClick={() => setOpen(true)} aria-label={`Enlarge: ${alt}`}>
             <Image
               src={src}
@@ -93,6 +101,7 @@ function VersionBeat({
             />
           </button>
           <span className="jp-ring" style={ringStyle(ring)} aria-hidden="true" />
+          {elbow ? <span className="jp-leader jp-leader--stem" aria-hidden="true" /> : null}
           <span className="jp-leader" aria-hidden="true" />
           <span className="jp-tag">{tag}</span>
         </div>
