@@ -141,3 +141,9 @@ Written in my own voice so I can explain each one in an interview. Each entry ho
 
 **Decision.** `app/dev/dialogue-variants/DepthMenu.tsx` picks the reply's depth from a model-picker style menu in the composer. It is dev only and PENDING Mudit's OK; nothing on /dialogue imports it.
 **Why.** No earlier round built a menu-style depth picker (searched iterations, notes, p10-decisions, git history, review-desk and the dlg folders); every picker so far was the tab row. The compare needed the take to judge it.
+
+### Dialogue continued (2026-11-27): the composer pill placement is a prototype awaiting Mudit's OK
+
+**Decision.** `/dev/dialogue-continued?opt=h` puts an existing source pill inside the composer to show the scope a follow-up inherits from the opened group. This placement is new, so it is a prototype awaiting Mudit's OK and nothing on /dialogue uses it. `?opt=h1` (scope only in reply 2's header) and `?opt=h2` (reply 1 folds to a compact count bar) sit beside it.
+**Why.** The reader can see and change the scope before pressing send. "Ask about all 300 shoppers" stays the explicit reset. No result is claimed for either.
+**Revert.** Delete `HybridPanel.tsx`, `hybridModel.ts` and `hybrid.css` in `app/dev/dialogue-continued/` and their wiring in `ContinuedLab.tsx` and `page.tsx`.

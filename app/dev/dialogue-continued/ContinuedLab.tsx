@@ -17,6 +17,8 @@ import { ArrowUpIcon } from "@/components/dialogue/product/icons";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
 import { ANA_TRANSCRIPT, QUOTE_LIST_FRIDAY, QUOTE_LIST_NEW, remainingCount } from "@/lib/dialogue/product/sampleData";
 import { COUNT_ANSWER, FRIDAY, QUESTION, TOTAL } from "@/components/dialogue/live/DeliveryDateTrial";
+import HybridPanel from "./HybridPanel";
+import { HYBRID_LABELS, HYBRID_OPTS, HYBRID_STATES, isHybrid, type HybridCase, type HybridOpt, type HybridState } from "./hybridModel";
 import "./continued.css";
 
 const FRIDAY_REMAINDER = FRIDAY - 1; // 225 minus Ana is 224
@@ -221,29 +223,56 @@ const PHASE_LABEL: Record<Phase, string> = {
   next: "A point in reply 2 is open",
 };
 
-export default function ContinuedLab({ opt, phase = "landed" }: { opt?: Opt; phase?: Phase }) {
+const HYBRID_STATE_LABEL: Record<HybridState, string> = {
+  start: "Start",
+  open: "Reply 1 open",
+  typed: "Follow-up typed",
+  landed: "Reply 2 landed",
+  reset: "Scope reset",
+  top: "“Top one” asked",
+};
+
+/* In the grid, the three shared beats map onto the hybrid's states. "A point in reply 2 is open" also opens a theme row. */
+const GRID_STATE: Record<Phase, HybridState> = { start: "typed", landed: "landed", next: "landed" };
+
+export default function ContinuedLab({ opt, phase = "landed", hybridState = "landed", variant }: { opt?: Opt | HybridOpt; phase?: Phase; hybridState?: HybridState; variant?: HybridCase }) {
   const [curPhase, setPhase] = useState<Phase>(phase);
-  const shown: Opt[] = opt ? [opt] : [...OPTS];
+  const [curState, setState] = useState<HybridState>(hybridState);
+  const solo = isHybrid(opt) ? opt : undefined;
+  const shown: Opt[] = solo ? [] : opt && !isHybrid(opt) ? [opt] : [...OPTS];
+  const hybrids: HybridOpt[] = solo ? [solo] : opt ? [] : [...HYBRID_OPTS];
   return (
     <div className="dlg-cont-page">
       <header className="dlg-cont-page__head">
         <h1 className="dlg-cont-page__title">Continued interaction</h1>
-        <p className="dlg-cont-page__sub">{shown.length === 1
+        <p className="dlg-cont-page__sub">{opt
           ? "After a point is open in the first reply, a second question is asked. Hearthside illustrative data. Depth stays D: click a point."
           : "After a point is open in the first reply, a second question is asked. Each column is a different take on that thread. Hearthside illustrative data. Depth stays D: click a point."}</p>
         <div className="dlg-cont-page__beats" role="group" aria-label="Beat">
-          {PHASES.map((p) => (
+          {solo ? HYBRID_STATES.map((s) => (
+            <button key={s} type="button" className="dlg-cont-beat" aria-pressed={curState === s} onClick={() => setState(s)}>{HYBRID_STATE_LABEL[s]}</button>
+          )) : PHASES.map((p) => (
             <button key={p} type="button" className="dlg-cont-beat" aria-pressed={curPhase === p} onClick={() => setPhase(p)}>{PHASE_LABEL[p]}</button>
           ))}
         </div>
       </header>
-      <div className="dlg-cont-grid" data-solo={shown.length === 1 || undefined}>
+      <div className="dlg-cont-grid" data-solo={!!opt || undefined}>
         {shown.map((id) => (
           <div key={id} className="dlg-cont-col">
             <p className="dlg-cont-label">{LABELS[id]}</p>
             <ThreadPanel key={`${id}:${curPhase}`} opt={id} phase={curPhase} />
           </div>
         ))}
+        {hybrids.map((id) => {
+          const state = solo ? curState : GRID_STATE[curPhase];
+          const deep = !solo && curPhase === "next";
+          return (
+            <div key={id} className="dlg-cont-col">
+              <p className="dlg-cont-label">{HYBRID_LABELS[id]}</p>
+              <HybridPanel key={`${id}:${state}:${deep}`} opt={id} state={state} variant={solo && state === hybridState ? variant : undefined} deep={deep} />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
