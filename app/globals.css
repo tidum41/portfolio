@@ -3737,7 +3737,7 @@ html[data-theme="dark"] .jo-annot__well { background: #1B1F23; }
     --jp-max-still-h: calc(100dvh - var(--jp-nav-h) - var(--jp-chrome) - (2 * var(--jp-inset)));
   }
   .jp-still--v1 {
-    width: min(100%, calc(var(--jp-max-still-h) * 2084 / 1050));
+    width: min(100%, calc(var(--jp-max-still-h) * 2100 / 724));
   }
   .jp-still--v2 {
     width: min(760px, 100%, calc(var(--jp-max-still-h) * 1520 / 964));

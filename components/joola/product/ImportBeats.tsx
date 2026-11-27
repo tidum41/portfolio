@@ -42,8 +42,8 @@ const SINGLE_VERSIONS: readonly SingleVersionBeat[] = [
     line: "The lines came in. The header didn't, so a rep still retyped ship-to, PO, and dates.",
     still: {
       src: "/images/joola/v20/import-v1.png",
-      width: 2084,
-      height: 1050,
+      width: 2100,
+      height: 724,
       alt: "Review and place order after a V1 import. The four imported lines appear in the order summary on the right ($98,580.78 total), while Ship to stays on the account default and Customer PO, Requested ship date, and Cancel if not shipped by remain empty.",
     },
   },

@@ -109,7 +109,7 @@ export default function JoolaPartialBody() {
       <Section id="import">
         <ImportBeats
           heading={
-            <H2 id="import">{`Buyers already send the form. I wanted the problems in it to be visible at upload, before a rep retypes the lines.`}</H2>
+            <H2 id="import">{`Buyers already send the form. I wanted the problems in it to be visible at upload, before a rep retypes the sheet.`}</H2>
           }
         />
       </Section>
