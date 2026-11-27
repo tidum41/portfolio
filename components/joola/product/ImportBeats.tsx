@@ -14,26 +14,31 @@ const VERSIONS = [
   {
     id: "v1",
     label: "V1",
-    src: "/images/joola/v17/import-v1.png",
-    alt: "Cart after the first import. The heading is Cart, an alert says row 22 could not be imported, four lines are in the cart, and the header cart reads $98,580.78 and 774 units.",
-    tag: "Straight to cart",
-    ring: { x: 856.6, y: 2, w: 169.4, h: 44, r: 22 },
+    src: "/images/joola/v19/import-v1.png",
+    alt: "Review after the first import. The four imported lines are in the order summary. Ship to is the account default, Customer PO and the date fields are empty, and Notes for JOOLA shows only a placeholder.",
+    tag: "Header not read",
+    line: "The lines were added. The ship-to, PO, dates, and comments on the sheet were not.",
+    // Ship to, Customer PO, requested ship date, and cancel date, 4px outside, in the 220,0 crop.
+    ring: { x: 24, y: 116, w: 616, h: 160, r: 12 },
   },
   {
     id: "v2",
     label: "V2",
-    src: "/images/joola/v17/import-v2.png",
-    alt: "Import preview after upload. The file is joola-order-form.csv. Rows 16 to 22 are listed, and row 22 is marked SKU not found and skipped.",
+    src: "/images/joola/v19/import-v2.png",
+    alt: "Import preview after upload. The file is joola-order-form.csv. Rows 16 to 22 are listed, and row 22 is marked SKU not found and skipped. The form header is not shown.",
     tag: "Preview first",
+    line: "The rows are checked first, so a bad SKU is visible before the order changes.",
     ring: { x: 55, y: 495.5, w: 712, h: 208, r: 12 },
   },
   {
     id: "final",
     label: "Final",
-    src: "/images/joola/v17/import-final.png",
-    alt: "Final import preview. Row 18 shows usually 36, check quantity, with Change to 36 and Keep 360. Row 22 is skipped as a SKU not found.",
-    tag: "Qty flag",
-    ring: { x: 579, y: 700.5, w: 178, h: 60, r: 10 },
+    src: "/images/joola/v19/import-final.png",
+    alt: "Final import preview. An Autofilled from import block lists ship-to, PO, dates, and comments from the sheet. Row 18 shows Usually 36 with Change to 36 and Keep 360. Row 22 is skipped as a SKU not found.",
+    tag: "Header read",
+    line: "The header is read in, and a quantity well above the usual waits for a decision.",
+    // Autofilled from import block, 4px outside, in the 220,0 crop.
+    ring: { x: 55, y: 262.5, w: 720, h: 278, r: 12 },
   },
 ] as const;
 
@@ -61,18 +66,21 @@ function VersionBeat({
   src,
   alt,
   tag,
+  line,
   ring,
 }: {
   label: string;
   src: string;
   alt: string;
   tag: string;
+  line: string;
   ring: CropRing;
 }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="jp-beat jp-beat--version">
       <p className="jp-beat__label">{label}</p>
+      <p className="jp-beat__line">{line}</p>
       <div className="jp-frame jp-frame--version">
         <div className="jp-still" style={tagVars(ring)}>
           <button type="button" className="jp-still__zoom" onClick={() => setOpen(true)} aria-label={`Enlarge: ${alt}`}>
@@ -82,7 +90,6 @@ function VersionBeat({
               width={1050}
               height={996}
               sizes={CASE_STUDY_MEDIA_SIZES}
-              priority
             />
           </button>
           <span className="jp-ring" style={ringStyle(ring)} aria-hidden="true" />
@@ -108,17 +115,16 @@ export default function ImportBeats({ heading }: { heading: ReactNode }) {
           <div className="jp-still jp-still--start">
             <button type="button" className="jp-still__zoom" onClick={() => setStartOpen(true)} aria-label="Enlarge: Import order form dialog">
               <Image
-                src="/images/joola/v17/import-start.png"
+                src="/images/joola/v19/import-start.png"
                 alt="Import order form dialog. A file-up icon sits next to Add your order form, the format line is on one line, and a Use a sample form link sits under the drop zone."
                 width={1520}
                 height={832}
                 sizes={CASE_STUDY_MEDIA_SIZES}
-                priority
               />
             </button>
           </div>
           <CaseStudyLightbox
-            src="/images/joola/v17/import-start.png"
+            src="/images/joola/v19/import-start.png"
             alt="Import order form dialog. A file-up icon sits next to Add your order form, the format line is on one line, and a Use a sample form link sits under the drop zone."
             open={startOpen}
             onClose={() => setStartOpen(false)}

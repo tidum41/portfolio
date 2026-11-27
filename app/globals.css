@@ -3441,6 +3441,15 @@ html[data-theme="dark"] .jo-annot__well { background: #1B1F23; }
   line-height: 16px;
   color: var(--color-text-muted);
 }
+.jp-beat__line {
+  margin: 0 0 var(--space-1);
+  max-width: 42em;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  line-height: var(--lh-body);
+  color: var(--color-text-primary);
+}
 .jp-frame {
   position: relative;
   background: var(--jp-ground);
@@ -3525,7 +3534,7 @@ html[data-theme="dark"] .jo-annot__well { background: #1B1F23; }
 /* Desktop 1200+: still height is set so the beat fits under the nav. Tags hang into cols 11-12. */
 @media (min-width: 1200px) {
   .jp-beat--version {
-    --jp-chrome: 40px;
+    --jp-chrome: 70px;
     --jp-inset: 32px;
     --jp-still-h: calc(100vh - var(--jp-nav-h) - var(--jp-chrome) - (2 * var(--jp-inset)));
     --jp-still-h: calc(100dvh - var(--jp-nav-h) - var(--jp-chrome) - (2 * var(--jp-inset)));
