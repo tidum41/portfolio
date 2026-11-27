@@ -11,7 +11,7 @@ JOOLA below is split into what `/joola` renders and what is withheld. BruinLease
 ## JOOLA B2B
 
 Route: `/joola`
-Hero file: `public/images/joola/hero-ruth-2.png`
+Hero file: `public/images/joola/v7/hero-new-order.webp`
 The Mux film stays on the homepage card only. It is not on this page.
 The body sections are off the page. After the metadata, an NDA request. There is no password.
 

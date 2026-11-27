@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { sanityClient } from "./client";
+import { JOOLA_CARD_MEDIA, JOOLA_CARD_STILL_SRC, JOOLA_MUX_PLAYBACK_ID } from "@/lib/caseStudies/joola";
 import {
   sanityImageUrl,
   sanityCdnUrl,
@@ -199,9 +200,12 @@ const JOOLA_B2B_PROJECT: SanityProject = {
   title: "Designing B2B ordering for the #1 pickleball brand",
   label: "Case study, Internship 2026",
   href: "/joola",
-  mediaType: "video",
-  muxPlaybackId: "gX4z7zlxZK85I7oNjrxK00ty3zVZtXmrxohRte00hCYs00",
-  // Native film is 4:3 — pinned here; the home grid reads the same ratio from GRID_MEDIA_ASPECTS.
+  // Still card until the new film is approved. To bring the film back, set
+  // JOOLA_CARD_MEDIA to "video" in lib/caseStudies/joola.ts.
+  mediaType: JOOLA_CARD_MEDIA,
+  muxPlaybackId: JOOLA_MUX_PLAYBACK_ID,
+  image: { asset: { url: JOOLA_CARD_STILL_SRC } },
+  // Native film and still are 4:3, pinned here; the home grid reads the same ratio from GRID_MEDIA_ASPECTS.
   aspectRatio: "4 / 3",
   order: 0,
   featured: true,
@@ -237,7 +241,7 @@ async function loadProjects(): Promise<SanityProject[]> {
 }
 
 export const getProjects = cache(
-  unstable_cache(loadProjects, ["projects-v13-allinone-before-sviz"], {
+  unstable_cache(loadProjects, ["projects-v14-joola-still"], {
     revalidate: 86400,
     tags: ["sanity", "projects"],
   }),

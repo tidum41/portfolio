@@ -1,11 +1,10 @@
-import type { CSSProperties, ReactNode } from "react";
-import Image from "next/image";
+import type { ReactNode } from "react";
 import CaseStudyOpen from "@/components/CaseStudyOpen";
-import CaseStudyRequest from "@/components/CaseStudyRequest";
 import CaseStudyTOC from "@/components/CaseStudyTOC";
 import CaseStudyPager from "@/components/CaseStudyPager";
-import { JOOLA_HERO_SRC, JOOLA_TITLE } from "@/lib/caseStudies/joola";
-import { CASE_STUDY_MEDIA_SIZES } from "@/lib/caseStudyLayout";
+import JoolaPartialBody, { JOOLA_PARTIAL_TOC } from "@/components/JoolaPartialBody";
+import ChangeQuantityLoop from "@/components/joola/product/ChangeQuantityLoop";
+import { JOOLA_TITLE } from "@/lib/caseStudies/joola";
 
 const TEAM = [
   { name: "Vinay Bulusu", role: "PM", href: "https://www.linkedin.com/in/vinay-bulusu-442395b9/" },
@@ -17,14 +16,15 @@ const TEAM = [
 
 /**
  * JOOLA uses the BruinLease case-study open: title, hero, then metadata.
- * `body` is the slot for later sections, between that open and the NDA request.
+ * The hero is a looping product moment (Change to 36), not a screenshot.
+ * `body` is the slot for the sections after that open.
  */
 export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
   return (
     <div style={{ fontFamily: "var(--font-sans)" }}>
       <div className="cs-layout">
         <aside className="cs-aside">
-          <CaseStudyTOC items={[]} backHref="/" />
+          <CaseStudyTOC items={JOOLA_PARTIAL_TOC} backHref="/" />
         </aside>
 
         <div className="cs-content" style={{ minWidth: 0 }}>
@@ -58,23 +58,11 @@ export default function ProductCaseStudy({ body }: { body?: ReactNode }) {
               },
             ]}
           >
-            <div className="cs-hero-media-frame" style={{ "--cs-hero-ar": 2400 / 1600 } as CSSProperties}>
-              <Image
-                src={JOOLA_HERO_SRC}
-                alt="Quick order screen from the JOOLA wholesale prototype, with tier pricing, a saved order, Net 30 credit, and an order marked ship date pending."
-                width={2400}
-                height={1600}
-                priority
-                fetchPriority="high"
-                sizes={CASE_STUDY_MEDIA_SIZES}
-                style={{ width: "100%", height: "auto", display: "block" }}
-              />
-            </div>
+            {/* v10 hero: the key moment, live from the ported prototype components (strategy 1 and 8). */}
+            <ChangeQuantityLoop size="hero" />
           </CaseStudyOpen>
 
-          {body}
-
-          <CaseStudyRequest />
+          {body ?? <JoolaPartialBody />}
 
           <CaseStudyPager href="/joola" />
         </div>

@@ -13,6 +13,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EASE_EXIT, EASE_OPACITY, PANEL_DURATION } from "@/lib/motion";
 import NortheastArrow from "@/components/icons/NortheastArrow";
+import { useModalDialog } from "@/lib/useModalDialog";
 
 const useLayoutEffect = typeof window !== "undefined" ? _useLayoutEffect : useEffect;
 
@@ -84,7 +85,6 @@ export default function ProjectPopup({
   children,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const triggerElRef = useRef<Element | null>(null);
   const infoPanelRef = useRef<HTMLDivElement>(null);
   const infoInnerRef = useRef<HTMLDivElement>(null);
   const whySectionRef = useRef<HTMLElement>(null);
@@ -175,108 +175,21 @@ export default function ProjectPopup({
     setSheetHeight(Math.min(contentH, cap));
   }, [infoOpen, isMobile, infoMeta, whyBuilt, infoLink]);
 
-  // Remember what had focus before opening, so it can be restored on close —
-  // and move focus into the panel itself so screen readers/keyboard users
-  // land somewhere sensible immediately. Fixed-body scroll lock preserves
-  // the page's scroll position (overflow:hidden alone causes jumps on close
-  // and focus-restore can scroll the trigger back into view).
-  useEffect(() => {
-    if (!open) return;
-    const scrollY = window.scrollY;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-
-    triggerElRef.current = document.activeElement;
-    panelRef.current?.focus();
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        // Large variant: dismiss the info overlay first, then the dialog.
-        if (isLarge && infoOpenRef.current) {
-          setInfoOpen(false);
-          return;
-        }
-        onClose();
+  // Focus return, Tab trap, Escape and the fixed-body scroll lock are shared
+  // with CaseStudyLightbox (lib/useModalDialog). Focus moves into the panel so
+  // screen readers and keyboard users land somewhere sensible immediately.
+  useModalDialog({
+    open,
+    containerRef: panelRef,
+    onEscape: () => {
+      // Large variant: dismiss the info overlay first, then the dialog.
+      if (isLarge && infoOpenRef.current) {
+        setInfoOpen(false);
         return;
       }
-      if (e.key !== "Tab" || !panelRef.current) return;
-      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-
-    const body = document.body;
-    const html = document.documentElement;
-    const prev = {
-      position: body.style.position,
-      top: body.style.top,
-      left: body.style.left,
-      right: body.style.right,
-      width: body.style.width,
-      overflow: body.style.overflow,
-      paddingRight: body.style.paddingRight,
-      overscroll: body.style.overscrollBehavior,
-      htmlOverflow: html.style.overflow,
-      htmlOverscroll: html.style.overscrollBehavior,
-      bodyBg: body.style.backgroundColor,
-      htmlBg: html.style.backgroundColor,
-      htmlScheme: html.style.colorScheme,
-      bodyScheme: body.style.colorScheme,
-    };
-
-    // Pin left/right (not only width:100%) so the fixed flex body can't pick
-    // a stale static position and shift the grid under the backdrop blur.
-    // paddingRight replaces the disappearing scrollbar so column widths stay put.
-    // Lock color-scheme to the live data-theme so the browser canvas cannot
-    // paint the opposite theme behind project cards / the CD plate.
-    // overflow + overscroll on html/body block background scroll and the
-    // rubber-band that can show a second scrollbar behind the modal.
-    const scheme = html.getAttribute("data-theme") === "light" ? "light" : "dark";
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.left = "0";
-    body.style.right = "0";
-    body.style.width = "auto";
-    body.style.overflow = "hidden";
-    body.style.overscrollBehavior = "none";
-    html.style.overflow = "hidden";
-    html.style.overscrollBehavior = "none";
-    body.style.backgroundColor = "var(--color-bg)";
-    html.style.backgroundColor = "var(--color-bg)";
-    html.style.colorScheme = scheme;
-    body.style.colorScheme = scheme;
-    if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      body.style.position = prev.position;
-      body.style.top = prev.top;
-      body.style.left = prev.left;
-      body.style.right = prev.right;
-      body.style.width = prev.width;
-      body.style.overflow = prev.overflow;
-      body.style.overscrollBehavior = prev.overscroll;
-      body.style.paddingRight = prev.paddingRight;
-      body.style.backgroundColor = prev.bodyBg;
-      html.style.overflow = prev.htmlOverflow;
-      html.style.overscrollBehavior = prev.htmlOverscroll;
-      html.style.backgroundColor = prev.htmlBg;
-      html.style.colorScheme = prev.htmlScheme;
-      body.style.colorScheme = prev.bodyScheme;
-      window.scrollTo({ top: scrollY, left: 0, behavior: "instant" });
-      document.removeEventListener("keydown", onKeyDown);
-      (triggerElRef.current as HTMLElement | null)?.focus?.({ preventScroll: true });
-    };
-  }, [open, onClose, isLarge]);
+      onClose();
+    },
+  });
 
   if (typeof document === "undefined") return null;
 
