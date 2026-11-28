@@ -232,12 +232,12 @@ function TopReply({ turn }: { turn: Turn }) {
   return <NamedThemeReply line={turn.topOf === "other" ? otherLine : clearLine} title={THEME_1} />;
 }
 
-function Chips({ chips }: { chips: { text: string; onClick: () => void }[] }) {
+function Chips({ chips }: { chips: { text: string; onClick: () => void; target?: string }[] }) {
   return (
     <div className="dlgh-follow">
       <p className="dlg-thin__label">Suggested follow-ups</p>
       <div className="dlgh-follow__row">
-        {chips.map((c) => <button key={c.text} type="button" className="dlg-suggest" onClick={c.onClick}>{c.text}</button>)}
+        {chips.map((c) => <button key={c.text} type="button" className="dlg-suggest" data-target={c.target} onClick={c.onClick}>{c.text}</button>)}
       </div>
     </div>
   );
@@ -438,7 +438,7 @@ export default function HybridPanel({ opt, state, variant, deep }: { opt: Hybrid
                         : <NamedThemeReply line={picked === THEME_1 ? clearLine : PH} title={picked} />}
                   </>
                 ) : null}
-                {latest && turn.scope && (turn.kind !== "clarify" || picked) ? <Chips chips={[{ text: "Ask about all 300 shoppers", onClick: () => setT(resetToAll) }]} /> : null}
+                {latest && turn.scope && (turn.kind !== "clarify" || picked) ? <Chips chips={[{ text: "Ask about all 300 shoppers", target: "reset-all", onClick: () => setT(resetToAll) }]} /> : null}
               </div>
             );
           })}

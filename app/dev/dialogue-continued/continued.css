@@ -13,6 +13,11 @@
 .dlg-cont-label { margin: 0; font: 500 13px/20px system-ui, sans-serif; color: var(--dp-ink, #1c1917); }
 .dlg-cont-grid .dlg-trial { width: 100%; max-width: none; margin-inline: 0; }
 .dlg-cont-grid .dlg-trial__panel { display: flex; flex-direction: column; }
+/* TASTE: the panel lifts off the page by its drop shadow, with no border. */
+.dlg-cont .dlg-trial__panel {
+  border: 0;
+  box-shadow: var(--shadow-chat);
+}
 /* Opened earlier, now folded: a solid muted underline, distinct from the live solid ink of an open point. */
 .dlg-cont .dlg-trial__point[data-opened]:not([aria-expanded="true"]) { text-decoration-style: solid; text-decoration-color: var(--dp-muted, #57534e); }
 .dlg-cont__q { align-self: flex-end; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; max-width: 91.6667%; }
