@@ -393,11 +393,13 @@ export default function HybridPanel({ opt, state, variant, deep }: { opt: Hybrid
                 {opt === "h2" ? "225" : <span className="dlgh-opened">225</span>} of 300 read it as this Friday
               </FoldLine>
               {opt === "h2" && !t.r1Open ? (
-                <button type="button" className="dlgh-compact dlg-live__bar" data-spot="reply1-bar" tabIndex={-1} aria-hidden onClick={toggleReply1}>
-                  <ChartStackedBar total={TOTAL} segments={[
-                    { label: "Read it as this Friday", value: FRIDAY, display: "225", focal: true },
-                    { label: "Unsure", value: TOTAL - FRIDAY, display: "75", remainder: true },
-                  ]} />
+                <button type="button" className="dlgh-compact dlg-live__bar" tabIndex={-1} aria-hidden onClick={toggleReply1}>
+                  <span className="dlgh-compact__bar" data-spot="reply1-bar">
+                    <ChartStackedBar total={TOTAL} segments={[
+                      { label: "Read it as this Friday", value: FRIDAY, display: "225", focal: true },
+                      { label: "Unsure", value: TOTAL - FRIDAY, display: "75", remainder: true },
+                    ]} />
+                  </span>
                 </button>
               ) : null}
               <Grow open={t.r1Open} className="dlg-trial__open">
