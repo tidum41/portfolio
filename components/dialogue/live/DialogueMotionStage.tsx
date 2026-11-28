@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import UserMessageBubble from "@/components/dialogue/product/UserMessageBubble";
 import { AnswerCard, type SideWhich } from "@/components/dialogue/live/AnswerCard";
@@ -13,7 +13,8 @@ import { ArrowUpIcon, ChevronUpIcon, LoaderArcIcon, WaveformIcon } from "@/compo
 import { dialogueProductFontClassName } from "@/components/dialogue/product/fonts";
 import { dialogueCopy } from "@/components/dialogue/product/tokens";
 import { THIN_FLAG, THIN_TIP } from "@/lib/dialogue/product/thinCopy";
-import { PARAGRAPH_ANSWER_WALL, QUOTE_LIST, QUOTE_LIST_FRIDAY } from "@/lib/dialogue/product/sampleData";
+import { ANA_TRANSCRIPT, PARAGRAPH_ANSWER_WALL, PROBLEM_ANSWER, QUOTE_GROUPS, QUOTE_LIST, QUOTE_LIST_FRIDAY, remainingCount } from "@/lib/dialogue/product/sampleData";
+import SyncedTranscript, { type TranscriptRow } from "@/components/dialogue/product/SyncedTranscript";
 import type { MotionDemo } from "@/components/dialogue/motion/stages";
 import { InfoCircleIcon } from "@/components/dialogue/product/icons";
 
@@ -129,7 +130,7 @@ function PlusGlyph() {
 }
 const clipLen = (time: string) => { const [a, z] = time.split(/[\u2013-]/).map(sec); return fmt(z - a); };
 
-export function QuoteRow({ q, open, onTap, playSec }: { q: { participant: string; time: string; quote: string }; open: boolean; onTap?: () => void; playSec?: number }) {
+export function QuoteRow({ q, open, onTap, playSec, transcript }: { q: { participant: string; time: string; quote: string }; open: boolean; onTap?: () => void; playSec?: number; transcript?: readonly TranscriptRow[] }) {
   const [start, end] = q.time.split(/[\u2013-]/);
   return (
     <div
@@ -156,6 +157,8 @@ export function QuoteRow({ q, open, onTap, playSec }: { q: { participant: string
       <Grow open={open} closeMs={560}>
         <div className="dlg-live__clip" data-who={q.participant.toLowerCase()}>
           <DialogueInterviewPlayer start={start} current={playSec !== undefined ? fmt(Math.min(sec(end), sec(start) + playSec)) : start} total={end} />
+          {/* Consult r1: the synced transcript sits under the player, inside the quote row, so the clip still never covers the count. */}
+          {transcript ? <div className="dlg-live__transcript"><SyncedTranscript rows={transcript} /></div> : null}
         </div>
       </Grow>
     </div>
@@ -164,13 +167,13 @@ export function QuoteRow({ q, open, onTap, playSec }: { q: { participant: string
 
 function SampleHead({ meta, shown, onCollapse }: { meta: (typeof SAMPLE_META)[SampleWhich]; shown: number; onCollapse: () => void }) {
   return (
-    <p className="dp-side-sample__head dp-text-body">
+    <button type="button" className="dp-side-sample__head dp-text-body" data-target="side-collapse" aria-label={`Collapse the ${meta.count} ${meta.label}`} onClick={onCollapse}>
       <span className="dlg-sample-key" aria-hidden />
       <span className="dlg-sample-head__text"><span className="dp-summary__emph">{shown}</span> <span className="dlg-nowrap">{shown === 1 ? "quote shown," : "quotes shown,"}</span> <span className="dlg-nowrap">picked from the {meta.count}</span> <span className="dlg-nowrap">{meta.who}</span></span>
-      <button type="button" className="dlg-clip-collapse" data-target="side-collapse" data-shown="" aria-label={`Collapse the ${meta.count} ${meta.label}`} onClick={onCollapse}>
+      <span className="dlg-clip-collapse" data-shown="" aria-hidden>
         <ChevronUpIcon />
-      </button>
-    </p>
+      </span>
+    </button>
   );
 }
 
@@ -178,7 +181,7 @@ function SampleHead({ meta, shown, onCollapse }: { meta: (typeof SAMPLE_META)[Sa
    timestamps (the selected one shares the quote card's warm fill), and the quote uses the full panel width. Every part is
    an existing Dialogue element, and there is no coloured edge on the quote. */
 const FRIDAY = SAMPLE_META.friday;
-const TAIL = FRIDAY.count - QUOTE_LIST_FRIDAY.length;
+const TAIL = remainingCount(FRIDAY.count, QUOTE_LIST_FRIDAY.length);
 export function HeroSelection() {
   const [ana, dev] = QUOTE_LIST_FRIDAY;
   const startOf = (t: string) => t.split(/[\u2013-]/)[0];
@@ -199,10 +202,58 @@ export function HeroSelection() {
   );
 }
 
-function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse }: { open: boolean; which?: SampleWhich; playing: boolean; onPlay?: () => void; playSec?: number; onCollapse?: () => void }) {
+/* Consult r1 (STATES S12): the "+223 more" pill opened in the panel. The head line stays pinned while the rows scroll under it.
+   Only labelled Hearthside people are listed (QUOTE_GROUPS); the rest of the side is one remainder line, 225 minus the names shown. */
+export function MoreList({ showEnd = false }: { showEnd?: boolean }) {
+  const g = QUOTE_GROUPS[0];
+  const left = remainingCount(g.count, g.rows.length);
+  const rowsRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (!showEnd) return;
+    const el = rowsRef.current;
+    if (!el) return;
+    const pin = () => {
+      const cards = [...el.querySelectorAll(".dp-clip-quote")] as HTMLElement[];
+      const rest = el.querySelector(".dlg-more-list__rest") as HTMLElement | null;
+      if (cards.length < 2 || !rest) {
+        el.scrollTop = el.scrollHeight;
+        return;
+      }
+      // Live stills may scale this panel; getBoundingClientRect is in screen px, maxHeight/scrollTop are not.
+      const scaleY = el.offsetHeight ? el.getBoundingClientRect().height / el.offsetHeight : 1;
+      const relTop = (node: HTMLElement) =>
+        (node.getBoundingClientRect().top - el.getBoundingClientRect().top) / scaleY + el.scrollTop;
+      const firstVisible = cards[cards.length - 2];
+      const startY = relTop(firstVisible);
+      const padBot = parseFloat(getComputedStyle(el).paddingBottom) || 0;
+      el.style.maxHeight = `${Math.ceil(relTop(rest) + rest.offsetHeight - startY + padBot)}px`;
+      el.scrollTop = Math.round(startY);
+    };
+    pin();
+    const id = requestAnimationFrame(pin);
+    return () => cancelAnimationFrame(id);
+  }, [showEnd]);
+  return (
+    <div className="dp-side-sample dlg-stage__sample dlg-more-list" data-side="friday" data-more="">
+      <p className="dlg-hero-head dlg-more-list__head" aria-hidden>
+        <span className="dlg-sample-key" />
+        <span>{g.label}</span>
+        <span className="dlg-hero-head__count">{g.count}</span>
+      </p>
+      <div ref={rowsRef} className="dlg-more-list__rows" tabIndex={0} aria-label={`Shoppers who read it as this Friday`}>
+        <div className="dp-clip-quotes">
+          {g.rows.map((q) => <QuoteRow key={q.participant} q={q} open={false} />)}
+        </div>
+        <p className="dlg-more-list__rest dp-text-body">{left} more shoppers in this group</p>
+      </div>
+    </div>
+  );
+}
+
+function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse, withTranscript = false }: { withTranscript?: boolean; open: boolean; which?: SampleWhich; playing: boolean; onPlay?: () => void; playSec?: number; onCollapse?: () => void }) {
   const meta = SAMPLE_META[which];
   const rows = meta.rows;
-  const more = meta.count - rows.length;
+  const more = remainingCount(meta.count, rows.length);
   const lead = rows[0];
   const collapse = onCollapse ?? (() => (window as unknown as { __dlg: { side: (b: SideWhich) => void } }).__dlg.side(false));
   return (
@@ -211,7 +262,7 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse }
         <SampleHead meta={meta} shown={rows.length} onCollapse={collapse} />
         <div className="dp-clip-quotes">
           {rows.map((q) => (
-            <QuoteRow key={q.participant} q={q} open={playing && q === lead} onTap={q === lead ? onPlay : undefined} playSec={playSec} />
+            <QuoteRow key={q.participant} q={q} open={playing && q === lead} onTap={q === lead ? onPlay : undefined} playSec={playSec} transcript={withTranscript && q.participant === "Ana" ? ANA_TRANSCRIPT : undefined} />
           ))}
         </div>
         <div className="dp-sources">
@@ -222,20 +273,24 @@ function Sample({ open, which = "unsure", playing, onPlay, playSec, onCollapse }
   );
 }
 
-export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
+/** `still` renders a frozen final frame of the live stage (no recorder, no motion): "final" is the take's held end state, "more" is the +223 list open. */
+export type StageStill = "final" | "more";
+
+export default function DialogueMotionStage({ demo, still }: { demo: MotionDemo; still?: StageStill }) {
+  const frozen = !!still;
   // P15 item 4: every starts answered and folds back to it, so the UI never fades out of the loop.
   // P16: add-only takes (hero, before, thin) start on an empty chat and end by scrolling their conversation up and out,
   // so the loop never fades the UI. Clip opens from the counts end state: 225 open, Ana first.
   const startAnswered = demo === "side" || demo === "toggles" || demo === "clip" || demo === "every";
   const [typed, setTyped] = useState("");
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState(frozen && demo === "before");
   const [analyzing, setAnalyzing] = useState(false);
   const [answered, setAnswered] = useState(startAnswered);
   const [side, setSide] = useState<SideWhich>(demo === "side" || demo === "clip" ? "friday" : false);
-  const [clip, setClip] = useState(false);
-  const [playSec, setPlaySec] = useState(0);
-  const [lines, setLines] = useState(0);
-  const [mark, setMark] = useState(false);
+  const [clip, setClip] = useState(frozen && demo === "clip");
+  const [playSec, setPlaySec] = useState(frozen && demo === "clip" ? 4 : 0);
+  const [lines, setLines] = useState(frozen ? 999 : 0);
+  const [mark, setMark] = useState(frozen);
   // P14 item 5: picker defaults to Insight (0), matching the decided default answer (count + insight).
   const [pick, setPick] = useState(0);
   const [level, setLevel] = useState(0);
@@ -253,6 +308,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   const sentences = PARAGRAPH_ANSWER_WALL.flatMap((p, pi) => p.split(/(?<=\.)\s+/).map((t, i) => ({ t, pi, first: i === 0 })));
 
   useEffect(() => {
+    if (frozen) return;
     const api = {
       type: (cps = 18) => new Promise<void>((res) => {
         let n = 0;
@@ -407,7 +463,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
     };
     (window as unknown as { __dlg: typeof api }).__dlg = api;
     return () => { if (tick.current) clearInterval(tick.current); };
-  }, [pick, demo]);
+  }, [pick, demo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const bubble = sent ? <UserMessageBubble>{QUESTION}</UserMessageBubble> : null;
 
@@ -438,7 +494,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
     body = (
       <>
         <div className="dlg-stage__item"><AnswerCard sideOpen="friday" /></div>
-        <Sample open which="friday" playing={clip} playSec={playSec} onPlay={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(!clip)} />
+        <Sample open which="friday" playing={clip} playSec={playSec} withTranscript onPlay={() => (window as unknown as { __dlg: { clip: (b: boolean) => void } }).__dlg.clip(!clip)} />
       </>
     );
   } else if (demo === "before") {
@@ -446,6 +502,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
       <>
         {bubble ? <div className="dlg-stage__item dlg-rise">{bubble}</div> : null}
         <div className="dp-text-prose-sm dlg-before dlg-stage__item">
+          <p className="dlg-before__h dlg-line" data-shown={frozen || lines > 0 ? "" : undefined}>{PROBLEM_ANSWER.heading}</p>
           {PARAGRAPH_ANSWER_WALL.map((_, pi) => (
             <p key={pi} style={{ margin: 0 }}>
               {sentences.map((s, si) => (s.pi === pi ? (
@@ -455,6 +512,18 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
               ) : null))}
             </p>
           ))}
+          {/* Consult r1: the rest of the shipped answer anatomy, as plain text: emoji headings, a raw pipe-text table, a barred quote.
+              Nothing here is cherry; "Many found" above is the one mark. The bar belongs to this "before" only (TASTE: no bar on our quotes). */}
+          <div className="dlg-line dlg-before__rest" data-shown={frozen || lines >= sentences.length ? "" : undefined}>
+            <p className="dlg-before__h">{PROBLEM_ANSWER.themesHeading}</p>
+            <pre className="dlg-before__raw">{PROBLEM_ANSWER.table.join("\n")}</pre>
+            <p className="dlg-before__h">{PROBLEM_ANSWER.quotesHeading}</p>
+            {PROBLEM_ANSWER.quotes.map((q) => (
+              <blockquote key={q.participant} className="dlg-before__quote">
+                &ldquo;{q.quote}&rdquo; <span className="dlg-before__who">{q.participant}, {q.time}</span>
+              </blockquote>
+            ))}
+          </div>
         </div>
       </>
     );
@@ -534,6 +603,15 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
     );
   }
 
+  if (still === "more") {
+    body = (
+      <>
+        <div className="dlg-stage__item"><AnswerCard still sideOpen="friday" /></div>
+        <div className="dlg-stage__item"><MoreList showEnd /></div>
+      </>
+    );
+  }
+
   const composer = (demo === "hero" || demo === "picker") ? (
     <div className="dp-study-chat__composer">
       {demo === "picker" ? (
@@ -554,7 +632,7 @@ export default function DialogueMotionStage({ demo }: { demo: MotionDemo }) {
   ) : null;
 
   return (
-    <div className={["dp-study-chat dlg-live dlg-stage", `dlg-stage--${demo}`, demo === "hero" ? "" : "dlg-live--bare", dialogueProductFontClassName].filter(Boolean).join(" ")} data-demo={demo}>
+    <div className={["dp-study-chat dlg-live dlg-stage", `dlg-stage--${demo}`, frozen ? "dlg-stage--still" : "", demo === "hero" ? "" : "dlg-live--bare", dialogueProductFontClassName].filter(Boolean).join(" ")} data-demo={demo}>
       {demo === "hero" ? (
         <div className="dp-study-chat__head">
           <div className="dp-study-chat__head-top">

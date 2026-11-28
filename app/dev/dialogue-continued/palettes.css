@@ -1,0 +1,123 @@
+/* Chart palette trial (?pal=1|2|3). Dev only. Chart fills only: --dp-brand and every UI token stay as they are.
+   Values and computed checks: dialogue-claude/color2/PALETTES-2.md. Hex lives here until Mudit picks an option. */
+
+/* Option 1. Even mid. oklch L 0.62, C 0.10. */
+.dlg-cont-page[data-pal="1"] {
+  --dp-series-1: #5c88c1;
+  --dp-series-2: #b6734d;
+  --dp-series-3: #8a7abc;
+  --dp-series-4: #6c9455;
+  --dp-series-5: #ae6e99;
+  --dp-series-6: #998538;
+  --dp-series-track: #f1eeea;
+  --dp-series-outline: #1c1917;
+  --dp-series-select: #1c1917;
+  --dp-series-on-fill: #1c1917;
+}
+
+/* Option 2. Cherry set. oklch L 0.551, C 0.135 to 0.165. */
+.dlg-cont-page[data-pal="2"] {
+  --dp-series-1: #b43f7f;
+  --dp-series-2: #3a8627;
+  --dp-series-3: #2a72c7;
+  --dp-series-4: #ac5804;
+  --dp-series-5: #7a5cbf;
+  --dp-series-6: #b9454c;
+  --dp-series-track: #f1eeea;
+  --dp-series-outline: #1c1917;
+  --dp-series-select: #1c1917;
+  --dp-series-on-fill: #ffffff;
+}
+
+/* Option 3. Soft. oklch L 0.70, C 0.075. */
+.dlg-cont-page[data-pal="3"] {
+  --dp-series-1: #7fa1cd;
+  --dp-series-2: #c59174;
+  --dp-series-3: #a195c9;
+  --dp-series-4: #8aa97a;
+  --dp-series-5: #bf8cad;
+  --dp-series-6: #ad9e68;
+  --dp-series-track: #f1eeea;
+  --dp-series-outline: #1c1917;
+  --dp-series-select: #1c1917;
+  --dp-series-on-fill: #1c1917;
+}
+
+/* Point every chart variable the components already read at the series, so no ramp B pink is left anywhere. */
+.dlg-cont-page[data-pal] .dialogue-product-root {
+  --dp-chart-focal: var(--dp-series-1);
+  --dp-chart-mid: var(--dp-series-2);
+  --dp-chart-soft: var(--dp-series-3);
+  --dp-chart-muted: var(--dp-series-2);
+  --dp-chart-muted-alt: var(--dp-series-3);
+  --dp-chart-secondary: var(--dp-series-2);
+  --dp-chart-secondary-soft: var(--dp-series-3);
+  --dp-chart-series-alt-fill: var(--dp-series-2);
+  --dp-chart-track: var(--dp-series-track);
+  --dp-chart-mark-outline: var(--dp-series-outline);
+  --dp-chart-seg-label: var(--dp-series-on-fill);
+}
+/* The compact bar fix: the Round 9 rule re-sets the focal to stone-900 inside .dlgh-muted. Under ?pal it takes series 1 back. */
+.dlg-cont-page[data-pal] .dlgh .dlgh-muted {
+  --dp-chart-focal: var(--dp-series-1);
+  --dp-chart-mark-outline: var(--dp-series-outline);
+}
+
+/* Fills by position. A segment and its legend swatch take the series of their index, in every state. */
+.dlg-cont-page[data-pal] .dp-chart-stack__seg[data-index="0"], .dlg-cont-page[data-pal] .dp-chart-stack__swatch[data-index="0"] { background: var(--dp-series-1) !important; }
+.dlg-cont-page[data-pal] .dp-chart-stack__seg[data-index="1"], .dlg-cont-page[data-pal] .dp-chart-stack__swatch[data-index="1"] { background: var(--dp-series-2) !important; }
+.dlg-cont-page[data-pal] .dp-chart-stack__seg[data-index="2"], .dlg-cont-page[data-pal] .dp-chart-stack__swatch[data-index="2"] { background: var(--dp-series-3) !important; }
+.dlg-cont-page[data-pal] .dp-chart-stack__seg[data-index="3"], .dlg-cont-page[data-pal] .dp-chart-stack__swatch[data-index="3"] { background: var(--dp-series-4) !important; }
+.dlg-cont-page[data-pal] .dp-chart-stack__seg[data-index="4"], .dlg-cont-page[data-pal] .dp-chart-stack__swatch[data-index="4"] { background: var(--dp-series-5) !important; }
+.dlg-cont-page[data-pal] .dp-chart-stack__seg[data-index="5"], .dlg-cont-page[data-pal] .dp-chart-stack__swatch[data-index="5"] { background: var(--dp-series-6) !important; }
+
+/* Ranked rows are one measure, so every row takes its group's series. Rank shows by length and order. */
+.dlg-cont-page[data-pal] [data-series="1"] .dp-chart-bars__bar { background-color: var(--dp-series-1) !important; }
+.dlg-cont-page[data-pal] [data-series="2"] .dp-chart-bars__bar { background-color: var(--dp-series-2) !important; }
+.dlg-cont-page[data-pal] [data-series="3"] .dp-chart-bars__bar { background-color: var(--dp-series-3) !important; }
+.dlg-cont-page[data-pal] .dp-chart-bars__track { background: var(--dp-series-track); }
+
+/* No count is colored or weighted as the answer. */
+.dlg-cont-page[data-pal] .dp-chart-bars__value--focal { color: var(--dp-chart-value-color); font-weight: var(--dp-chart-value-weight); }
+.dlg-cont-page[data-pal] .dp-chart-stack__lane[data-focal] .dp-chart-stack__lane-value { color: var(--dp-ink); }
+
+/* Hover is a 1px ink outline on the hovered segment only. The open segment shows the underline below in place of an outline. */
+.dlg-cont-page[data-pal] .dlg-live__bar .dp-chart-stack__seg { box-shadow: none !important; }
+.dlg-cont-page[data-pal] .dlg-live__bar:has(.dlg-live__side--friday:hover) .dp-chart-stack__seg[data-index="0"],
+.dlg-cont-page[data-pal] .dlg-live__bar:has(.dlg-live__side--unsure:hover) .dp-chart-stack__seg[data-index="1"] { box-shadow: inset 0 0 0 1px var(--dp-series-outline) !important; }
+/* The folded bar is a button with no side hits, so its segments carry the same outline themselves. */
+.dlg-cont-page[data-pal] .dlgh-compact .dp-chart-stack__seg:hover { box-shadow: inset 0 0 0 1px var(--dp-series-outline) !important; }
+
+/* Selected (Nov 11): a 2px ink underline under the open segment, 4px below the 24px bar. Fills do not move. */
+.dlg-cont-page[data-pal] .dlg-live__bar[data-side="friday"] .dp-chart-stack__seg[data-index="0"]::after,
+.dlg-cont-page[data-pal] .dlg-live__bar[data-side="unsure"] .dp-chart-stack__seg[data-index="1"]::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; background: var(--dp-series-select); pointer-events: none;
+}
+/* An open theme row underlines its label, as .dlgh-opened does. */
+.dlg-cont-page[data-pal] .dlgh-row[data-open] .dp-chart-bars__label { text-decoration: underline solid var(--dp-series-select); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+/* Simulation filters, for review only. */
+.dlg-cont-page[data-sim="gray"] .dlg-trial__panel { filter: grayscale(1); }
+.dlg-cont-page[data-sim="deutan"] .dlg-trial__panel { filter: url(#dlg-sim-deutan); }
+.dlg-cont-page[data-sim="protan"] .dlg-trial__panel { filter: url(#dlg-sim-protan); }
+
+/* Decision frames: two 390-wide columns side by side, one draft line under the pair. */
+.dlg-frames { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 1392px; margin: 0 auto; padding: 24px 0; }
+.dlg-frames__row { display: flex; gap: 48px; align-items: flex-start; }
+.dlg-frame { flex: 0 0 390px; width: 390px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.dlg-frames__draft { margin: 0; max-width: 828px; color: var(--color-text-secondary, #57534e); font: 400 13px/20px system-ui, sans-serif; }
+/* Too narrow for the pair (828px plus page padding): the columns stack, each at most 390, so nothing is cut off. */
+@media (max-width: 899px) {
+  .dlg-frames__row { flex-direction: column; gap: 32px; }
+  .dlg-frame { flex: 0 0 auto; width: 100%; max-width: 390px; }
+}
+
+/* Check sheet. */
+.dlg-check { display: flex; flex-direction: column; gap: 8px; max-width: 390px; margin: 32px 0 0; }
+.dlg-check__swatches { display: flex; gap: 8px; }
+.dlg-check__swatch { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.dlg-check__chip { width: 40px; height: 24px; border-radius: 2px; }
+
+/* Panels outside the grid get the grid's own panel layout. */
+.dlg-frames .dlg-trial, .dlg-check .dlg-trial { width: 100%; max-width: none; margin-inline: 0; }
+.dlg-frames .dlg-trial__panel, .dlg-check .dlg-trial__panel { display: flex; flex-direction: column; }

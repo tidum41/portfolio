@@ -4220,8 +4220,13 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 /* Round 9, updated 10 Nov 2026 for ramp B: the 225 is the focal segment (cherry). The 75
    and other ranks 2-3 use mid. Ranks 4+ use soft. Swatches follow data-tone so they match
    the segment they name. */
-.dialogue-product-root .dp-chart-stack__seg:not([data-focal]):not([data-tone="soft"]),
-.dlg-live .dp-chart-stack__seg:not([data-focal]):not([data-tone="soft"]) { background: var(--dp-chart-mid); }
+.dialogue-product-root .dp-chart-stack__seg:not([data-focal]):not([data-tone="soft"]):not([data-tone="neutral"]),
+.dlg-live .dp-chart-stack__seg:not([data-focal]):not([data-tone="soft"]):not([data-tone="neutral"]) { background: var(--dp-chart-mid); }
+/* Consult r1 (F31): the remainder of a two-segment count split is Dialogue stone in every figure, as in the hero. */
+.dialogue-product-root .dp-chart-stack__seg[data-tone="neutral"],
+.dialogue-product-root .dp-chart-stack__swatch[data-tone="neutral"],
+.dlg-live .dp-chart-stack__seg[data-tone="neutral"],
+.dlg-live .dp-chart-stack__swatch[data-tone="neutral"] { background: var(--dp-border-strong); }
 .dialogue-product-root .dp-chart-stack__seg[data-tone="soft"],
 .dlg-live .dp-chart-stack__seg[data-tone="soft"] { background: var(--dp-chart-soft); }
 .dlg-reason .dialogue-lib__mark[data-kind="pro"] { color: var(--color-text-secondary); }
@@ -4247,7 +4252,7 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
    so its bar rows put the label and value on one line with the track under them (the phone layout, at every width). */
 .dlg-match__pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
 .dlg-match__half { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.dlg-match__tag { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--color-text-tertiary); }
+.dlg-match__tag { margin: 0; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); color: var(--dp-muted); }
 .dlg-match__tag[data-kept] { color: var(--color-text-primary); }
 .dlg-templates__panel.dlg-mini .dp-chart-bars__row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label value" "track track"; row-gap: 4px; }
 .dlg-templates__panel.dlg-mini .dp-chart-bars__row > .dp-chart-bars__label { grid-area: label; width: auto; white-space: normal; }
@@ -4423,3 +4428,98 @@ html:not(:has(#agentation-cursor)) .dialogue-product-block--static [data-interac
 
 /* Round 19: the constraint line moves under the problem figure, so it needs air below the caption. */
 .cs-caption + .dlg-constraint { margin-top: var(--space-3); }
+
+/* ===== Consult r1 ===== */
+/* Frozen stage frames on the page (DialogueDemoStill live): no entrance, no transition, so a capture is never mid-animation. */
+.dlg-stage--still, .dlg-stage--still * { animation: none !important; transition: none !important; }
+.dlg-stage--still .dlg-stage__body { overflow: visible; }
+.dlg-live-still:not([data-measured]) { min-height: 320px; }
+.dlg-qgroups { max-width: 448px; margin-inline: auto; }
+.dlg-live-still { position: relative; width: 100%; line-height: normal; overflow: hidden; }
+.dlg-live-still__inner { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.dlg-live-still__panel { box-sizing: border-box; }
+/* Problem "before": the shipped answer anatomy as plain text. The black bar is the shipped quote style we depict, and it stays inside .dlg-before. */
+.dlg-before__h { margin: 0; font-weight: var(--dp-weight-medium); color: var(--dp-ink); }
+.dlg-before__rest { display: flex; flex-direction: column; gap: 12px; }
+.dlg-before__raw { margin: 0; padding: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--dp-font-mono); font-size: var(--ds-text-xs); line-height: 20px; color: var(--dp-muted); }
+.dlg-before__quote { margin: 0; padding: 0 0 0 12px; border-left: 3px solid var(--dp-ink); color: var(--dp-ink); }
+.dlg-before__who { color: var(--dp-muted); white-space: nowrap; }
+/* Clip open in place: the transcript sits under the player at the panel's width. Ana's row is the one active (warm) row. */
+.dlg-live__transcript { padding: 12px 0 0; line-height: normal; }
+.dlg-live__transcript .dp-synced-transcript__head { margin-bottom: 8px; }
+.dlg-live__transcript .dp-synced-transcript__row { gap: 12px; padding: 8px; margin-bottom: 0; }
+.dlg-live__transcript .dp-synced-transcript__avatar { width: 32px; height: 32px; }
+.dlg-live__transcript .dp-synced-transcript__scroll { display: none; }
+/* The +223 list: head pinned, rows scroll. */
+.dlg-more-list { display: flex; flex-direction: column; gap: 8px; }
+.dlg-more-list__head { flex: 0 0 auto; padding-bottom: 8px; border-bottom: 1px solid var(--dp-border); }
+.dlg-more-list__rows { max-height: 276px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; scrollbar-width: thin; }
+.dlg-more-list__rows:focus-visible { outline: 2px solid var(--dp-ink); outline-offset: 2px; }
+.dlg-more-list__rest { margin: 0; padding: 4px 4px 8px; color: var(--dp-muted); }
+.dlg-stage .dlg-stage__sample[data-more] .dlg-more-list__rows { display: flex; }
+/* Grouped quote list: a swatch, the group name and its count; the 75 swatch is stone, the 225 swatch is the one cherry. */
+.dlg-qgroup { display: flex; flex-direction: column; gap: 8px; }
+.dlg-qgroup + .dlg-qgroup { margin-top: 12px; }
+.dlg-qgroup[data-group="unsure"] .dlg-sample-key { background: var(--dp-border-strong); } /* same token as the count card's Unsure legend (data-tone="neutral") */
+.dlg-qgroup[data-group="friday"] .dlg-sample-key { background: var(--dp-chart-focal); }
+
+
+/* consult-r1 fix-r1 visual follow-up */
+/* hideHeader shells have no title hairline, so the 48px body offset (hairline to first message) does not apply. */
+.dp-study-chat.dp-study-chat--no-head:not(.dp-study-chat--hero) .dp-study-chat__body {
+  padding-top: 16px; /* same top pad as .dlg-live stills and hero body */
+}
+
+/* The "N quotes shown" row is the collapse control: pointer and the same warm hover as the chevron. */
+.dlg-live .dp-side-sample__head {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--dp-radius-control);
+}
+.dlg-live .dp-side-sample__head:hover {
+  background: var(--dp-warm);
+}
+.dlg-live .dp-side-sample__head:focus-visible {
+  outline: 2px solid var(--dp-brand);
+  outline-offset: 2px;
+}
+.dlg-live .dp-side-sample__head .dlg-clip-collapse,
+.dlg-live .dp-side-sample__head:hover .dlg-clip-collapse,
+.dlg-live .dp-side-sample__head .dlg-clip-collapse:hover {
+  background: transparent;
+  cursor: inherit;
+}
+
+/* Depth r2, variant D: the delivery-date interaction trial. Tokens only. */
+.dlg-trial { width: 100%; max-width: 423px; margin-inline: auto; }
+.dlg-trial__panel { border: 1px solid var(--dp-border); border-radius: var(--dp-radius); background: var(--dp-surface); overflow: hidden; }
+.dlg-trial__body { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.dlg-trial__line { margin: 0; color: var(--dp-ink); }
+.dlg-trial__point { padding: 0; border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer; text-decoration: underline dotted; text-decoration-color: var(--dp-ink); text-decoration-thickness: 2px; text-underline-offset: 3px; border-radius: var(--dp-radius-chip); transition: background-color 150ms ease; } /* real click trigger: dotted ink, cherry stays on the 225 bar */
+.dlg-trial__point:hover { background: var(--dp-warm); }
+.dlg-trial__point[aria-expanded="true"] { text-decoration-style: solid; }
+.dlg-trial__point:disabled { cursor: default; }
+.dlg-trial__point:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
+.dlg-trial__open .dlg-grow__inner, div.dlg-trial__open:not(.dlg-grow) { display: flex; flex-direction: column; gap: 12px; }
+.dlg-trial__more { margin: 0; color: var(--dp-muted); font-size: var(--text-meta-size); }
+.dlg-trial--stepped { max-width: none; display: grid; grid-template-columns: repeat(2, minmax(0, 423px)); gap: 32px; justify-content: center; align-items: start; }
+.dlg-trial__step { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.dlg-trial__step-label { color: var(--dp-muted); font-size: var(--text-meta-size); }
+@media (max-width: 600px) { .dlg-trial--stepped { grid-template-columns: minmax(0, 1fr); } }
+
+/* Depth r4: the stacked bar's legend holds at any segment count and width. Two lanes share one line while they fit and
+   wrap to one lane per line when they do not, so a label never breaks mid-name beside its neighbour; a label wraps only
+   when it is wider than the card on its own. Three or more segments always list one row per segment with the count at
+   the right edge, the rows the homepage card already uses. */
+.dp-chart-stack__lanes { flex-wrap: wrap; row-gap: 4px; }
+.dp-chart-stack__lane { flex: 0 1 auto; min-width: 0; }
+.dp-chart-stack__lanes[data-rows] { flex-direction: column; flex-wrap: nowrap; align-items: stretch; justify-content: flex-start; gap: 4px; }
+.dp-chart-stack__lanes[data-rows] .dp-chart-stack__lane { display: flex; width: 100%; }
+.dp-chart-stack__lanes[data-rows] .dp-chart-stack__lane-label { flex: 1 1 auto; min-width: 0; }
+.dp-chart-stack__lanes[data-rows] .dp-chart-stack__lane-value { margin-left: auto; }

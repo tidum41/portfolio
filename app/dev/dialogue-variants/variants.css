@@ -1,0 +1,85 @@
+.dlgv-page { padding: 48px 32px; background: var(--dp-bg, #faf9f7); display: flex; flex-direction: column; gap: 64px; min-height: 100vh; }
+.dlgv-pair { display: grid; grid-template-columns: repeat(2, 535px); gap: 48px; justify-content: center; align-items: start; }
+.dlgv-pair--c { display: block; }
+.dlgv-strip { display: grid; grid-template-columns: repeat(2, 423px); column-gap: 48px; row-gap: 40px; gap: 24px; justify-content: center; align-items: start; }
+.dlgv-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.dlgv-label { margin: 0; font: 500 13px/20px system-ui, sans-serif; color: var(--dp-muted, #57534e); }
+.dlgv-panel { border: 1px solid var(--dp-border); border-radius: 16px; background: var(--dp-surface); overflow: hidden; }
+.dlgv-body { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.dlgv-before { width: 535px; }
+.dlgv-pair:not(.dlgv-pair--c) .dlgv-panel { width: 423px; margin: 56px auto 0; box-sizing: border-box; }
+.dlgv-h { margin: 4px 0 0; font-weight: 500; color: var(--dp-ink); }
+.dlgv-more { margin: 4px 0 0; color: var(--dp-muted); font-size: var(--text-meta-size); }
+@media (max-width: 600px) {
+  .dlgv-page { padding: 24px 16px; }
+  .dlgv-pair, .dlgv-strip { grid-template-columns: minmax(0, 1fr); }
+  .dlgv-before { width: 100%; }
+  .dlgv-pair:not(.dlgv-pair--c) .dlgv-panel { width: 100%; margin-top: 0; }
+}
+.dlgv-lead { margin: 0; color: var(--dp-ink); }
+.dlgv-point { padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: var(--dp-brand); text-decoration-thickness: 2px; text-underline-offset: 3px; border-radius: 2px; }
+.dlgv-point:hover { background: var(--dp-warm); }
+.dlgv-point:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
+.dlgv-open { display: flex; flex-direction: column; gap: 12px; }
+.dlgv-d { margin-top: 56px; }
+@media (max-width: 600px) { .dlgv-d { margin-top: 0; } }
+
+/* Depth r4: the compare is one iteration, "level of depth for each reply". Four columns share one beat; at 1440 each
+   column is about 336px wide, close to a phone panel, which the product already lays out (the legend wraps per lane). */
+.dlgv-iter { width: 100%; max-width: 1392px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+.dlgv-iter__head { display: flex; flex-direction: column; gap: 8px; }
+.dlgv-iter__title { margin: 0; font: 500 20px/28px system-ui, sans-serif; color: var(--dp-ink); }
+.dlgv-iter__sub { margin: 0; font: 400 13px/20px system-ui, sans-serif; color: var(--dp-muted); }
+.dlgv-beats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.dlgv-beat { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px 0 8px; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-muted); font: 500 13px/20px system-ui, sans-serif; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlgv-beat:hover { background: var(--dp-warm); color: var(--dp-ink); }
+.dlgv-beat:active { background: var(--dp-nav-active-bg); }
+.dlgv-beat[aria-pressed="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); cursor: default; }
+.dlgv-beat:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
+.dlgv-beat__n { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: var(--dp-radius-round); background: var(--dp-card); color: var(--dp-ink); font-size: 12px; font-variant-numeric: tabular-nums; }
+.dlgv-compare { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.dlgv-compare .dlgv-col { gap: 8px; }
+.dlgv-compare .dlgv-label { color: var(--dp-ink); }
+.dlgv-when { margin: 0; align-self: flex-start; padding: 0 8px; border-radius: var(--dp-radius-chip); background: var(--dp-warm); color: var(--dp-ink); font: 500 12px/20px system-ui, sans-serif; }
+.dlgv-when[data-when="before"] { background: var(--dp-nav-active-bg); }
+.dlgv-how { margin: 0; min-height: 36px; font: 400 12px/18px system-ui, sans-serif; color: var(--dp-muted); }
+.dlgv-compare .dlg-trial { width: 100%; max-width: none; margin-inline: 0; }
+.dlgv-compare .dlg-trial__panel { display: flex; flex-direction: column; }
+.dlgv-empty { min-height: 176px; }
+.dlgv-compare .dlg-depth:last-child { margin-bottom: 0; }
+.dlgv-compare .dlg-depth__opt { text-align: center; }
+.dlgv-reset { align-self: flex-start; margin: 4px 0 0; color: var(--dp-muted); font-size: var(--text-meta-size); }
+.dlgv-history { margin: 48px 0 0; font: 500 16px/24px system-ui, sans-serif; color: var(--dp-ink); text-align: center; }
+@media (max-width: 1180px) { .dlgv-compare { grid-template-columns: repeat(2, minmax(0, 423px)); justify-content: center; } }
+@media (max-width: 600px) {
+  .dlgv-compare { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .dlgv-how { min-height: 0; }
+  .dlgv-empty { min-height: 176px; }
+}
+
+/* Option 4: the composer's depth menu (DepthMenu.tsx). Trigger takes the depth tab chip's type and fills; the menu takes
+   the tooltip chip's surface. 150ms states, menu grows from the trigger, reduced motion fades only. */
+.dlgv-menu-box { gap: 8px; }
+.dlgv-menu__row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dlgv-menu__row .dp-study-chat__composer-send { align-self: auto; }
+.dlgv-menu { position: relative; }
+.dlgv-menu__trigger { display: inline-flex; align-items: center; gap: 4px; height: 28px; margin-left: -4px; padding: 0 4px 0 8px; border: 0; border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-muted); font: inherit; font-size: var(--text-meta-size); line-height: var(--text-meta-leading); cursor: pointer; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlgv-menu__trigger:hover { background: var(--dp-warm); color: var(--dp-ink); }
+.dlgv-menu__trigger:active, .dlgv-menu__trigger[aria-expanded="true"] { background: var(--dp-nav-active-bg); color: var(--dp-ink); }
+.dlgv-menu__trigger:focus-visible { outline: 2px solid var(--dp-brand); outline-offset: 2px; }
+.dlgv-menu__chevron { width: 16px; height: 16px; transition: transform 150ms cubic-bezier(0.2, 0, 0, 1); }
+.dlgv-menu[data-open] .dlgv-menu__chevron { transform: rotate(180deg); }
+.dlgv-menu__list { position: absolute; left: -4px; bottom: calc(100% + 8px); z-index: 2; width: 224px; padding: 4px; display: flex; flex-direction: column; gap: 2px; box-sizing: border-box; border: 1px solid var(--dp-border); border-radius: var(--dp-radius-control); background: var(--dp-surface); box-shadow: var(--shadow-chat); transform-origin: bottom left; opacity: 0; visibility: hidden; transform: translateY(4px) scale(0.97); pointer-events: none; transition: opacity 150ms cubic-bezier(0.2, 0, 0, 1), transform 150ms cubic-bezier(0.2, 0, 0, 1), visibility 0s linear 150ms; }
+.dlgv-menu[data-open] .dlgv-menu__list { opacity: 1; visibility: visible; transform: none; pointer-events: auto; transition: opacity 150ms cubic-bezier(0.2, 0, 0, 1), transform 150ms cubic-bezier(0.2, 0, 0, 1), visibility 0s; }
+.dlgv-menu__head { margin: 0; padding: 4px 8px; color: var(--dp-muted); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
+.dlgv-menu__item { display: grid; grid-template-columns: minmax(0, 1fr) 16px; column-gap: 8px; align-items: center; padding: 8px; border: 0; border-radius: var(--dp-radius-chip); background: transparent; color: var(--dp-ink); font: inherit; text-align: left; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+.dlgv-menu__name { grid-column: 1; font-size: var(--text-body-size); line-height: 20px; font-weight: var(--dp-weight-medium); }
+.dlgv-menu__note { grid-column: 1; color: var(--dp-muted); font-size: var(--text-meta-size); line-height: var(--text-meta-leading); }
+.dlgv-menu__check { grid-column: 2; grid-row: 1 / span 2; display: inline-flex; width: 16px; height: 16px; color: var(--dp-ink); }
+.dlgv-menu__item:hover, .dlgv-menu__item:focus-visible { background: var(--dp-warm); outline: none; }
+.dlgv-menu__item:active { background: var(--dp-nav-active-bg); }
+@media (prefers-reduced-motion: reduce) {
+  .dlgv-menu__list { transform: none; transition: opacity 150ms linear, visibility 0s linear 150ms; }
+  .dlgv-menu[data-open] .dlgv-menu__list { transform: none; transition: opacity 150ms linear, visibility 0s; }
+  .dlgv-menu__chevron { transition: none; }
+}

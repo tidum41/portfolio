@@ -4,7 +4,7 @@ import {
   PersonIcon,
 } from "@/components/dialogue/product/icons";
 
-type Row = {
+export type TranscriptRow = {
   speaker: string;
   time: string;
   text: string;
@@ -13,7 +13,7 @@ type Row = {
 };
 
 /** Paper section-5 transcript, as restored from 657337d. */
-const ROWS: Row[] = [
+const ROWS: TranscriptRow[] = [
   { speaker: "Dialogue", time: "18:24", text: "The delivery date is on the product page. What did you take it to mean?", role: "dialogue" },
   {
     speaker: "Mei",
@@ -25,7 +25,7 @@ const ROWS: Row[] = [
   { speaker: "Dialogue", time: "18:51", text: "Did anything on the page pin the date down?", role: "dialogue" },
 ];
 
-export default function SyncedTranscript() {
+export default function SyncedTranscript({ rows = ROWS }: { rows?: readonly TranscriptRow[] }) {
   return (
     <div className="dp-synced-transcript" aria-hidden data-annotate-part="transcript">
       <div className="dp-synced-transcript__head" data-annotate-part="transcript-head">
@@ -36,7 +36,7 @@ export default function SyncedTranscript() {
       </div>
       <div className="dp-synced-transcript__viewport" data-annotate-part="transcript-viewport">
         <ul className="dp-synced-transcript__list">
-          {ROWS.map((row, i) => (
+          {rows.map((row, i) => (
             <li
               key={i}
               data-annotate-part={`transcript-row-${i + 1}`}

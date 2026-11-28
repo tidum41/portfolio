@@ -74,9 +74,10 @@ export function ArrowDownIcon({ className }: IconProps) {
   );
 }
 
+/** Paper section-5 transcript copy mark, drawn at 16 like the rest of this set (the export is 16×16, stroke 2). */
 export function CopyIcon({ className }: IconProps) {
   return (
-    <svg {...stroke} width="20" height="20" viewBox="0 0 24 24" strokeWidth="2" className={className}>
+    <svg {...stroke} width="16" height="16" viewBox="0 0 24 24" strokeWidth="2" className={className}>
       <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
       <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
     </svg>

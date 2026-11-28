@@ -194,3 +194,51 @@ export const ANATOMY_PART_IDS = [
   "clips",
   "followups",
 ] as const;
+
+/** Remaining people on one surface: the group total minus the named people that surface shows.
+ *  A pill next to two names is +223 (225 − 2). A list of four names is 221 more (225 − 4).
+ *  Each surface stays consistent with the names it shows; N is not one global figure. */
+export function remainingCount(total: number, shown: number) {
+  return total - shown;
+}
+
+/* Consult r1. Hearthside mock only (MOCK-DATA.md 4c to 4g). Labelled people on each side; the rest of each side is a +N remainder. */
+export const QUOTE_GROUPS = [
+  { id: "friday", label: "Read it as this Friday", count: 225, rows: [...QUOTE_LIST_FRIDAY, ...QUOTE_LIST_NEW] },
+  { id: "unsure", label: "Unsure", count: 75, rows: QUOTE_LIST },
+] as const;
+
+/** Ana's transcript for the clip open in place. MOCK-DATA holds only her line (04:10 to 04:24), so no Dialogue line is shown around it. */
+export const ANA_TRANSCRIPT = [
+  { speaker: "Ana", time: "04:10", text: "It says Friday, so I planned for this Friday.", active: true, role: "participant" },
+] as const;
+
+/** Problem still: the shipped Study chat answer anatomy (emoji headings, a raw pipe-text table, a barred quote), drawn with Hearthside data. */
+export const PROBLEM_ANSWER = {
+  heading: "\u{1F4E6} Delivery date",
+  themesHeading: "\u{1F4CB} What shoppers asked for after checkout",
+  table: [
+    "| Theme | Mentions |",
+    "|---|---|",
+    "| Show an exact calendar date | 41 of 300 |",
+    "| Say which Friday it means | 28 of 300 |",
+    "| Warn when Friday slips | 17 of 300 |",
+    "| Offer a pickup option | 11 of 300 |",
+    "| Email the day before | 8 of 300 |",
+  ],
+  quotesHeading: "\u{1F4AC} In their words",
+  quotes: [
+    { participant: "Ana", time: "04:10", quote: "It says Friday, so I planned for this Friday." },
+    { participant: "Dev", time: "11:02", quote: "Friday means the closest one to me." },
+    { participant: "Mei", time: "18:27", quote: "Friday which week?" },
+  ],
+} as const;
+
+/** Hearthside mock (MOCK-DATA ranked themes): what shoppers asked for after checkout, mentions out of 300. Same rows as PROBLEM_ANSWER.table. */
+export const TOP_ASKS = [
+  { label: "Show an exact calendar date", value: 41 },
+  { label: "Say which Friday it means", value: 28 },
+  { label: "Warn when Friday slips", value: 17 },
+  { label: "Offer a pickup option", value: 11 },
+  { label: "Email the day before", value: 8 },
+] as const;

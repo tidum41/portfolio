@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import PlayPauseButton from "@/components/PlayPauseButton";
-import { recordingAspect } from "@/components/dialogue/motion/stages";
+import { recordingAspect, STAGE_GUTTER, STAGE_PANEL_W, type MotionDemo } from "@/components/dialogue/motion/stages";
+import DialogueMotionStage, { type StageStill } from "@/components/dialogue/live/DialogueMotionStage";
 import MOTION_VERSIONS from "@/lib/dialogue/motionVersions.json";
 
 /**
@@ -79,8 +80,37 @@ export default function DialogueDemoVideo({ src, poster, label, ratio }: { src: 
   );
 }
 
-/** P16: a held still on the same stage as the videos (the picker), themed like them, with no play control. */
-export function DialogueDemoStill({ src, label }: { src: string; label: string }) {
+/** Consult r1: a frozen final frame of the live stage, scaled to the well. Real components, no recording, nothing mid-animation. */
+function LiveStill({ demo, still, label }: { demo: MotionDemo; still: StageStill; label: string }) {
+  const wrap = useRef<HTMLDivElement>(null);
+  const inner = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState<{ scale: number; h: number; x: number } | null>(null);
+  const w = STAGE_PANEL_W + 2 * STAGE_GUTTER;
+  useEffect(() => {
+    const el = wrap.current, inn = inner.current;
+    if (!el || !inn) return;
+    const measure = () => { const scale = Math.min(1, el.clientWidth / w); setBox({ scale, h: inn.offsetHeight * scale, x: (el.clientWidth - w * scale) / 2 }); };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el); ro.observe(inn);
+    return () => ro.disconnect();
+  }, [w]);
+  return (
+    <div className="dlg-demo dlg-demo--live" style={{ margin: 0 }}>
+      <div ref={wrap} className="dlg-live-still" role="img" aria-label={label} data-measured={box ? "" : undefined} style={box ? { height: box.h } : undefined}>
+        <div ref={inner} className="dlg-live-still__inner" style={{ width: w, padding: STAGE_GUTTER, boxSizing: "border-box", transform: `translateX(${box?.x ?? 0}px) scale(${box?.scale ?? 1})` }} aria-hidden>
+          <div className="dialogue-product-root dp-chat-panel-typography dlg-motion-frame__panel dlg-live-still__panel" style={{ width: STAGE_PANEL_W }}>
+            <DialogueMotionStage demo={demo} still={still} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** P16: a held still on the same stage as the videos (the picker), themed like them, with no play control.
+ *  Consult r1: pass `live` to hold a frozen frame of the live stage instead of a recorded JPG (takes are real live UI). */
+export function DialogueDemoStill({ src, label, live }: { src: string; label: string; live?: { demo: MotionDemo; still: StageStill } }) {
   const [dark, setDark] = useState<boolean | null>(null);
   useEffect(() => {
     setDark(isDarkNow());
@@ -91,6 +121,7 @@ export function DialogueDemoStill({ src, label }: { src: string; label: string }
   const phone = usePhone();
   const ssrc = sized(src, phone);
   const ratio = recordingAspect(ssrc) ?? "1 / 1";
+  if (live) return <LiveStill demo={live.demo} still={live.still} label={label} />;
   return (
     <div className="dlg-demo">
       {dark === null ? <div className="dlg-demo__video" style={{ aspectRatio: ratio }} aria-hidden /> : (

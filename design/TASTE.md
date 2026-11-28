@@ -286,3 +286,8 @@ Defaults: specific headings and copy, section order details, figure choices and 
 - Nov 11 2026 Mudit: card bar states are lift-and-marker; supersedes the inner-ring line.
 - Nov 11 2026 Mudit: card bars never move on select; the selected segment uses a clear ink underline; 2-segment charts pair cherry with Dialogue's neutral gray as a static ramp; 3+ segments adapt the ramp for readability; lift-and-marker is kept as an exploration only.
 - Nov 22 2026 Mudit (delegated to research-team preference): the denominator figure reads counts first (9 of 14, 88 of 125) with the percent on hover, matching the shipped Counts bar ("18 of 24" not a percent); build priority follows what teams ask for: verbatims and clips, then segment comparison, then sharing.
+- Delivery-date answer: C+B combination (one-click in-place depth, B wording, asks as second expandable line), Mudit 2026-11-23
+- Delivery-date trial (D, dotted ink underline triggers) goes in the /dialogue depth section as the single interactive moment, Mudit 2026-11-23
+- 2026-11-24 (Mudit): the data viz deep dive opens on the live product's raw markdown table (the before), so the PostHog reference lands as the turn, then our Current templates.
+- 2026-11-24 (Mudit): depth final is D, click a point; the composer DepthMenu, footer picker, tab row and chips stay as explorations for the case study.
+- Nov 27 2026 (Mudit): chart colors move to an equal-weight categorical set like PostHog, so no segment carries color weight bias. Cherry is optional and never the default focal. Supersedes the Nov 11 cherry-plus-neutral pairing for segment fills. The ink underline still marks selection.

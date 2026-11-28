@@ -101,3 +101,58 @@ Written in my own voice so I can explain each one in an interview. Each entry ho
 ### Match the chart is three rows
 
 **Decision.** The Match the chart figure is three rows. Each row pairs a question with the chart it gets and puts one line under it; the first row is a split bar, the second is ranked bars and the third is a flag for fewer than 3 people. **Tried.** Option 2 was one worked example and a text index that names the other charts, and before that the figure carried a By group pair and four awkward-shape frames. **Why.** A skimmer reads the question to chart mapping in one pass when every chart is drawn next to its question, and option 2 hides that mapping in text. The cost is that By group's percent against count comparison and the tie, too many themes, nothing matches and two shapes frames are off the page. **Revisit.** If someone asks how the template handles a tie or too many themes, I would add that one row back instead of restoring the whole set. I would also revisit it if the three rows feel too thin next to the thin data section below.
+
+## Consult r1
+
+### The Problem figure is a frozen frame of the live "before" stage
+
+**Decision.** The Problem figure renders the live `before` stage in a frozen final state, with an emoji heading, the existing Hearthside paragraphs, "Many found" as the one cherry mark, the ranked themes as raw pipe text and three barred quotes from Ana, Dev and Mei. **Tried.** Another recorded JPG. **Why.** The JPG showed a short tidy paragraph, which is not what the shipped chat answers with, and takes are real live UI. The black quote bar is the shipped style we depict, scoped to `.dlg-before`, so it cannot reach our own quotes (no coloured bar on quotes). **Revert.** Remove the `live` prop on the Problem figure; the old JPG path is still on the call.
+
+### Ana's clip carries her transcript line, and nothing is invented around it
+
+**Decision.** `SyncedTranscript` takes rows as props (Mei's rows stay the default) and Ana's open clip shows one active row, 04:10. **Why.** MOCK-DATA holds Ana's line and no Dialogue line around it, so adding one would be invented. The transcript sits inside the quote row, so the clip never covers the count. **Revert.** Drop the `transcript` prop on `QuoteRow`.
+
+### The 75 is stone in every two-segment count split
+
+**Decision.** A `remainder` flag on bar and stacked-bar data draws the non-focal side with `--dp-border-strong`. It is set for the 225 and 75 in the Split template, the rows answer and the Counts explorations. **Why.** The hero and Counts draw the 75 stone, and the pink mid read as a second finding. Ranked charts keep ramp B mid for ranks 2 and 3, and the cherry versus neutral question for ranked charts stays open. **Revert.** Remove `remainder` from the three call sites.
+
+### Two missing states and the 161 sentence
+
+**Decision.** A grouped quote list (a count per group, no chart) sits in Data viz, and the "+223 more" list sits under Counts. The 161 untagged shoppers get one proposed sentence under By group, with no third row. **Why.** STATES S4 and S12 asked for them and TASTE Nov 10 allows the 161 as a sentence only. Only labelled Hearthside people are named, and the rest is a remainder line (225 minus 4 is 221, 75 minus 2 is 73). **Revert.** Remove the three figures and the line.
+
+### Rule-break fixes
+
+**Decision.** The near-miss title now reads "Two of 300 shoppers said they missed a delivery.", the templates caption is a marked proposal without a list of three, and the thin cutoff has a visible `[PLACEHOLDER]` for its reason. **Why.** MOCK-DATA 4g gives no cause, the old caption was a list of three, and OPEN-QUESTIONS 22 is still open. **Revert.** Restore the earlier strings from git.
+
+
+
+### +N more is counted on the surface that shows the names
+
+**Decision.** `remainingCount(total, shown)` is the group total minus the named people actually shown on that surface. The pill next to Ana and Dev is +223 (225 − 2). The open list and the grouped quote list show four named Friday people, so both say 221 more (225 − 4). Unsure with Mei and Owen is +73 (75 − 2). **Why.** The three figures looked inconsistent, but each one is already consistent with the names it shows. Unifying every surface to one N would miscount the people on screen. **Revert.** Inline the subtractions and drop the helper.
+
+
+### Depth r4 (2026-11-24): one chart path for the depth compare, and stacked-bar labels past two segments
+
+**Decision.** Every take on `/dev/dialogue-variants` draws the delivery-date reply through `DeliveryDateTrial`'s `Answer`, and both its charts go through `AnswerCard` (`COUNT_ANSWER`, `ASKS_ANSWER`). The count shows a selected side only while its people are on screen (`people: false` at the Chart depth). `answerLayout(groups, total)` returns rows when the groups do not split the total (ranked asks overlap), and those rows scale to the top ask as the ranked template already did; only a true two-way split draws its second group as the stone remainder. In `ChartStackedBar`, two legend lanes wrap per lane instead of breaking a label mid-name, three or more segments list one legend row per segment (the homepage card's rows), and from three segments the non-focal fills alternate mid and soft so no two neighbours share a fill.
+**Why.** The compare's picker had its own hand-built answer: it pinned `sideOpen="friday"` at every depth, so at Chart the 225 was drawn selected with the 75 receded and no people under it, and its asks rows had no hover percent, unlike the count bar. Past two segments the one-line legend broke labels into single letters at 336px and below.
+**Revert.** Restore `components/dialogue/live/DeliveryDateTrial.tsx`, `AnswerCard.tsx`, `ChartStackedBar.tsx`, `lib/dialogue/product/answerLayout.ts` and the last block of `dialogue-product.css` from 460912e. /dialogue at 1440 and the homepage card measure identical either way; at 390 three two-lane legends grow 4px because the second lane now wraps whole.
+
+### Depth r4 (2026-11-24): option 4, a composer depth menu, stays on a dev route
+
+**Decision.** `app/dev/dialogue-variants/DepthMenu.tsx` picks the reply's depth from a model-picker style menu in the composer. It is dev only and PENDING Mudit's OK; nothing on /dialogue imports it.
+**Why.** No earlier round built a menu-style depth picker (searched iterations, notes, p10-decisions, git history, review-desk and the dlg folders); every picker so far was the tab row. The compare needed the take to judge it.
+
+### Dialogue continued (2026-11-27): the composer pill placement is a prototype awaiting Mudit's OK
+
+**Decision.** `/dev/dialogue-continued?opt=h` puts an existing source pill inside the composer to show the scope a follow-up inherits from the opened group. This placement is new, so it is a prototype awaiting Mudit's OK and nothing on /dialogue uses it. `?opt=h1` (scope only in reply 2's header) and `?opt=h2` (reply 1 folds to a compact count bar) sit beside it.
+**Why.** The reader can see and change the scope before pressing send. "Ask about all 300 shoppers" stays the explicit reset. No result is claimed for either.
+**Revert.** Delete `HybridPanel.tsx`, `hybridModel.ts` and `hybrid.css` in `app/dev/dialogue-continued/` and their wiring in `ContinuedLab.tsx` and `page.tsx`.
+
+### Dialogue continued (2026-11-27): equal-weight chart palettes are a dev trial at ?pal
+
+**Decision.** Following Mudit's note of 27 Nov 2026 ("just like posthog, shouldnt we just use other good complimenting colors so all bar segments dont have color weight bias?"), `/dev/dialogue-continued?pal=1|2|3` draws every chart segment by position from six series at one OKLCH lightness and chroma (color2/PALETTES-2.md). Option 2 is the one exception on chroma. Selection is the Nov 11 ink underline, and no fill darkens or recedes. Under ?pal the folded compact bar and reply 1 reopened under reply 2 take series 1 and 2, which retires Round 9's stone-900 225 in the trial only. The default page keeps today's fills.
+**Why.** A saturated focal beside a near-white gray reads as the answer and the leftover. Equal lightness and chroma leave hue as the only difference between segments.
+**Build notes.** The decision frames stack below 900px, because the two 390px columns side by side would be cut off on a phone. The badge label in the three-part bar carries single quotes (Round 9).
+**Open.** All three options change the hard rule "cherry #B43F7F is the one focal". It needs Mudit's explicit OK before any option leaves ?pal. When he picks, the follow-up change moves the six hex values into layer 3 of dialogue-tokens.css and deletes the Round 9 `.dlgh-muted` rules and `cherryAt` in HybridPanel.
+**Measured.** [PLACEHOLDER] Nothing was measured in a browser in this build, because starting the dev server needed an approval the session did not have. The frame heights, screenshots and computed colors are still to be checked.
+**Revert.** Delete palettes.css, PaletteCheck.tsx and DecisionFrames.tsx, the param wiring in page.tsx and ContinuedLab.tsx, and the three HybridPanel edits (series fallbacks and `data-series`).
