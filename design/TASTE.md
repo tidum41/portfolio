@@ -290,3 +290,4 @@ Defaults: specific headings and copy, section order details, figure choices and 
 - Delivery-date trial (D, dotted ink underline triggers) goes in the /dialogue depth section as the single interactive moment, Mudit 2026-11-23
 - 2026-11-24 (Mudit): the data viz deep dive opens on the live product's raw markdown table (the before), so the PostHog reference lands as the turn, then our Current templates.
 - 2026-11-24 (Mudit): depth final is D, click a point; the composer DepthMenu, footer picker, tab row and chips stay as explorations for the case study.
+- Nov 27 2026 (Mudit): chart colors move to an equal-weight categorical set like PostHog, so no segment carries color weight bias. Cherry is optional and never the default focal. Supersedes the Nov 11 cherry-plus-neutral pairing for segment fills. The ink underline still marks selection.
