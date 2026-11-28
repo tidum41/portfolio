@@ -69,7 +69,7 @@ function Segment({ side }: { side: Side }) {
   const q = seg.quotes[at];
   return (
     <div className="dp-side-sample dlg-stage__sample" data-side={side} data-hero="">
-      <SegmentHead title={seg.title} count={seg.count} swatch={side === "friday" ? "var(--dp-chart-focal)" : "var(--dp-border-strong)"} />
+      <SegmentHead title={seg.title} count={seg.count} swatch={side === "friday" ? "var(--dp-series-1, var(--dp-chart-focal))" : "var(--dp-series-2, var(--dp-border-strong))"} />
       <div className="dp-sources">
         {seg.quotes.map((s, i) => <SourceButton key={s.participant} q={s} selected={i === at} onPick={() => { setAt(i); setClip(false); }} />)}
         <SourcePill name={seg.more} time="" />
@@ -140,9 +140,12 @@ function ThemeQuotes({ row, swatch }: { row: Row; swatch: string }) {
 
 const rowFill = (rows: Row[], i: number) => chartBarFill(i, rows[i].focal, false, rows[i].remainder);
 
-function RankedRows({ rows, of, openKey, onRow }: { rows: Row[]; of: string; openKey?: ThemeKey | null; onRow?: (k: ThemeKey) => void }) {
+/* Under ?pal, ranked rows take one series per group: the 75 draws in series 2, everything else in series 1. */
+const seriesOf = (scope: Scope | null) => (scope?.kind === "unsure" ? "2" : "1");
+
+function RankedRows({ rows, of, openKey, onRow, series }: { rows: Row[]; of: string; openKey?: ThemeKey | null; onRow?: (k: ThemeKey) => void; series?: string }) {
   return (
-    <div className="dlg-answer--rows dlgh-rows">
+    <div className="dlg-answer--rows dlgh-rows" data-series={series}>
       {rows.map((r, i) => (
         <div key={r.key} className="dlgh-row" data-open={openKey === r.key || undefined}>
           {/* One row per list keeps each hit target exactly on its row. The fill is passed by rank. Lengths wait on counts. */}
@@ -178,7 +181,7 @@ function ThemesReply({ turn, onTheme }: { turn: Turn; onTheme: (k: ThemeKey) => 
     <>
       <div data-spot="reply2">
         <ChartVizCard title={themesTitle(turn.scope)}>
-          <RankedRows rows={rows} of={ofFor(turn.scope)} openKey={turn.theme} onRow={onTheme} />
+          <RankedRows rows={rows} of={ofFor(turn.scope)} openKey={turn.theme} onRow={onTheme} series={seriesOf(turn.scope)} />
           <p className="dp-chart-bars__note">
             Row count and counts are {PH}.{rows.some((r) => r.key === "draft") ? ` “${DRAFT_THEME}” is a draft label and its rank is ${PH}.` : ""}
           </p>
@@ -186,7 +189,7 @@ function ThemesReply({ turn, onTheme }: { turn: Turn; onTheme: (k: ThemeKey) => 
         </ChartVizCard>
       </div>
       <Grow open={at >= 0} className="dlg-trial__open">
-        {shown >= 0 ? <ThemeQuotes key={rows[shown].key} row={rows[shown]} swatch={rowFill(rows, shown)} /> : null}
+        {shown >= 0 ? <ThemeQuotes key={rows[shown].key} row={rows[shown]} swatch={`var(--dp-series-${seriesOf(turn.scope)}, ${rowFill(rows, shown)})`} /> : null}
       </Grow>
     </>
   );
@@ -195,7 +198,7 @@ function ThemesReply({ turn, onTheme }: { turn: Turn; onTheme: (k: ThemeKey) => 
 function OverviewReply() {
   return (
     <ChartVizCard title={PH}>
-      <RankedRows rows={ROW_SETS.default.slice(0, 2)} of={String(TOTAL)} />
+      <RankedRows rows={ROW_SETS.default.slice(0, 2)} of={String(TOTAL)} series="1" />
       <p className="dp-chart-bars__note">Row count and counts are {PH}.</p>
     </ChartVizCard>
   );

@@ -19,7 +19,10 @@ import { ANA_TRANSCRIPT, QUOTE_LIST_FRIDAY, QUOTE_LIST_NEW, remainingCount } fro
 import { COUNT_ANSWER, FRIDAY, QUESTION, TOTAL } from "@/components/dialogue/live/DeliveryDateTrial";
 import HybridPanel from "./HybridPanel";
 import { HYBRID_LABELS, HYBRID_OPTS, HYBRID_STATES, isHybrid, type HybridCase, type HybridOpt, type HybridState } from "./hybridModel";
+import PaletteCheck from "./PaletteCheck";
+import DecisionFrames from "./DecisionFrames";
 import "./continued.css";
+import "./palettes.css";
 
 const FRIDAY_REMAINDER = FRIDAY - 1; // 225 minus Ana is 224
 
@@ -235,19 +238,49 @@ const HYBRID_STATE_LABEL: Record<HybridState, string> = {
 /* In the grid, the three shared beats map onto the hybrid's states. "A point in reply 2 is open" also opens a theme row. */
 const GRID_STATE: Record<Phase, HybridState> = { start: "typed", landed: "landed", next: "landed" };
 
-export default function ContinuedLab({ opt, phase = "landed", hybridState = "landed", variant }: { opt?: Opt | HybridOpt; phase?: Phase; hybridState?: HybridState; variant?: HybridCase }) {
+export type Pal = "1" | "2" | "3";
+export type Sim = "gray" | "deutan" | "protan";
+
+/* Colorblind review filters for ?sim: the Viénot 1999 matrices in linear RGB. */
+function SimFilters() {
+  return (
+    <svg width="0" height="0" aria-hidden style={{ position: "absolute" }}>
+      <filter id="dlg-sim-deutan" colorInterpolationFilters="linearRGB">
+        <feColorMatrix type="matrix" values="0.29275 0.70725 0 0 0  0.29275 0.70725 0 0 0  -0.02234 0.02234 1 0 0  0 0 0 1 0" />
+      </filter>
+      <filter id="dlg-sim-protan" colorInterpolationFilters="linearRGB">
+        <feColorMatrix type="matrix" values="0.11238 0.88762 0 0 0  0.11238 0.88762 0 0 0  0.00401 -0.00401 1 0 0  0 0 0 1 0" />
+      </filter>
+    </svg>
+  );
+}
+
+export default function ContinuedLab({ opt, phase = "landed", hybridState = "landed", variant, pal, check, sim, frame }: { opt?: Opt | HybridOpt; phase?: Phase; hybridState?: HybridState; variant?: HybridCase; pal?: Pal; check?: boolean; sim?: Sim; frame?: "1" | "2" }) {
   const [curPhase, setPhase] = useState<Phase>(phase);
   const [curState, setState] = useState<HybridState>(hybridState);
   const solo = isHybrid(opt) ? opt : undefined;
   const shown: Opt[] = solo ? [] : opt && !isHybrid(opt) ? [opt] : [...OPTS];
   const hybrids: HybridOpt[] = solo ? [solo] : opt ? [] : [...HYBRID_OPTS];
+  if (frame) {
+    return (
+      <div className="dlg-cont-page" data-pal={pal} data-sim={sim}>
+        <SimFilters />
+        <header className="dlg-cont-page__head">
+          <h1 className="dlg-cont-page__title">Continued interaction</h1>
+        </header>
+        <DecisionFrames frame={frame} />
+      </div>
+    );
+  }
   return (
-    <div className="dlg-cont-page">
+    <div className="dlg-cont-page" data-pal={pal} data-sim={sim}>
+      <SimFilters />
       <header className="dlg-cont-page__head">
         <h1 className="dlg-cont-page__title">Continued interaction</h1>
         <p className="dlg-cont-page__sub">{opt
           ? "After a point is open in the first reply, a second question is asked. Hearthside illustrative data. Depth stays D: click a point."
           : "After a point is open in the first reply, a second question is asked. Each column is a different take on that thread. Hearthside illustrative data. Depth stays D: click a point."}</p>
+        {pal ? <p className="dlg-cont-page__sub">{`Chart palette ${pal}. Every segment takes its color by position. The rest of the UI keeps Dialogue's tokens.`}</p> : null}
         <div className="dlg-cont-page__beats" role="group" aria-label="Beat">
           {solo ? HYBRID_STATES.map((s) => (
             <button key={s} type="button" className="dlg-cont-beat" aria-pressed={curState === s} onClick={() => setState(s)}>{HYBRID_STATE_LABEL[s]}</button>
@@ -274,6 +307,7 @@ export default function ContinuedLab({ opt, phase = "landed", hybridState = "lan
           );
         })}
       </div>
+      {pal && check ? <PaletteCheck /> : null}
     </div>
   );
 }
